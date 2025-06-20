@@ -15,8 +15,9 @@ export async function POST(request: NextRequest) {
     }
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
-    const topicsWithUrls = await addUrlsToTopicList(topics)  
+    const topicsWithUrls = await addUrlsToTopicList(topics)  //todo get correct date here too 
     const topicsWithAnswers = await addAnswerToTopicList({topics: topicsWithUrls, specialty: SPECIALTY})
+    const topicsWithAnswers = await addSyptomsToTopicLIst({topics: topicsWithAnswers, specialty: SPECIALTY})
 
     return NextResponse.json(topicsWithAnswers);
   } catch (error) {

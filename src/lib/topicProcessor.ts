@@ -115,6 +115,10 @@ type TopicWithUrlAndSpecialty = {
   url: string;
 };
 
+type TopicWithUrlAndSpecialtyAndAnswer= TopicWithUrlAndSpecialty & {
+  answer: string;
+};
+
 const AnswerZObject = z.object({
   title: z.string(),
   bullet_points: z.array(z.string()),
@@ -157,11 +161,27 @@ export async function getSourceTopicAnswer({topic, url, specialty}: {topic: stri
   }
 }
 
-export async function addAnswerToTopicList({topics, specialty}:{topics: TopicWithUrlAndSpecialty[], specialty: Specialty}){
+export async function addAnswerToTopicList({topics, specialty}:{topics: TopicWithUrlAndSpecialty[], specialty: Specialty}): Promise<TopicWithUrlAndSpecialtyAndAnswer>{
   return Promise.all(
     topics.map(async (topic) => {
       const answer = await getSourceTopicAnswer({...topic, specialty});
-      return { ...topic, answer };
+      return { ...topic, answer } ;
+    })
+  );
+}
+
+
+// *** Topic symptom tagging functions ***
+
+type TopicWithUrlAndSpecialtyAndAnswerAndSymptoms = TopicWithUrlAndSpecialtyAndAnswer & {
+  specialty: Specialty[]
+};
+
+export async function addSyptomsToTopicLIst({topics, specialty}: {topics:TopicWithUrlAndSpecialtyAndAnswer, specialty: Specialty}): Promise<TopicWithUrlAndSpecialtyAndAnswerAndSymptoms>{
+  return Promise.all(
+    topics.map(async (topic) => {
+      const answer = await getSourceTopic({...topic, specialty});
+      return { ...topic, answer } ;
     })
   );
 }
