@@ -1,5 +1,7 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
+import {Specialty} from '../../types';
+import {zodTextFormat} from 'openai/helpers/zod.mjs';
 
 const TopicList = z.object({
   topics: z.array(z.string())
@@ -9,6 +11,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+/// *** Topic list extraction from plain text ***
 
 export async function transformTopicsToStructuredList(unstructuredTopicList: string): Promise<string[]> {
   
@@ -41,7 +44,6 @@ export async function transformTopicsToStructuredList(unstructuredTopicList: str
       }
     ],
     temperature: 1,
-    max_tokens: 1000
   });
 
   const message = response.choices[0].message;
@@ -60,6 +62,7 @@ export async function transformTopicsToStructuredList(unstructuredTopicList: str
   return topics;
 } 
 
+/// *** Topic Source functions ***
 
 export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
   const response = await openai.responses.create({
@@ -82,7 +85,6 @@ export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
       }
     ],
     temperature: 1,
-    max_output_tokens: 2048,
     top_p: 1
   });
 
@@ -101,6 +103,65 @@ export async function addUrlsToTopicList(topics: string[]) {
     topics.map(async (topic) => {
       const url = await getSourceTopicSourceUrl(topic);
       return { topic, url };
+    })
+  );
+}
+
+
+/// *** Topic Answer functions ***
+
+type TopicWithUrlAndSpecialty = {
+  topic: string;
+  url: string;
+};
+
+const AnswerZObject = z.object({
+  title: z.string(),
+  bullet_points: z.array(z.string()),
+})
+
+export async function getSourceTopicAnswer({topic, url, specialty}: {topic: string, url: string, specialty: Specialty}): Promise<string> {
+  const response = await openai.responses.create({
+    model: "gpt-4.1",
+    input: [
+      {
+        role: "user",
+        content: `Summarize the key clinical changing conclusions of the source for specialty ${specialty}.
+        It's the tld.\nAn MD will read this so speak their language. Topic: ${topic}, its source with more details can be found here ${url}.
+        Please format your answer in a json with elements title, and then bullet_points with is a list of strings. Only return the answer doctors wil read, nothing else`
+      }
+    ],
+    reasoning: {},
+    text: {
+      format: zodTextFormat(AnswerZObject, "answer"),
+    },
+    tools: [
+      {
+        type: "web_search_preview",
+        user_location: {
+          type: "approximate",
+          country: "US"
+        },
+        search_context_size: "medium"
+      }
+    ],
+    temperature: 1,
+    top_p: 1
+  });
+
+  const message = response.output_text
+  if (message ) {
+    return JSON.parse(message)
+  } else {
+    throw new Error('No url found in response');
+  }
+}
+
+export async function addAnswerToTopicList({topics, specialty}:{topics: TopicWithUrlAndSpecialty[], specialty: Specialty}){
+  return Promise.all(
+    topics.map(async (topic) => {
+      const answer = await getSourceTopicAnswer({...topic, specialty});
+      return { ...topic, answer };
     })
   );
 }

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addUrlsToTopicList, transformTopicsToStructuredList } from '@/lib/topicProcessor';
+import { addAnswerToTopicList, addUrlsToTopicList, transformTopicsToStructuredList } from '@/lib/topicProcessor';
+
+const SPECIALTY = "EM" //todo make parameter
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,9 +15,10 @@ export async function POST(request: NextRequest) {
     }
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
-    const topicsWithUrls = await addUrlsToTopicList(topics)
-    
-    return NextResponse.json(topicsWithUrls);
+    const topicsWithUrls = await addUrlsToTopicList(topics)  
+    const topicsWithAnswers = await addAnswerToTopicList({topics: topicsWithUrls, specialty: SPECIALTY})
+
+    return NextResponse.json(topicsWithAnswers);
   } catch (error) {
     console.error('Error processing topics:', error);
     return NextResponse.json(
