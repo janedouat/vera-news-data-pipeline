@@ -21,8 +21,9 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^9",
+    "eslint": "^9.29.0",
     "eslint-config-next": "15.3.4",
+    "prettier": "^3.5.3",
     "supabase": "^2.26.9",
     "typescript": "^5"
   }

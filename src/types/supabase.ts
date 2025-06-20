@@ -709,6 +709,7 @@ export type Database = {
           news_type: string | null
           ranking_model_ranking: number | null
           score: number | null
+          specialties: string[] | null
           specialty: string | null
           timestamp: string | null
           updated_at: string | null
@@ -723,6 +724,7 @@ export type Database = {
           news_type?: string | null
           ranking_model_ranking?: number | null
           score?: number | null
+          specialties?: string[] | null
           specialty?: string | null
           timestamp?: string | null
           updated_at?: string | null
@@ -737,6 +739,7 @@ export type Database = {
           news_type?: string | null
           ranking_model_ranking?: number | null
           score?: number | null
+          specialties?: string[] | null
           specialty?: string | null
           timestamp?: string | null
           updated_at?: string | null

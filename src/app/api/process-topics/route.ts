@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addAnswersToTopicList, addSyptomsToTopicLIst, addUrlsToTopicList, transformTopicsToStructuredList } from '@/lib/modules/newsUpload/topicProcessor';
-import {PhysicianSpecialty} from '../../../types/taxonomy';
+import {
+  addAnswersToTopicList,
+  addSyptomsToTopicLIst,
+  addUrlsToTopicList,
+  transformTopicsToStructuredList,
+  uploadTopics,
+} from '@/lib/modules/newsUpload/topicProcessor';
+import { PhysicianSpecialty } from '../../../types/taxonomy';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,21 +15,29 @@ export async function POST(request: NextRequest) {
     if (!unstructuredTopicList) {
       return NextResponse.json(
         { error: 'unstructuredTopicList is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
-    const topicsWithUrls = await addUrlsToTopicList(topics)  //todo get correct date here too 
-    const topicsWithAnswers = await addAnswersToTopicList({topics: topicsWithUrls, specialty: PhysicianSpecialty.EMERGENCY_MEDICINE})
-    const topicsWithSyptoms = await addSyptomsToTopicLIst({topics: topicsWithAnswers})
+    const topicsWithUrls = await addUrlsToTopicList(topics); //todo get correct date here too
+    const topicsWithAnswers = await addAnswersToTopicList({
+      topics: topicsWithUrls,
+      specialty: PhysicianSpecialty.EMERGENCY_MEDICINE,
+    });
 
-    return NextResponse.json(topicsWithSyptoms);
+    const topicsWithSpecialties = await addSyptomsToTopicLIst({
+      topics: topicsWithAnswers,
+    });
+    console.log({ topicsWithSpecialties });
+    await uploadTopics({ topics: topicsWithSpecialties });
+
+    return NextResponse.json(topicsWithSpecialties);
   } catch (error) {
     console.error('Error processing topics:', error);
     return NextResponse.json(
       { error: 'Failed to process topics' },
-      { status: 500 }
+      { status: 500 },
     );
   }
-} 
+}
