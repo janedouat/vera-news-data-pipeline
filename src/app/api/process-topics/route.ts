@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { transformTopicsToStructuredList } from '@/lib/topicProcessor';
+import { addUrlsToTopicList, transformTopicsToStructuredList } from '@/lib/topicProcessor';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,9 +13,9 @@ export async function POST(request: NextRequest) {
     }
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
-
+    const topicsWithUrls = await addUrlsToTopicList(topics)
     
-    return NextResponse.json(topics);
+    return NextResponse.json(topicsWithUrls);
   } catch (error) {
     console.error('Error processing topics:', error);
     return NextResponse.json(

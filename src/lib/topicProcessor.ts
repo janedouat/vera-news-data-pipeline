@@ -5,11 +5,13 @@ const TopicList = z.object({
   topics: z.array(z.string())
 });
 
-export async function transformTopicsToStructuredList(unstructuredTopicList: string): Promise<string[]> {
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
+
+export async function transformTopicsToStructuredList(unstructuredTopicList: string): Promise<string[]> {
+  
   const response = await openai.chat.completions.create({
     model: "gpt-4o",
     messages: [
@@ -57,3 +59,51 @@ export async function transformTopicsToStructuredList(unstructuredTopicList: str
   }
   return topics;
 } 
+
+
+export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
+  const response = await openai.responses.create({
+    model: "gpt-4.1",
+    input: [
+      {
+        role: "user",
+        content: `Find the source url of this topic and return it as a JSON object: { "url": "..." }. Topic: ${topic}`
+      }
+    ],
+    text: {
+      format: { type: "text" }
+    },
+    reasoning: {},
+    tools: [
+      {
+        type: "web_search_preview",
+        user_location: {
+          type: "approximate",
+          country: "US"
+        },
+        search_context_size: "medium"
+      }
+    ],
+    temperature: 1,
+    max_output_tokens: 2048,
+    top_p: 1
+  });
+
+  const message = response.output_text
+  console.log({message})
+  if (message) {
+    const parsed = JSON.parse(message);
+    return parsed.url;
+  } else {
+    throw new Error('No url found in response');
+  }
+}
+
+export async function addUrlsToTopicList(topics: string[]) {
+  return Promise.all(
+    topics.map(async (topic) => {
+      const url = await getSourceTopicSourceUrl(topic);
+      return { topic, url };
+    })
+  );
+}
