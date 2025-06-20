@@ -29,10 +29,9 @@ export async function POST(request: NextRequest) {
     const topicsWithSpecialties = await addSyptomsToTopicLIst({
       topics: topicsWithAnswers,
     });
-    console.log({ topicsWithSpecialties });
-    await uploadTopics({ topics: topicsWithSpecialties });
+    const answer = await uploadTopics({ topics: topicsWithSpecialties });
 
-    return NextResponse.json(topicsWithSpecialties);
+    return NextResponse.json(answer);
   } catch (error) {
     console.error('Error processing topics:', error);
     return NextResponse.json(

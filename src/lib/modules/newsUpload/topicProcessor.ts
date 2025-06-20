@@ -2,7 +2,7 @@ import OpenAI from 'openai';
 import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod.mjs';
 import { ALL_SPECIALTIES, Specialty } from '../../../types/taxonomy';
-import { insertNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
+import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
 
 const TopicList = z.object({
   topics: z.array(z.string()),
@@ -234,7 +234,7 @@ export async function getSourceTopicSpecialty({
 
   const message = response.output_text;
   if (message) {
-    return JSON.parse(message);
+    return JSON.parse(message).specialties;
   } else {
     throw new Error('No url found in response');
   }
@@ -263,12 +263,12 @@ export async function uploadTopics({
   return Promise.all(
     topics.map(
       async (topic: TopicWithUrlAndSpecialtyAndAnswerAndSpecialties) => {
-        return insertNewsRow({
+        return uploadNewsRow({
           elements: topic.answer,
           news_date: '2025-06-20',
           news_type: 'test',
           score: 6,
-          specialties: ['Family Medicine', 'Internal Medicine'], //topic.specialties, // todo fix specialties
+          specialties: topic.specialties,
           ranking_model_ranking: 1,
           url: topic.url,
         });
