@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   addAnswersToTopicList,
   addSyptomsToTopicLIst,
-  addUrlsToTopicList,
+  addUrlsAndDateToTopicList,
   transformTopicsToStructuredList,
   uploadTopics,
 } from '@/lib/modules/newsUpload/topicProcessor';
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     }
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
-    const topicsWithUrls = await addUrlsToTopicList(topics); //todo get correct date here too
+    const topicsWithUrls = await addUrlsAndDateToTopicList(topics); //todo get correct date here too
     const topicsWithAnswers = await addAnswersToTopicList({
       topics: topicsWithUrls,
       specialty: PhysicianSpecialty.EMERGENCY_MEDICINE,

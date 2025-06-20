@@ -66,7 +66,9 @@ export async function transformTopicsToStructuredList(
 
 /// *** Topic Source functions ***
 
-export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
+export async function getSourceTopicSourceUrlAndDate(
+  topic: string,
+): Promise<{ news_date: string; url: string }> {
   const response = await openai.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -92,18 +94,19 @@ export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
 
   const message = response.output_text;
   const urlR = /(https?:\/\/[^\s]+)/g;
-  const url = message.match(urlR);
+  const url = message.match(urlR)?.toString();
+  let answer: { url: string; date: string };
   if (url) {
-    return message;
+    answer['url'] = url;
   } else {
     throw new Error('No url found in response');
   }
 }
 
-export async function addUrlsToTopicList(topics: string[]) {
+export async function addUrlsAndDateToTopicList(topics: string[]) {
   return Promise.all(
     topics.map(async (topic) => {
-      const url = await getSourceTopicSourceUrl(topic);
+      const url = await getSourceTopicSourceUrlAndDate(topic);
       return { topic, url };
     }),
   );
