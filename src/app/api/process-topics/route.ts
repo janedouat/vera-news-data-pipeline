@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { addAnswerToTopicList, addUrlsToTopicList, transformTopicsToStructuredList } from '@/lib/topicProcessor';
-
-const SPECIALTY = "EM" //todo make parameter
+import { addAnswersToTopicList, addSyptomsToTopicLIst, addUrlsToTopicList, transformTopicsToStructuredList } from '@/lib/modules/newsUpload/topicProcessor';
+import {PhysicianSpecialty} from '../../../types/taxonomy';
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,10 +15,10 @@ export async function POST(request: NextRequest) {
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
     const topicsWithUrls = await addUrlsToTopicList(topics)  //todo get correct date here too 
-    const topicsWithAnswers = await addAnswerToTopicList({topics: topicsWithUrls, specialty: SPECIALTY})
-    const topicsWithAnswers = await addSyptomsToTopicLIst({topics: topicsWithAnswers, specialty: SPECIALTY})
+    const topicsWithAnswers = await addAnswersToTopicList({topics: topicsWithUrls, specialty: PhysicianSpecialty.EMERGENCY_MEDICINE})
+    const topicsWithSyptoms = await addSyptomsToTopicLIst({topics: topicsWithAnswers})
 
-    return NextResponse.json(topicsWithAnswers);
+    return NextResponse.json(topicsWithSyptoms);
   } catch (error) {
     console.error('Error processing topics:', error);
     return NextResponse.json(

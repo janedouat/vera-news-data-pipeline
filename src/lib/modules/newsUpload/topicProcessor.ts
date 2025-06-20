@@ -1,7 +1,9 @@
 import OpenAI from 'openai';
 import { z } from 'zod';
-import {Specialty} from '../../types';
 import {zodTextFormat} from 'openai/helpers/zod.mjs';
+import {ALL_SPECIALTIES, Specialty} from '../../../types/taxonomy';
+
+
 
 const TopicList = z.object({
   topics: z.array(z.string())
@@ -70,7 +72,7 @@ export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
     input: [
       {
         role: "user",
-        content: `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`
+        content: `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${ALL_SPECIALTIES.join()}`
       }
     ],
     reasoning: {},
@@ -161,7 +163,7 @@ export async function getSourceTopicAnswer({topic, url, specialty}: {topic: stri
   }
 }
 
-export async function addAnswerToTopicList({topics, specialty}:{topics: TopicWithUrlAndSpecialty[], specialty: Specialty}): Promise<TopicWithUrlAndSpecialtyAndAnswer>{
+export async function addAnswersToTopicList({topics, specialty}:{topics: TopicWithUrlAndSpecialty[], specialty: Specialty}): Promise<TopicWithUrlAndSpecialtyAndAnswer[]>{
   return Promise.all(
     topics.map(async (topic) => {
       const answer = await getSourceTopicAnswer({...topic, specialty});
@@ -173,15 +175,57 @@ export async function addAnswerToTopicList({topics, specialty}:{topics: TopicWit
 
 // *** Topic symptom tagging functions ***
 
-type TopicWithUrlAndSpecialtyAndAnswerAndSymptoms = TopicWithUrlAndSpecialtyAndAnswer & {
+type TopicWithUrlAndSpecialtyAndAnswerAndSpecialties = TopicWithUrlAndSpecialtyAndAnswer & {
   specialty: Specialty[]
 };
 
-export async function addSyptomsToTopicLIst({topics, specialty}: {topics:TopicWithUrlAndSpecialtyAndAnswer, specialty: Specialty}): Promise<TopicWithUrlAndSpecialtyAndAnswerAndSymptoms>{
+export const SpecialtyZod = z.enum([...ALL_SPECIALTIES] as [string, ...string[]]);
+
+const SpecialtiesZObject = z.object({
+  specialties: z.array(SpecialtyZod),
+})
+
+export async function getSourceTopicSpecialty({answer}: {answer: string}): Promise<Specialty[]>{
+  const response = await openai.responses.create({
+    model: "gpt-4.1",
+    input: [
+      {
+        role: "user",
+        content: `Tag this answer with MD specialties that might be interested in reading it ${answer}, from this list of specialties, using the exact same words for them: ${ALL_SPECIALTIES}`
+      }
+    ],
+    reasoning: {},
+    text: {
+      format: zodTextFormat(SpecialtiesZObject, "specialty"),
+    },
+    tools: [
+      {
+        type: "web_search_preview",
+        user_location: {
+          type: "approximate",
+          country: "US"
+        },
+        search_context_size: "medium"
+      }
+    ],
+    temperature: 1,
+    top_p: 1
+  });
+
+  const message = response.output_text
+  console.log({message})
+  if (message ) {
+    return JSON.parse(message)
+  } else {
+    throw new Error('No url found in response');
+  }
+}
+
+export async function addSyptomsToTopicLIst({topics}: {topics:TopicWithUrlAndSpecialtyAndAnswer[]}): Promise<TopicWithUrlAndSpecialtyAndAnswerAndSpecialties[]>{
   return Promise.all(
-    topics.map(async (topic) => {
-      const answer = await getSourceTopic({...topic, specialty});
-      return { ...topic, answer } ;
+    topics.map(async (topic: TopicWithUrlAndSpecialtyAndAnswer) => {
+      const specialties = await getSourceTopicSpecialty({answer: topic.answer});
+      return { ...topic, specialties };
     })
   );
 }
