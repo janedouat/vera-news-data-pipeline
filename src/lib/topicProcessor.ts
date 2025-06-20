@@ -67,12 +67,9 @@ export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
     input: [
       {
         role: "user",
-        content: `Find the source url of this topic and return it as a JSON object: { "url": "..." }. Topic: ${topic}`
+        content: `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`
       }
     ],
-    text: {
-      format: { type: "text" }
-    },
     reasoning: {},
     tools: [
       {
@@ -90,10 +87,10 @@ export async function getSourceTopicSourceUrl(topic: string): Promise<string> {
   });
 
   const message = response.output_text
-  console.log({message})
-  if (message) {
-    const parsed = JSON.parse(message);
-    return parsed.url;
+  const urlR = /(https?:\/\/[^\s]+)/g;
+  const url= message.match(urlR);
+  if (url ) {
+    return message
   } else {
     throw new Error('No url found in response');
   }
