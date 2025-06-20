@@ -1,3 +1,4 @@
+import {zodTextFormat} from "openai/helpers/zod.mjs";
 import { z } from "zod";
 
 const TopicList = z.object({
@@ -21,24 +22,7 @@ export async function transformTopicsToStructuredList(unstructuredTopicList: str
     "temperature": 1,
     "top_p": 1,
     "text": {
-      "format": {
-        "type": "json_schema",
-        "name": "topic_list",
-        "schema": {
-          "type": "object",
-          "properties": {
-            "topics": {
-              "type": "array",
-              "items": {
-                "type": "string"
-              }
-            }
-          },
-          "required": ["topics"],
-          "additionalProperties": false
-        },
-        "strict": true
-      }
+      "format": zodTextFormat(TopicList, "topics")
     }
   };
 
@@ -59,7 +43,6 @@ export async function transformTopicsToStructuredList(unstructuredTopicList: str
 
   const data = await response.json();
   const topics = JSON.parse(data.output[0].content[0].text).topics;
-  console.log('Extracted topics:', topics);
   
   return topics;
 } 
