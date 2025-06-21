@@ -66,6 +66,11 @@ export async function transformTopicsToStructuredList(
 
 /// *** Topic Source functions ***
 
+const UrlAndDateZObject = z.object({
+  news_date: z.string(),
+  url: z.string(),
+});
+
 export async function getSourceTopicSourceUrlAndDate(
   topic: string,
 ): Promise<{ news_date: string; url: string }> {
@@ -77,6 +82,9 @@ export async function getSourceTopicSourceUrlAndDate(
         content: `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`,
       },
     ],
+    text: {
+      format: zodTextFormat(UrlAndDateZObject, 'urlAndDate'),
+    },
     reasoning: {},
     tools: [
       {
@@ -92,12 +100,16 @@ export async function getSourceTopicSourceUrlAndDate(
     top_p: 1,
   });
 
-  const message = response.output_text;
+  const message = JSON.parse(response.output_text);
+
+  const outputUrl = message.url;
   const urlR = /(https?:\/\/[^\s]+)/g;
-  const url = message.match(urlR)?.toString();
-  let answer: { url: string; date: string };
-  if (url) {
-    answer['url'] = url;
+  const url = outputUrl.match(urlR)?.toString();
+
+  const outputDate = message.news_date;
+
+  if (url && outputDate) {
+    return { url, news_date: outputDate };
   } else {
     throw new Error('No url found in response');
   }
@@ -106,20 +118,21 @@ export async function getSourceTopicSourceUrlAndDate(
 export async function addUrlsAndDateToTopicList(topics: string[]) {
   return Promise.all(
     topics.map(async (topic) => {
-      const url = await getSourceTopicSourceUrlAndDate(topic);
-      return { topic, url };
+      const { url, news_date } = await getSourceTopicSourceUrlAndDate(topic);
+      return { topic, url, news_date };
     }),
   );
 }
 
 /// *** Topic Answer functions ***
 
-type TopicWithUrlAndSpecialty = {
+type TopicWithUrlAndDate = {
   topic: string;
   url: string;
+  news_date: string;
 };
 
-type TopicWithUrlAndSpecialtyAndAnswer = TopicWithUrlAndSpecialty & {
+type TopicWithUrlAndAnswer = TopicWithUrlAndDate & {
   answer: string;
 };
 
@@ -142,9 +155,12 @@ export async function getSourceTopicAnswer({
     input: [
       {
         role: 'user',
-        content: `Summarize the key clinical changing conclusions of the source for specialty ${specialty}.
-        It's the tld.\nAn MD will read this so speak their language. Topic: ${topic}, its source with more details can be found here ${url}.
-        Please format your answer in a json with elements title, and then bullet_points with is a list of strings. Only return the answer doctors wil read, nothing else`,
+        content: `Find a good title for the topic.
+        Then summarize the key clinical changing conclusions of the source for specialty ${specialty}. It's the tldr.\nAn MD will read this so speak their language.
+        Topic: ${topic}, its source with more details can be found here ${url}.
+        Please format your answer in a json with elements title, and then bullet_points with is a list of strings.
+        Only return what the doctors will read, nothing else.
+        `,
       },
     ],
     reasoning: {},
@@ -177,9 +193,9 @@ export async function addAnswersToTopicList({
   topics,
   specialty,
 }: {
-  topics: TopicWithUrlAndSpecialty[];
+  topics: TopicWithUrlAndDate[];
   specialty: Specialty;
-}): Promise<TopicWithUrlAndSpecialtyAndAnswer[]> {
+}): Promise<TopicWithUrlAndAnswer[]> {
   return Promise.all(
     topics.map(async (topic) => {
       const answer = await getSourceTopicAnswer({ ...topic, specialty });
@@ -189,11 +205,9 @@ export async function addAnswersToTopicList({
 }
 
 // *** Topic symptom tagging functions ***
-
-type TopicWithUrlAndSpecialtyAndAnswerAndSpecialties =
-  TopicWithUrlAndSpecialtyAndAnswer & {
-    specialties: Specialty[];
-  };
+type TopicWithUrlAndAnswerAndSpecialties = TopicWithUrlAndAnswer & {
+  specialties: Specialty[];
+};
 
 export const SpecialtyZod = z.enum([...ALL_SPECIALTIES] as [
   string,
@@ -214,7 +228,7 @@ export async function getSourceTopicSpecialty({
     input: [
       {
         role: 'user',
-        content: `Tag this answer with MD specialties that might be interested in reading it ${answer}, from this list of specialties, using the exact same words for them: ${ALL_SPECIALTIES.join()}`,
+        content: `Tag this answer with MD specialties that might be interested in reading it ${answer}, from the list of specialties, using the exact same words for them; only select the ones it's really clinical-practice changing for. List of specialties: ${ALL_SPECIALTIES.join()}`,
       },
     ],
     reasoning: {},
@@ -246,10 +260,10 @@ export async function getSourceTopicSpecialty({
 export async function addSyptomsToTopicLIst({
   topics,
 }: {
-  topics: TopicWithUrlAndSpecialtyAndAnswer[];
-}): Promise<TopicWithUrlAndSpecialtyAndAnswerAndSpecialties[]> {
+  topics: TopicWithUrlAndAnswer[];
+}): Promise<TopicWithUrlAndAnswerAndSpecialties[]> {
   return Promise.all(
-    topics.map(async (topic: TopicWithUrlAndSpecialtyAndAnswer) => {
+    topics.map(async (topic: TopicWithUrlAndAnswer) => {
       const specialties = await getSourceTopicSpecialty({
         answer: topic.answer,
       });
@@ -260,22 +274,23 @@ export async function addSyptomsToTopicLIst({
 
 export async function uploadTopics({
   topics,
+  specialty,
 }: {
-  topics: TopicWithUrlAndSpecialtyAndAnswerAndSpecialties[];
+  topics: TopicWithUrlAndAnswerAndSpecialties[];
+  specialty: Specialty;
 }) {
   return Promise.all(
-    topics.map(
-      async (topic: TopicWithUrlAndSpecialtyAndAnswerAndSpecialties) => {
-        return uploadNewsRow({
-          elements: topic.answer,
-          news_date: '2025-06-20',
-          news_type: 'test',
-          score: 6,
-          specialties: topic.specialties,
-          ranking_model_ranking: 1,
-          url: topic.url,
-        });
-      },
-    ),
+    topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties) => {
+      return uploadNewsRow({
+        elements: topic.answer,
+        news_date: topic.news_date,
+        news_type: 'test',
+        score: 6,
+        specialty,
+        specialties: topic.specialties,
+        ranking_model_ranking: 1,
+        url: topic.url,
+      });
+    }),
   );
 }
