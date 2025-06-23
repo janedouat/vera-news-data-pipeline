@@ -111,7 +111,7 @@ export async function getSourceTopicSourceUrlAndDate(
   if (url && outputDate) {
     return { url, news_date: outputDate };
   } else {
-    throw new Error('No url found in response');
+    throw new Error('Error generating url or news_date');
   }
 }
 
@@ -139,6 +139,7 @@ type TopicWithUrlAndAnswer = TopicWithUrlAndDate & {
 const AnswerZObject = z.object({
   title: z.string(),
   bullet_points: z.array(z.string()),
+  paragraphs: z.array(z.string()),
 });
 
 export async function getSourceTopicAnswer({
@@ -155,10 +156,14 @@ export async function getSourceTopicAnswer({
     input: [
       {
         role: 'user',
-        content: `Find a good title for the topic.
-        Then summarize the key clinical changing conclusions of the source for specialty ${specialty}. It's the tldr.\nAn MD will read this so speak their language.
-        Topic: ${topic}, its source with more details can be found here ${url}.
-        Please format your answer in a json with elements title, and then bullet_points with is a list of strings.
+        content: `Topic: ${topic}, its source with more details can be found here ${url}.
+        
+        1) Find a good title for the topic.
+        2) Then summarize the key clinical changing conclusions of the source for specialty ${specialty}. It's the tldr.\nAn MD will read this so speak their language. This should be 2-3 bullet points.
+        3) Put a longer explanation of the topic, still has to be really clinically relevant to an MD. Should be approx two paragraphs.
+
+        Please format your answer in a json with elements title, then bullet_points with is a list of strings and then paragraphs which is a list of strings. 
+
         Only return what the doctors will read, nothing else.
         `,
       },
@@ -185,7 +190,7 @@ export async function getSourceTopicAnswer({
   if (message) {
     return JSON.parse(message);
   } else {
-    throw new Error('No url found in response');
+    throw new Error('Error generating title and/or bullet_points');
   }
 }
 
@@ -220,15 +225,19 @@ const SpecialtiesZObject = z.object({
 
 export async function getSourceTopicSpecialty({
   answer,
+  specialty,
 }: {
   answer: string;
+  specialty: Specialty;
 }): Promise<Specialty[]> {
+  const content = `Tag this answer with MD specialties that might be interested in reading it ${answer}, from the list of specialties, using the exact same words for them; only select the ones it's really clinical-practice changing for. List of specialties: ${ALL_SPECIALTIES.join()}`;
+  console.log({ content });
   const response = await openai.responses.create({
     model: 'gpt-4.1',
     input: [
       {
         role: 'user',
-        content: `Tag this answer with MD specialties that might be interested in reading it ${answer}, from the list of specialties, using the exact same words for them; only select the ones it's really clinical-practice changing for. List of specialties: ${ALL_SPECIALTIES.join()}`,
+        content,
       },
     ],
     reasoning: {},
@@ -250,10 +259,15 @@ export async function getSourceTopicSpecialty({
   });
 
   const message = response.output_text;
+  const messageSpecialties = JSON.parse(message).specialties + specialty;
+  const specialties = messageSpecialties.includes(specialty)
+    ? messageSpecialties
+    : messageSpecialties.concat(specialty);
+
   if (message) {
-    return JSON.parse(message).specialties;
+    return specialties;
   } else {
-    throw new Error('No url found in response');
+    throw new Error('Error generating source specialties');
   }
 }
 

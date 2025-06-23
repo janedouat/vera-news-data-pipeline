@@ -6,7 +6,7 @@ import {
   transformTopicsToStructuredList,
   uploadTopics,
 } from '@/lib/modules/newsUpload/topicProcessor';
-import { PhysicianSpecialty } from '../../../types/taxonomy';
+import { ALL_SPECIALTIES } from '@/types/taxonomy';
 
 // TODO
 // 1) compute scores
@@ -15,9 +15,11 @@ import { PhysicianSpecialty } from '../../../types/taxonomy';
 
 export async function POST(request: NextRequest) {
   try {
-    const specialty = PhysicianSpecialty.EMERGENCY_MEDICINE;
+    const { unstructuredTopicList, specialty } = await request.json();
 
-    const { unstructuredTopicList } = await request.json();
+    if (!ALL_SPECIALTIES.includes(specialty)) {
+      throw new Error('Request specialty not correct');
+    }
 
     if (!unstructuredTopicList) {
       return NextResponse.json(
