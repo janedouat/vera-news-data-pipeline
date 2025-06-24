@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   addAnswersToTopicList,
-  addSyptomsToTopicLIst,
+  addSyptomsToTopicLIst as addSpecialtiesToTopicLIst,
   addUrlsAndDateToTopicList,
   transformTopicsToStructuredList,
   uploadTopics,
@@ -30,21 +30,23 @@ export async function POST(request: NextRequest) {
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
     const topicsWithUrls = await addUrlsAndDateToTopicList(topics);
+
     const topicsWithAnswers = await addAnswersToTopicList({
       topics: topicsWithUrls,
       specialty,
     });
 
-    const topicsWithSpecialties = await addSyptomsToTopicLIst({
+    const topicsWithSpecialties = await addSpecialtiesToTopicLIst({
       topics: topicsWithAnswers,
+      specialty,
     });
 
-    const answer = await uploadTopics({
+    await uploadTopics({
       topics: topicsWithSpecialties,
       specialty,
     });
 
-    return NextResponse.json(answer);
+    return NextResponse.json('ok');
   } catch (error) {
     console.error('Error processing topics:', error);
     return NextResponse.json(

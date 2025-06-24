@@ -71,6 +71,8 @@ const UrlAndDateZObject = z.object({
   url: z.string(),
 });
 
+const NO_URL_PLACEHOLDER_STRING = 'no_url';
+
 export async function getSourceTopicSourceUrlAndDate(
   topic: string,
 ): Promise<{ news_date: string; url: string }> {
@@ -105,11 +107,11 @@ export async function getSourceTopicSourceUrlAndDate(
   const outputUrl = message.url;
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = outputUrl.match(urlR)?.toString();
-
   const outputDate = message.news_date;
 
-  if (url && outputDate) {
-    return { url, news_date: outputDate };
+  // after refacto handle no url case
+  if (outputDate && url) {
+    return { url: url ?? NO_URL_PLACEHOLDER_STRING, news_date: outputDate };
   } else {
     throw new Error('Error generating url or news_date');
   }
@@ -231,7 +233,6 @@ export async function getSourceTopicSpecialty({
   specialty: Specialty;
 }): Promise<Specialty[]> {
   const content = `Tag this answer with MD specialties that might be interested in reading it ${answer}, from the list of specialties, using the exact same words for them; only select the ones it's really clinical-practice changing for. List of specialties: ${ALL_SPECIALTIES.join()}`;
-  console.log({ content });
   const response = await openai.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -259,10 +260,10 @@ export async function getSourceTopicSpecialty({
   });
 
   const message = response.output_text;
-  const messageSpecialties = JSON.parse(message).specialties + specialty;
+  const messageSpecialties = JSON.parse(message).specialties;
   const specialties = messageSpecialties.includes(specialty)
     ? messageSpecialties
-    : messageSpecialties.concat(specialty);
+    : [...messageSpecialties, specialty];
 
   if (message) {
     return specialties;
@@ -273,13 +274,16 @@ export async function getSourceTopicSpecialty({
 
 export async function addSyptomsToTopicLIst({
   topics,
+  specialty,
 }: {
   topics: TopicWithUrlAndAnswer[];
+  specialty: Specialty;
 }): Promise<TopicWithUrlAndAnswerAndSpecialties[]> {
   return Promise.all(
     topics.map(async (topic: TopicWithUrlAndAnswer) => {
       const specialties = await getSourceTopicSpecialty({
         answer: topic.answer,
+        specialty,
       });
       return { ...topic, specialties };
     }),
@@ -295,16 +299,22 @@ export async function uploadTopics({
 }) {
   return Promise.all(
     topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties) => {
-      return uploadNewsRow({
-        elements: topic.answer,
-        news_date: topic.news_date,
-        news_type: 'test',
-        score: 6,
-        specialty,
-        specialties: topic.specialties,
-        ranking_model_ranking: 1,
-        url: topic.url,
-      });
+      if (topic.url == NO_URL_PLACEHOLDER_STRING) {
+        console.log(
+          `A news piece was not added to supabase (cause: missing url)`,
+        );
+      } else {
+        return uploadNewsRow({
+          elements: topic.answer,
+          news_date: topic.news_date,
+          news_type: 'test',
+          score: 6,
+          specialty,
+          specialties: topic.specialties,
+          ranking_model_ranking: 1,
+          url: topic.url,
+        });
+      }
     }),
   );
 }
