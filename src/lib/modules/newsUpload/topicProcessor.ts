@@ -216,7 +216,7 @@ export async function getSourceTopicAnswer({
   });
 
   const message = response.output_text;
-  console.log({ message });
+
   if (message) {
     return JSON.parse(message);
   } else {
@@ -260,7 +260,8 @@ export async function getSourceTopicSpecialty({
   answer: string;
   specialty: Specialty;
 }): Promise<Specialty[]> {
-  const content = `Tag this answer with MD specialties that might be interested in reading it ${answer}, from the list of specialties, using the exact same words for them; only select the ones it's really clinical-practice changing for. List of specialties: ${ALL_SPECIALTIES.join()}`;
+  console.log({ answer });
+  const content = `Tag this answer with MD specialties that might be interested in reading it ${JSON.stringify(answer)}, from the list of specialties, using the exact same words for them. Go through these specialties one by one and only return the ones it's really clinical-practice changing for: ${ALL_SPECIALTIES.join()}`;
   const response = await openai.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -292,6 +293,7 @@ export async function getSourceTopicSpecialty({
   const specialties = messageSpecialties.includes(specialty)
     ? messageSpecialties
     : [...messageSpecialties, specialty];
+  console.log({ specialties });
 
   if (message) {
     return specialties;
