@@ -7,6 +7,7 @@ import {
   uploadTopics,
 } from '@/lib/modules/newsUpload/topicProcessor';
 import { ALL_SPECIALTIES } from '@/types/taxonomy';
+import { start } from 'repl';
 
 // TODO
 // 1) compute scores
@@ -15,10 +16,25 @@ import { ALL_SPECIALTIES } from '@/types/taxonomy';
 
 export async function POST(request: NextRequest) {
   try {
-    const { unstructuredTopicList, specialty } = await request.json();
+    const {
+      unstructuredTopicList,
+      specialty,
+      startDate: startDateString,
+    } = await request.json();
 
     if (!ALL_SPECIALTIES.includes(specialty)) {
-      throw new Error('Request specialty not correct');
+      return NextResponse.json(
+        { error: 'Request Specialty not correct' },
+        { status: 400 },
+      );
+    }
+
+    const startDate = new Date(startDateString);
+    if (!startDate.valueOf()) {
+      return NextResponse.json(
+        { error: 'Request StartDate not correct' },
+        { status: 400 },
+      );
     }
 
     if (!unstructuredTopicList) {
@@ -29,7 +45,10 @@ export async function POST(request: NextRequest) {
     }
 
     const topics = await transformTopicsToStructuredList(unstructuredTopicList);
-    const topicsWithUrls = await addUrlsAndDateToTopicList(topics);
+    const topicsWithUrls = await addUrlsAndDateToTopicList({
+      topics,
+      startDate,
+    });
 
     const topicsWithAnswers = await addAnswersToTopicList({
       topics: topicsWithUrls,

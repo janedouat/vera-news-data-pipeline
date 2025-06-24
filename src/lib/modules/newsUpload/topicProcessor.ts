@@ -72,10 +72,15 @@ const UrlAndDateZObject = z.object({
 });
 
 const NO_URL_PLACEHOLDER_STRING = 'no_url';
+const SOURCE_TOO_OLD_PLACEHOLDER_STRING = 'too_old';
 
-export async function getSourceTopicSourceUrlAndDate(
-  topic: string,
-): Promise<{ news_date: string; url: string }> {
+export async function getSourceTopicSourceUrlAndDate({
+  startDate,
+  topic,
+}: {
+  topic: string;
+  startDate: Date;
+}): Promise<{ news_date: string; url: string }> {
   const response = await openai.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -107,20 +112,35 @@ export async function getSourceTopicSourceUrlAndDate(
   const outputUrl = message.url;
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = outputUrl.match(urlR)?.toString();
-  const outputDate = message.news_date;
+  const outputDate = message.news_date as string;
 
   // after refacto handle no url case
-  if (outputDate && url) {
-    return { url: url ?? NO_URL_PLACEHOLDER_STRING, news_date: outputDate };
+  if (outputDate) {
+    return {
+      url: url ?? NO_URL_PLACEHOLDER_STRING,
+      news_date:
+        new Date(outputDate) > startDate
+          ? outputDate
+          : SOURCE_TOO_OLD_PLACEHOLDER_STRING,
+    };
   } else {
     throw new Error('Error generating url or news_date');
   }
 }
 
-export async function addUrlsAndDateToTopicList(topics: string[]) {
+export async function addUrlsAndDateToTopicList({
+  startDate,
+  topics,
+}: {
+  topics: string[];
+  startDate: Date;
+}) {
   return Promise.all(
     topics.map(async (topic) => {
-      const { url, news_date } = await getSourceTopicSourceUrlAndDate(topic);
+      const { url, news_date } = await getSourceTopicSourceUrlAndDate({
+        topic,
+        startDate,
+      });
       return { topic, url, news_date };
     }),
   );
@@ -158,16 +178,23 @@ export async function getSourceTopicAnswer({
     input: [
       {
         role: 'user',
-        content: `Topic: ${topic}, its source with more details can be found here ${url}.
-        
-        1) Find a good title for the topic.
-        2) Then summarize the key clinical changing conclusions of the source for specialty ${specialty}. It's the tldr.\nAn MD will read this so speak their language. This should be 2-3 bullet points.
-        3) Put a longer explanation of the topic, still has to be really clinically relevant to an MD. Should be approx two paragraphs.
+        content: `Topic: ${topic}, with more details here: ${url}.
 
-        Please format your answer in a json with elements title, then bullet_points with is a list of strings and then paragraphs which is a list of strings. 
+        1. Write a clinically relevant title that clearly addresses the “so what?”—include the main intervention/exposure, the outcome, and the patient population when applicable.
+        2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like “ethically obligated.” Focus on legally binding, clinical, or operational implications.
+        3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
 
-        Only return what the doctors will read, nothing else.
+        Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).
         `,
+
+        // In your answers, don't repeat yourself please.
+        // 1) Find a good title for the topic. It should answer the "so what?"
+        // 2) Then summarize the key clinical changing conclusions of the source for specialty ${specialty}. Don't mention the specialty name, as it might be shown to other specialties. It's the tldr.\nAn MD will read this so speak their language. This should be 2-3 bullet points.
+        // 3) Put a longer explanation of the topic, still has to be really clinically relevant to an MD. An MD will read this in an article format, so pretend your writing for an MD; speak their language. Should be approx two paragraphs.
+
+        // Please format your answer in a json with elements title, then bullet_points with is a list of strings and then paragraphs which is a list of strings.
+
+        // Only return what the doctors will read, nothing else.
       },
     ],
     reasoning: {},
@@ -189,6 +216,7 @@ export async function getSourceTopicAnswer({
   });
 
   const message = response.output_text;
+  console.log({ message });
   if (message) {
     return JSON.parse(message);
   } else {
@@ -298,10 +326,13 @@ export async function uploadTopics({
   specialty: Specialty;
 }) {
   return Promise.all(
-    topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties) => {
-      if (topic.url == NO_URL_PLACEHOLDER_STRING) {
+    topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties, index) => {
+      if (
+        topic.url == NO_URL_PLACEHOLDER_STRING ||
+        topic.news_date == SOURCE_TOO_OLD_PLACEHOLDER_STRING
+      ) {
         console.log(
-          `A news piece was not added to supabase (cause: missing url)`,
+          `News piece ${index + 1} was not added to supabase (cause: ${topic.url === NO_URL_PLACEHOLDER_STRING ? (topic.news_date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
         );
       } else {
         return uploadNewsRow({
