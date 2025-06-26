@@ -118,10 +118,10 @@ export async function getSourceTopicSourceUrlAndDate({
   if (outputDate) {
     return {
       url: url ?? NO_URL_PLACEHOLDER_STRING,
-      news_date:
-        new Date(outputDate) > startDate
-          ? outputDate
-          : SOURCE_TOO_OLD_PLACEHOLDER_STRING,
+      news_date: outputDate,
+      // new Date(outputDate) > startDate
+      //   ? outputDate
+      //   : SOURCE_TOO_OLD_PLACEHOLDER_STRING,
     };
   } else {
     throw new Error('Error generating url or news_date');
@@ -242,6 +242,7 @@ export async function addAnswersToTopicList({
 // *** Topic symptom tagging functions ***
 type TopicWithUrlAndAnswerAndSpecialties = TopicWithUrlAndAnswer & {
   specialties: Specialty[];
+  tags: string[];
 };
 
 export const SpecialtyZod = z.enum([...ALL_SPECIALTIES] as [
@@ -260,7 +261,6 @@ export async function getSourceTopicSpecialty({
   answer: string;
   specialty: Specialty;
 }): Promise<Specialty[]> {
-  console.log({ answer });
   const content = `Tag this answer with MD specialties that might be interested in reading it ${JSON.stringify(answer)}, from the list of specialties, using the exact same words for them. Go through these specialties one by one and only return the ones it's really clinical-practice changing for: ${ALL_SPECIALTIES.join()}`;
   const response = await openai.responses.create({
     model: 'gpt-4.1',
@@ -293,7 +293,6 @@ export async function getSourceTopicSpecialty({
   const specialties = messageSpecialties.includes(specialty)
     ? messageSpecialties
     : [...messageSpecialties, specialty];
-  console.log({ specialties });
 
   if (message) {
     return specialties;
@@ -323,9 +322,11 @@ export async function addSyptomsToTopicLIst({
 export async function uploadTopics({
   topics,
   specialty,
+  model,
 }: {
   topics: TopicWithUrlAndAnswerAndSpecialties[];
   specialty: Specialty;
+  model: string;
 }) {
   return Promise.all(
     topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties, index) => {
@@ -345,9 +346,62 @@ export async function uploadTopics({
           specialty,
           specialties: topic.specialties,
           ranking_model_ranking: 1,
+          selecting_model: model,
           url: topic.url,
+          tags: topic.tags,
+          upload_id: 'pulmo_tags_test_1',
+          is_visible_in_prod: false,
         });
       }
     }),
   );
+}
+
+// tag with clinical interests
+
+const TagsZObject = z.object({
+  tags: z.string(),
+});
+
+export async function getTags({
+  answer,
+  tags: possible_tags,
+}: {
+  answer: string;
+  tags: string[];
+}): Promise<Specialty[]> {
+  const content = `Tag this medical update (below) with clinical interests that are relevant to it (below). Only use the precise clinical_interest strings provided below in your outputs. \n ### medical update ${answer}) \n ### clinical interests ${JSON.stringify(possible_tags)})`;
+  const response = await openai.responses.create({
+    model: 'gpt-4.1',
+    input: [
+      {
+        role: 'user',
+        content,
+      },
+    ],
+    reasoning: {},
+    text: {
+      format: zodTextFormat(TagsZObject, 'tags'),
+    },
+    tools: [
+      {
+        type: 'web_search_preview',
+        user_location: {
+          type: 'approximate',
+          country: 'US',
+        },
+        search_context_size: 'medium',
+      },
+    ],
+    temperature: 1,
+    top_p: 1,
+  });
+
+  const tags = JSON.parse(response.output_text).tags;
+
+  if (tags) {
+    return tags;
+  } else {
+    throw new Error('Error generating source tags');
+  }
 }

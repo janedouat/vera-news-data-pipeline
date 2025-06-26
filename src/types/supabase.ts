@@ -715,6 +715,10 @@ export type Database = {
           updated_at: string | null;
           url: string | null;
           view_count: number | null;
+          selecting_model?: string | null;
+          tags?: string[] | null;
+          upload_id?: string | null;
+          is_visible_in_prod?: boolean | null;
         };
         Insert: {
           created_at?: string | null;
@@ -728,10 +732,15 @@ export type Database = {
           specialty?: string | null;
           timestamp?: string | null;
           updated_at?: string | null;
+          selecting_model?: string | null;
           url?: string | null;
           view_count?: number | null;
+          tags?: string[] | null;
+          upload_id?: string | null;
+          is_visible_in_prod?: boolean | null;
         };
         Update: {
+          selecting_model?: string | null;
           created_at?: string | null;
           elements?: Json | null;
           id?: string;
@@ -745,6 +754,9 @@ export type Database = {
           updated_at?: string | null;
           url?: string | null;
           view_count?: number | null;
+          tags?: string[] | null;
+          upload_id?: string | null;
+          is_visible_in_prod?: boolean | null;
         };
         Relationships: [];
       };
