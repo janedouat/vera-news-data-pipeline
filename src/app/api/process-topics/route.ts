@@ -22,6 +22,7 @@ type DeepSearchOutput = {
   isInSupabase: string;
   model: string;
   tags: string[];
+  uploadId: string;
 };
 
 export async function POST(request: NextRequest) {
@@ -96,6 +97,7 @@ export async function POST(request: NextRequest) {
         topics: withTags,
         specialty,
         model,
+        uploadId: output.uploadId,
       });
 
       // // Path to your test-data.json file

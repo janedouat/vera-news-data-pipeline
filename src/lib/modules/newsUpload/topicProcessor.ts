@@ -323,10 +323,12 @@ export async function uploadTopics({
   topics,
   specialty,
   model,
+  uploadId,
 }: {
   topics: TopicWithUrlAndAnswerAndSpecialties[];
   specialty: Specialty;
   model: string;
+  uploadId: string;
 }) {
   return Promise.all(
     topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties, index) => {
@@ -349,7 +351,7 @@ export async function uploadTopics({
           selecting_model: model,
           url: topic.url,
           tags: topic.tags,
-          upload_id: 'pulmo_tags_test_1',
+          upload_id: uploadId,
           is_visible_in_prod: false,
         });
       }
