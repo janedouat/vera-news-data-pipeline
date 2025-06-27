@@ -8,7 +8,12 @@ import {
   transformTopicsToStructuredList,
   uploadTopics,
 } from '@/lib/modules/newsUpload/topicProcessor';
-import { ALL_SPECIALTIES, Specialty } from '@/types/taxonomy';
+import {
+  ALL_SPECIALTIES,
+  PhysicianSpecialty,
+  Specialty,
+} from '@/types/taxonomy';
+import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
 
 // TODO
 // 1) compute scores
@@ -17,7 +22,7 @@ import { ALL_SPECIALTIES, Specialty } from '@/types/taxonomy';
 
 type DeepSearchOutput = {
   unstructuredTopicList: string;
-  specialty: Specialty;
+  specialty: PhysicianSpecialty;
   startDate: string;
   isInSupabase: string;
   model: string;
@@ -81,12 +86,13 @@ export async function POST(request: NextRequest) {
         specialty,
       });
 
-      const withTags = output.tags
+      const subspecialtyTags = SubspecialtiesEnumMap?.[output.specialty];
+      const withTags = subspecialtyTags?.length
         ? await Promise.all(
             topicsWithSpecialties.map(async (topic) => {
               const clinical_interests = await getTags({
                 answer: topic.answer,
-                tags: output.tags,
+                tags: subspecialtyTags,
               });
               return { ...topic, tags: clinical_interests };
             }),
@@ -98,20 +104,8 @@ export async function POST(request: NextRequest) {
         specialty,
         model,
         uploadId: output.uploadId,
+        is_visible_in_prod: false,
       });
-
-      // // Path to your test-data.json file
-      // const dataPath = path.join(process.cwd(), 'test-data.json');
-
-      // // Read the file
-      // const fileData = fs.readFileSync(dataPath, 'utf-8');
-      // const jsonData = JSON.parse(fileData);
-
-      // // Update the relevant output(s)
-      // jsonData.outputs[index].isInSupabase = 'true';
-
-      // // Write the updated data back to the file
-      // fs.writeFileSync(dataPath, JSON.stringify(jsonData, null, 2));
 
       return 'ok';
     });

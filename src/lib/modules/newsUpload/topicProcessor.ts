@@ -324,11 +324,13 @@ export async function uploadTopics({
   specialty,
   model,
   uploadId,
+  is_visible_in_prod,
 }: {
   topics: TopicWithUrlAndAnswerAndSpecialties[];
   specialty: Specialty;
   model: string;
   uploadId: string;
+  is_visible_in_prod?: boolean;
 }) {
   return Promise.all(
     topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties, index) => {
@@ -352,7 +354,7 @@ export async function uploadTopics({
           url: topic.url,
           tags: topic.tags,
           upload_id: uploadId,
-          is_visible_in_prod: false,
+          is_visible_in_prod: !!is_visible_in_prod,
         });
       }
     }),
