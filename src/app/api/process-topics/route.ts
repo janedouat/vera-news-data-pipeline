@@ -1,18 +1,15 @@
 import fs from 'fs';
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  addAnswersToTopicList,
-  addSyptomsToTopicLIst as addSpecialtiesToTopicLIst,
-  addUrlsAndDateToTopicList,
+  getAnswer,
+  getSpecialties as getSpecialties,
   getTags,
-  transformTopicsToStructuredList,
-  uploadTopics,
+  getDate,
+  getUrl,
+  uploadTopic,
+  extractTopicsFromText,
 } from '@/lib/modules/newsUpload/topicProcessor';
-import {
-  ALL_SPECIALTIES,
-  PhysicianSpecialty,
-  Specialty,
-} from '@/types/taxonomy';
+import { ALL_SPECIALTIES, PhysicianSpecialty } from '@/types/taxonomy';
 import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
 
 // TODO
@@ -39,7 +36,6 @@ export async function POST(request: NextRequest) {
         return 'ok';
       }
 
-      console.log({ a: output.uploadId });
       const {
         unstructuredTopicList,
         specialty,
@@ -55,6 +51,7 @@ export async function POST(request: NextRequest) {
       }
 
       const startDate = new Date(startDateString);
+
       if (!startDate.valueOf()) {
         return NextResponse.json(
           { error: 'Request StartDate not correct' },
@@ -69,44 +66,43 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const topics = await transformTopicsToStructuredList(
-        unstructuredTopicList,
-      );
-      const topicsWithUrls = await addUrlsAndDateToTopicList({
-        topics,
-        startDate,
-      });
-
-      const topicsWithAnswers = await addAnswersToTopicList({
-        topics: topicsWithUrls,
-        specialty,
-      });
-
-      const topicsWithSpecialties = await addSpecialtiesToTopicLIst({
-        topics: topicsWithAnswers,
-        specialty,
-      });
+      const topics = await extractTopicsFromText(unstructuredTopicList);
 
       const subspecialtyTags = SubspecialtiesEnumMap?.[output.specialty];
-      const withTags = subspecialtyTags?.length
-        ? await Promise.all(
-            topicsWithSpecialties.map(async (topic) => {
-              const clinical_interests = await getTags({
-                answer: topic.answer,
-                specialtyTags: subspecialtyTags,
-              });
-              return { ...topic, tags: clinical_interests };
-            }),
-          )
-        : topicsWithSpecialties;
 
-      await uploadTopics({
-        topics: withTags,
-        specialty,
-        model,
-        uploadId: output.uploadId,
-        is_visible_in_prod: false,
-      });
+      await Promise.all(
+        topics.map(async (topic: string, index: number) => {
+          const { url } = await getUrl({ topic });
+          const { date } = await getDate({ topic, url, startDate });
+          const { answer } = await getAnswer({
+            topic,
+            url,
+          });
+          const { specialties } = await getSpecialties({
+            answer,
+            specialty,
+          });
+          const { tags } = subspecialtyTags?.length
+            ? await getTags({
+                answer,
+                tags: subspecialtyTags,
+              })
+            : { tags: [] };
+
+          return uploadTopic({
+            answer,
+            date,
+            index,
+            specialties,
+            tags,
+            url,
+            specialty,
+            model,
+            uploadId: output.uploadId,
+            is_visible_in_prod: false,
+          });
+        }),
+      );
 
       return 'ok';
     });

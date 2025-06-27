@@ -1,11 +1,11 @@
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
-
 import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod.mjs';
 import { ALL_SPECIALTIES, Specialty } from '../../../types/taxonomy';
 import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
 import { OpenAI } from 'openai';
+import { callOpenAIWithZodFormat } from '@/lib/utils/openaiWebSearch';
 
 const TopicList = z.object({
   topics: z.array(z.string()),
@@ -17,7 +17,7 @@ const openaiClient = new OpenAI({
 
 /// *** Topic list extraction from plain text ***
 
-export async function transformTopicsToStructuredList(
+export async function extractTopicsFromText(
   unstructuredTopicList: string,
 ): Promise<string[]> {
   const result = await generateObject({
@@ -26,7 +26,6 @@ export async function transformTopicsToStructuredList(
     schemaName: 'TopicList',
     schemaDescription: 'A list of topics extracted from unstructured text.',
     prompt: `Extract a list of topics from the following text (one per title) and return ONLY a JSON object with a "topics" array of strings. Text: ${unstructuredTopicList}`,
-    maxTokens: 1000,
     temperature: 1,
   });
 
@@ -35,97 +34,64 @@ export async function transformTopicsToStructuredList(
 
 /// *** Topic Source functions ***
 
-const UrlAndDateZObject = z.object({
-  news_date: z.string(),
-  url: z.string(),
-});
-
 const NO_URL_PLACEHOLDER_STRING = 'no_url';
 const SOURCE_TOO_OLD_PLACEHOLDER_STRING = 'too_old';
 
-export async function getSourceTopicSourceUrlAndDate({
-  startDate,
+export async function getUrl({
   topic,
 }: {
   topic: string;
-  startDate: Date;
-}): Promise<{ news_date: string; url: string }> {
-  const response = await openaiClient.responses.create({
+}): Promise<{ url: string }> {
+  const content = `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`;
+  const outputUrl = await callOpenAIWithZodFormat({
+    content,
+    zodSchema: z.string(),
     model: 'gpt-4.1',
-    input: [
-      {
-        role: 'user',
-        content: `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`,
-      },
-    ],
-    text: {
-      format: zodTextFormat(UrlAndDateZObject, 'urlAndDate'),
-    },
-    reasoning: {},
-    tools: [
-      {
-        type: 'web_search_preview',
-        user_location: {
-          type: 'approximate',
-          country: 'US',
-        },
-        search_context_size: 'medium',
-      },
-    ],
-    temperature: 1,
-    top_p: 1,
   });
 
-  const message = JSON.parse(response.output_text);
-
-  const outputUrl = message.url;
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = outputUrl.match(urlR)?.toString();
-  const outputDate = message.news_date as string;
 
-  // after refacto handle no url case
-  if (outputDate) {
+  if (url) {
     return {
       url: url ?? NO_URL_PLACEHOLDER_STRING,
-      news_date: outputDate,
-      // new Date(outputDate) > startDate
-      //   ? outputDate
-      //   : SOURCE_TOO_OLD_PLACEHOLDER_STRING,
     };
   } else {
-    throw new Error('Error generating url or news_date');
+    throw new Error('Error generating url');
   }
 }
 
-export async function addUrlsAndDateToTopicList({
+export async function getDate({
   startDate,
-  topics,
+  topic,
+  url,
 }: {
-  topics: string[];
+  topic: string;
+  url: string;
   startDate: Date;
-}) {
-  return Promise.all(
-    topics.map(async (topic) => {
-      const { url, news_date } = await getSourceTopicSourceUrlAndDate({
-        topic,
-        startDate,
-      });
-      return { topic, url, news_date };
-    }),
-  );
+}): Promise<{ date: string }> {
+  const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the 1rst of that month (ex: July 25 -> 2025--07-01), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
+  const message = await callOpenAIWithZodFormat({
+    content,
+    zodSchema: z.string(),
+    model: 'gpt-4.1',
+  });
+
+  const outputDate = new Date(message as string);
+
+  if (outputDate) {
+    return {
+      date:
+        outputDate > startDate
+          ? outputDate.toISOString().slice(0, 10)
+          : SOURCE_TOO_OLD_PLACEHOLDER_STRING,
+    };
+  } else {
+    throw new Error('Error generating news_date');
+  }
 }
 
 /// *** Topic Answer functions ***
-
-type TopicWithUrlAndDate = {
-  topic: string;
-  url: string;
-  news_date: string;
-};
-
-type TopicWithUrlAndAnswer = TopicWithUrlAndDate & {
-  answer: string;
-};
 
 const AnswerZObject = z.object({
   title: z.string(),
@@ -133,15 +99,13 @@ const AnswerZObject = z.object({
   paragraphs: z.array(z.string()),
 });
 
-export async function getSourceTopicAnswer({
+export async function getAnswer({
   topic,
   url,
-  specialty,
 }: {
   topic: string;
   url: string;
-  specialty: Specialty;
-}): Promise<string> {
+}): Promise<{ answer: string }> {
   const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -155,15 +119,6 @@ export async function getSourceTopicAnswer({
 
         Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).
         `,
-
-        // In your answers, don't repeat yourself please.
-        // 1) Find a good title for the topic. It should answer the "so what?"
-        // 2) Then summarize the key clinical changing conclusions of the source for specialty ${specialty}. Don't mention the specialty name, as it might be shown to other specialties. It's the tldr.\nAn MD will read this so speak their language. This should be 2-3 bullet points.
-        // 3) Put a longer explanation of the topic, still has to be really clinically relevant to an MD. An MD will read this in an article format, so pretend your writing for an MD; speak their language. Should be approx two paragraphs.
-
-        // Please format your answer in a json with elements title, then bullet_points with is a list of strings and then paragraphs which is a list of strings.
-
-        // Only return what the doctors will read, nothing else.
       },
     ],
     reasoning: {},
@@ -187,49 +142,26 @@ export async function getSourceTopicAnswer({
   const message = response.output_text;
 
   if (message) {
-    return JSON.parse(message);
+    return { answer: JSON.parse(message) };
   } else {
     throw new Error('Error generating title and/or bullet_points');
   }
 }
 
-export async function addAnswersToTopicList({
-  topics,
-  specialty,
-}: {
-  topics: TopicWithUrlAndDate[];
-  specialty: Specialty;
-}): Promise<TopicWithUrlAndAnswer[]> {
-  return Promise.all(
-    topics.map(async (topic) => {
-      const answer = await getSourceTopicAnswer({ ...topic, specialty });
-      return { ...topic, answer };
-    }),
-  );
-}
-
 // *** Topic symptom tagging functions ***
-type TopicWithUrlAndAnswerAndSpecialties = TopicWithUrlAndAnswer & {
-  specialties: Specialty[];
-  tags: string[];
-};
 
 export const SpecialtyZod = z.enum([...ALL_SPECIALTIES] as [
   string,
   ...string[],
 ]);
 
-const SpecialtiesZObject = z.object({
-  specialties: z.array(SpecialtyZod),
-});
-
-export async function getSourceTopicSpecialty({
+export async function getSpecialties({
   answer,
   specialty,
 }: {
   answer: string;
   specialty: Specialty;
-}): Promise<Specialty[]> {
+}): Promise<{ specialties: Specialty[] }> {
   const content = `Tag this answer with MD specialties that might be interested in reading it ${JSON.stringify(answer)}, from the list of specialties, using the exact same words for them. Go through these specialties one by one and only return the ones it's really clinical-practice changing for: ${ALL_SPECIALTIES.join()}`;
   const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
@@ -241,7 +173,7 @@ export async function getSourceTopicSpecialty({
     ],
     reasoning: {},
     text: {
-      format: zodTextFormat(SpecialtiesZObject, 'specialty'),
+      format: zodTextFormat(z.array(SpecialtyZod),, 'specialty'),
     },
     tools: [
       {
@@ -258,94 +190,31 @@ export async function getSourceTopicSpecialty({
   });
 
   const message = response.output_text;
-  const messageSpecialties = JSON.parse(message).specialties;
+  const messageSpecialties = JSON.parse(message);
   const specialties = messageSpecialties.includes(specialty)
     ? messageSpecialties
     : [...messageSpecialties, specialty];
 
   if (message) {
-    return specialties;
+    return { specialties };
   } else {
     throw new Error('Error generating source specialties');
   }
 }
 
-export async function addSyptomsToTopicLIst({
-  topics,
-  specialty,
-}: {
-  topics: TopicWithUrlAndAnswer[];
-  specialty: Specialty;
-}): Promise<TopicWithUrlAndAnswerAndSpecialties[]> {
-  return Promise.all(
-    topics.map(async (topic: TopicWithUrlAndAnswer) => {
-      const specialties = await getSourceTopicSpecialty({
-        answer: topic.answer,
-        specialty,
-      });
-      return { ...topic, specialties };
-    }),
-  );
-}
 
-export async function uploadTopics({
-  topics,
-  specialty,
-  model,
-  uploadId,
-  is_visible_in_prod,
-}: {
-  topics: TopicWithUrlAndAnswerAndSpecialties[];
-  specialty: Specialty;
-  model: string;
-  uploadId: string;
-  is_visible_in_prod?: boolean;
-}) {
-  return Promise.all(
-    topics.map(async (topic: TopicWithUrlAndAnswerAndSpecialties, index) => {
-      if (
-        topic.url == NO_URL_PLACEHOLDER_STRING ||
-        topic.news_date == SOURCE_TOO_OLD_PLACEHOLDER_STRING
-      ) {
-        console.log(
-          `News piece ${index + 1} was not added to supabase (cause: ${topic.url === NO_URL_PLACEHOLDER_STRING ? (topic.news_date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
-        );
-      } else {
-        return uploadNewsRow({
-          elements: topic.answer,
-          news_date: topic.news_date,
-          news_type: 'test',
-          score: 6,
-          specialty,
-          specialties: topic.specialties,
-          ranking_model_ranking: 1,
-          selecting_model: model,
-          url: topic.url,
-          tags: topic.tags,
-          upload_id: uploadId,
-          is_visible_in_prod: !!is_visible_in_prod,
-        });
-      }
-    }),
-  );
-}
 
 // tag with clinical interests
 
-const TagsZObject = z.object({
-  tags: z.string(),
-});
-
 export async function getTags({
   answer,
-  specialtyTags,
+  tags,
 }: {
   answer: string;
-  specialtyTags: string[];
-}): Promise<Specialty[]> {
-  console.log({ answer, specialtyTags });
-  const content = `Tag this medical update (below) with clinical interests that are relevant to it (below). Only use the precise clinical_interest strings provided below in your outputs. \n ### medical update ${answer}) \n ### clinical interests ${JSON.stringify(specialtyTags)})`;
-  console.log({ content });
+  tags: string[];
+}): Promise<{ tags: string[] }> {
+  const content = `Given the medical update below, return only the relevant clinical interests as a JSON array of strings. Only use the exact strings provided in the clinical interests list. Do not include any tag unless the medical update is clearly and directly relevant to it. If none are relevant, return an empty array. Do not include any explanation or extra text. \n ### medical update ${JSON.stringify(answer)}) \n ### clinical interests ${JSON.stringify(tags)})`;
+
   const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -356,7 +225,7 @@ export async function getTags({
     ],
     reasoning: {},
     text: {
-      format: zodTextFormat(TagsZObject, 'tags'),
+      format: zodTextFormat(z.string(), 'tags'),
     },
     tools: [
       {
@@ -372,11 +241,61 @@ export async function getTags({
     top_p: 1,
   });
 
-  const tags = JSON.parse(response.output_text).tags;
+  const outputTags = JSON.parse(JSON.parse(response.output_text).tags);
 
-  if (tags) {
-    return tags;
+  if (outputTags) {
+    return { tags: outputTags };
   } else {
     throw new Error('Error generating source tags');
+  }
+}
+
+
+
+export async function uploadTopic({
+  index,
+  date,
+  url,
+  specialty,
+  specialties,
+  tags,
+  answer,
+  model,
+  uploadId,
+  is_visible_in_prod,
+}: {
+  index: number;
+  date: string;
+  url: string;
+  specialty: Specialty;
+  specialties: string[];
+  tags: string[];
+  answer: string;
+  model: string;
+  uploadId: string;
+  is_visible_in_prod?: boolean;
+}) {
+  if (
+    url == NO_URL_PLACEHOLDER_STRING ||
+    date == SOURCE_TOO_OLD_PLACEHOLDER_STRING
+  ) {
+    console.log(
+      `News piece ${index + 1} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
+    );
+  } else {
+    return uploadNewsRow({
+      elements: answer,
+      news_date: date,
+      news_type: 'test',
+      score: 6,
+      specialty,
+      specialties: specialties,
+      ranking_model_ranking: 1,
+      selecting_model: model,
+      url: url,
+      tags: tags,
+      upload_id: uploadId,
+      is_visible_in_prod: !!is_visible_in_prod,
+    });
   }
 }
