@@ -1,113 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  getAnswer,
-  getSpecialties as getSpecialties,
-  getTags,
-  getDate,
-  getUrl,
-  uploadTopic,
-  extractTopicsFromText,
-  getScore,
-} from '@/lib/modules/newsUpload/topicProcessor';
-import { ALL_SPECIALTIES, PhysicianSpecialty } from '@/types/taxonomy';
-import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
+  processOneOutput,
+  DeepSearchOutput,
+} from '@/lib/modules/newsUpload/api/processOneOutput';
 
 // TODO
-// 1) compute scores
-// 2) store DOIs and make sure there are no other papers for the same DOI that day? (how can you identify drugs updates? drug name?)
-// 2) refacto to map once and apply all functions to unique topics
-
-type DeepSearchOutput = {
-  unstructuredTopicList: string;
-  specialty: PhysicianSpecialty;
-  startDate: string;
-  isInSupabase: string;
-  model: string;
-  tags: string[];
-  uploadId: string;
-};
+// 1) store DOIs and make sure there are no other papers for the same DOI that day? (how can you identify drugs updates? drug name?)
+// 2) store one score per specialty? right now only computed for the specialty in the input data (not the additional tagged specialties)
+// 3) tags are only added for the input data specialty (not the additional tagged specialties)
 
 export async function POST(request: NextRequest) {
   try {
     const deepSearchOutputs = (await request.json()).outputs;
 
-    await deepSearchOutputs.map(async (output: DeepSearchOutput) => {
-      if (output.isInSupabase == 'true') {
-        return 'ok';
-      }
+    // Process all outputs in parallel using the helper
+    const results = await Promise.all(
+      deepSearchOutputs.map((output: DeepSearchOutput) =>
+        processOneOutput(output),
+      ),
+    );
 
-      const {
-        unstructuredTopicList,
-        specialty,
-        startDate: startDateString,
-        model,
-      } = output;
-
-      if (!ALL_SPECIALTIES.includes(specialty)) {
-        return NextResponse.json(
-          { error: 'Request Specialty not correct' },
-          { status: 400 },
-        );
-      }
-
-      const startDate = new Date(startDateString);
-
-      if (!startDate.valueOf()) {
-        return NextResponse.json(
-          { error: 'Request StartDate not correct' },
-          { status: 400 },
-        );
-      }
-
-      if (!unstructuredTopicList) {
-        return NextResponse.json(
-          { error: 'unstructuredTopicList is required' },
-          { status: 400 },
-        );
-      }
-
-      const topics = await extractTopicsFromText(unstructuredTopicList);
-
-      const subspecialtyTags = SubspecialtiesEnumMap?.[output.specialty];
-
-      await Promise.all(
-        topics.map(async (topic: string, index: number) => {
-          const { url } = await getUrl({ topic });
-          const { date } = await getDate({ topic, url, startDate });
-          const { answer } = await getAnswer({
-            topic,
-            url,
-          });
-          const { specialties } = await getSpecialties({
-            answer,
-            specialty,
-          });
-          const { tags } = subspecialtyTags?.length
-            ? await getTags({
-                answer,
-                tags: subspecialtyTags,
-              })
-            : { tags: [] };
-          const { score } = await getScore({ answer, url, specialty });
-
-          return uploadTopic({
-            index,
-            date,
-            url,
-            specialty,
-            specialties,
-            tags,
-            answer,
-            score,
-            model,
-            uploadId: output.uploadId,
-            is_visible_in_prod: false,
-          });
-        }),
-      );
-
-      return 'ok';
-    });
+    // Check for errors
+    const errors = results.filter((r) => r.error);
+    if (errors.length > 0) {
+      // Return the first error (or aggregate as needed)
+      return NextResponse.json(errors[0], { status: errors[0].status });
+    }
 
     return NextResponse.json('ok');
   } catch (error) {

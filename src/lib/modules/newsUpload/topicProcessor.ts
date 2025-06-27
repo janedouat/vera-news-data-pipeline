@@ -51,7 +51,6 @@ export async function getUrl({
 
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = output.url.match(urlR)?.toString();
-  console.log({ url });
   if (url) {
     return {
       url: url ?? NO_URL_PLACEHOLDER_STRING,
@@ -78,7 +77,6 @@ export async function getDate({
   });
 
   const outputDate = new Date(message.date as string);
-  console.log({ outputDate });
 
   if (outputDate) {
     return {
