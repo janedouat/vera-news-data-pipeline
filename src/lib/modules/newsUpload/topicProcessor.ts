@@ -43,15 +43,15 @@ export async function getUrl({
   topic: string;
 }): Promise<{ url: string }> {
   const content = `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`;
-  const outputUrl = await callOpenAIWithZodFormat({
+  const output = await callOpenAIWithZodFormat({
     content,
-    zodSchema: z.string(),
+    zodSchema: z.object({ url: z.string() }),
     model: 'gpt-4.1',
   });
 
   const urlR = /(https?:\/\/[^\s]+)/g;
-  const url = outputUrl.match(urlR)?.toString();
-
+  const url = output.url.match(urlR)?.toString();
+  console.log({ url });
   if (url) {
     return {
       url: url ?? NO_URL_PLACEHOLDER_STRING,
@@ -73,11 +73,12 @@ export async function getDate({
   const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the 1rst of that month (ex: July 25 -> 2025--07-01), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
   const message = await callOpenAIWithZodFormat({
     content,
-    zodSchema: z.string(),
+    zodSchema: z.object({ date: z.string() }),
     model: 'gpt-4.1',
   });
 
-  const outputDate = new Date(message as string);
+  const outputDate = new Date(message.date as string);
+  console.log({ outputDate });
 
   if (outputDate) {
     return {
@@ -173,7 +174,10 @@ export async function getSpecialties({
     ],
     reasoning: {},
     text: {
-      format: zodTextFormat(z.array(SpecialtyZod),, 'specialty'),
+      format: zodTextFormat(
+        z.object({ specialties: z.array(SpecialtyZod) }),
+        'specialty',
+      ),
     },
     tools: [
       {
@@ -190,7 +194,7 @@ export async function getSpecialties({
   });
 
   const message = response.output_text;
-  const messageSpecialties = JSON.parse(message);
+  const messageSpecialties = JSON.parse(message).specialties;
   const specialties = messageSpecialties.includes(specialty)
     ? messageSpecialties
     : [...messageSpecialties, specialty];
@@ -201,8 +205,6 @@ export async function getSpecialties({
     throw new Error('Error generating source specialties');
   }
 }
-
-
 
 // tag with clinical interests
 
@@ -225,7 +227,7 @@ export async function getTags({
     ],
     reasoning: {},
     text: {
-      format: zodTextFormat(z.string(), 'tags'),
+      format: zodTextFormat(z.object({ tags: z.array(z.string()) }), 'tags'),
     },
     tools: [
       {
@@ -241,7 +243,7 @@ export async function getTags({
     top_p: 1,
   });
 
-  const outputTags = JSON.parse(JSON.parse(response.output_text).tags);
+  const outputTags = JSON.parse(response.output_text).tags;
 
   if (outputTags) {
     return { tags: outputTags };
@@ -249,8 +251,6 @@ export async function getTags({
     throw new Error('Error generating source tags');
   }
 }
-
-
 
 export async function uploadTopic({
   index,
