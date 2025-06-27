@@ -252,6 +252,39 @@ export async function getTags({
   }
 }
 
+export async function getScore({
+  answer,
+  url,
+  specialty,
+}: {
+  answer: string;
+  url: string;
+  specialty: Specialty;
+}) {
+  const message = await callOpenAIWithZodFormat({
+    content: `Score the topic below for MDs of specialty ${specialty} on trustfulness, clinical-impactfulness and how hard to treat the underlying diagnosis is to treat for MDs of that specialt, each from 1 to 3 (3 is max). Return a json in the format {trust: 1, clinical_impact: 3, tricky_diagnosis: 3}./n ### Topic: ${JSON.stringify(answer)} \n ### url: ${url}}`,
+    model: 'gpt-4.1',
+    zodSchema: z.object({
+      trust: z.number(),
+      clinical_impact: z.number(),
+      tricky_diagnosis: z.number(),
+    }),
+  });
+
+  const score =
+    Number(message.clinical_impact) +
+    Number(message.tricky_diagnosis) +
+    Number(message.trust);
+
+  if (isNaN(score)) {
+    throw new Error(
+      'Score calculation failed: one or more values are not numbers',
+    );
+  }
+
+  return { score };
+}
+
 export async function uploadTopic({
   index,
   date,
@@ -260,6 +293,7 @@ export async function uploadTopic({
   specialties,
   tags,
   answer,
+  score,
   model,
   uploadId,
   is_visible_in_prod,
@@ -271,6 +305,7 @@ export async function uploadTopic({
   specialties: string[];
   tags: string[];
   answer: string;
+  score: number;
   model: string;
   uploadId: string;
   is_visible_in_prod?: boolean;
@@ -285,9 +320,9 @@ export async function uploadTopic({
   } else {
     return uploadNewsRow({
       elements: answer,
+      score,
       news_date: date,
       news_type: 'test',
-      score: 6,
       specialty,
       specialties: specialties,
       ranking_model_ranking: 1,

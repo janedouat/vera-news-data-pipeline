@@ -7,6 +7,7 @@ import {
   getUrl,
   uploadTopic,
   extractTopicsFromText,
+  getScore,
 } from '@/lib/modules/newsUpload/topicProcessor';
 import { ALL_SPECIALTIES, PhysicianSpecialty } from '@/types/taxonomy';
 import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
@@ -87,15 +88,17 @@ export async function POST(request: NextRequest) {
                 tags: subspecialtyTags,
               })
             : { tags: [] };
+          const { score } = await getScore({ answer, url, specialty });
 
           return uploadTopic({
-            answer,
-            date,
             index,
-            specialties,
-            tags,
+            date,
             url,
             specialty,
+            specialties,
+            tags,
+            answer,
+            score,
             model,
             uploadId: output.uploadId,
             is_visible_in_prod: false,
