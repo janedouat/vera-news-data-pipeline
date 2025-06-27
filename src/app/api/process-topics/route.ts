@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         return 'ok';
       }
 
+      console.log({ a: output.uploadId });
       const {
         unstructuredTopicList,
         specialty,
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
             topicsWithSpecialties.map(async (topic) => {
               const clinical_interests = await getTags({
                 answer: topic.answer,
-                tags: subspecialtyTags,
+                specialtyTags: subspecialtyTags,
               });
               return { ...topic, tags: clinical_interests };
             }),

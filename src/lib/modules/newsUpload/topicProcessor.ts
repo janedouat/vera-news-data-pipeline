@@ -1,14 +1,17 @@
-import OpenAI from 'openai';
+import { generateObject } from 'ai';
+import { openai } from '@ai-sdk/openai';
+
 import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod.mjs';
 import { ALL_SPECIALTIES, Specialty } from '../../../types/taxonomy';
 import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
+import { OpenAI } from 'openai';
 
 const TopicList = z.object({
   topics: z.array(z.string()),
 });
 
-const openai = new OpenAI({
+const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
@@ -17,51 +20,17 @@ const openai = new OpenAI({
 export async function transformTopicsToStructuredList(
   unstructuredTopicList: string,
 ): Promise<string[]> {
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    messages: [
-      {
-        role: 'user',
-        content: `Extract a list of topics from the following text (one per title) and return ONLY a JSON object with a "topics" array of strings. Text: ${unstructuredTopicList}`,
-      },
-    ],
-    response_format: { type: 'json_object' },
-    tools: [
-      {
-        type: 'function',
-        function: {
-          name: 'topic_list',
-          description: 'Extracts a list of topics from unstructured text.',
-          parameters: {
-            type: 'object',
-            properties: {
-              topics: {
-                type: 'array',
-                items: { type: 'string' },
-              },
-            },
-            required: ['topics'],
-          },
-        },
-      },
-    ],
+  const result = await generateObject({
+    model: openai('gpt-4o'),
+    schema: TopicList,
+    schemaName: 'TopicList',
+    schemaDescription: 'A list of topics extracted from unstructured text.',
+    prompt: `Extract a list of topics from the following text (one per title) and return ONLY a JSON object with a "topics" array of strings. Text: ${unstructuredTopicList}`,
+    maxTokens: 1000,
     temperature: 1,
   });
 
-  const message = response.choices[0].message;
-  let topics;
-
-  if (message.tool_calls && message.tool_calls[0]?.function?.arguments) {
-    const args = JSON.parse(message.tool_calls[0].function.arguments);
-    topics = args.topics;
-  } else if (message.content) {
-    const parsed = TopicList.safeParse(JSON.parse(message.content));
-    if (!parsed.success) throw new Error('Schema mismatch');
-    topics = parsed.data.topics;
-  } else {
-    throw new Error('No topics found in response');
-  }
-  return topics;
+  return result.object.topics;
 }
 
 /// *** Topic Source functions ***
@@ -81,7 +50,7 @@ export async function getSourceTopicSourceUrlAndDate({
   topic: string;
   startDate: Date;
 }): Promise<{ news_date: string; url: string }> {
-  const response = await openai.responses.create({
+  const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
       {
@@ -173,15 +142,15 @@ export async function getSourceTopicAnswer({
   url: string;
   specialty: Specialty;
 }): Promise<string> {
-  const response = await openai.responses.create({
+  const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
       {
         role: 'user',
         content: `Topic: ${topic}, with more details here: ${url}.
 
-        1. Write a clinically relevant title that clearly addresses the “so what?”—include the main intervention/exposure, the outcome, and the patient population when applicable.
-        2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like “ethically obligated.” Focus on legally binding, clinical, or operational implications.
+        1. Write a clinically relevant title that clearly addresses the "so what?"—include the main intervention/exposure, the outcome, and the patient population when applicable.
+        2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
         3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
 
         Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).
@@ -262,7 +231,7 @@ export async function getSourceTopicSpecialty({
   specialty: Specialty;
 }): Promise<Specialty[]> {
   const content = `Tag this answer with MD specialties that might be interested in reading it ${JSON.stringify(answer)}, from the list of specialties, using the exact same words for them. Go through these specialties one by one and only return the ones it's really clinical-practice changing for: ${ALL_SPECIALTIES.join()}`;
-  const response = await openai.responses.create({
+  const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
       {
@@ -369,13 +338,15 @@ const TagsZObject = z.object({
 
 export async function getTags({
   answer,
-  tags: possible_tags,
+  specialtyTags,
 }: {
   answer: string;
-  tags: string[];
+  specialtyTags: string[];
 }): Promise<Specialty[]> {
-  const content = `Tag this medical update (below) with clinical interests that are relevant to it (below). Only use the precise clinical_interest strings provided below in your outputs. \n ### medical update ${answer}) \n ### clinical interests ${JSON.stringify(possible_tags)})`;
-  const response = await openai.responses.create({
+  console.log({ answer, specialtyTags });
+  const content = `Tag this medical update (below) with clinical interests that are relevant to it (below). Only use the precise clinical_interest strings provided below in your outputs. \n ### medical update ${answer}) \n ### clinical interests ${JSON.stringify(specialtyTags)})`;
+  console.log({ content });
+  const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
       {
