@@ -29,3 +29,35 @@ export async function uploadNewsRow(row: NewsRow) {
 
   return insertNewsRow(row);
 }
+
+export async function getUserNewsRows(
+  userTags: string[],
+  limit: number,
+  testMode: boolean = false,
+) {
+  try {
+    // Start building the query
+    let query = supabase.from('news').select('*').overlaps('tags', userTags); // Filter where news tags overlap with user tags
+
+    // If not in test mode, only get articles visible in production
+    if (!testMode) {
+      query = query.eq('is_visible_in_prod', true);
+    }
+
+    // Sort by score descending, then by date descending
+    query = query
+      .order('score', { ascending: false })
+      .order('news_date', { ascending: false })
+      .limit(limit);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching user news rows:', error);
+    throw new Error(
+      `Failed to fetch news for user tags: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+  }
+}
