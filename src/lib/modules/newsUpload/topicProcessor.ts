@@ -26,7 +26,7 @@ export async function extractTopicsFromText(
     schema: TopicList,
     schemaName: 'TopicList',
     schemaDescription: 'A list of topics extracted from unstructured text.',
-    prompt: `Extract a list of topics from the following text (one per title) and return ONLY a JSON object with a "topics" array of strings. Text: ${unstructuredTopicList}`,
+    prompt: `Extract a list of strings from the topic text below (one per title, the titles are separated by commas and numbers), do not change any of the words in the topic text below and return ONLY a JSON object with a "topics" array of strings. \n ### Topic list: ${unstructuredTopicList}`,
     temperature: 1,
   });
 
