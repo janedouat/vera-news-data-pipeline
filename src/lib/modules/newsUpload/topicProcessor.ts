@@ -6,6 +6,7 @@ import { ALL_SPECIALTIES, Specialty } from '../../../types/taxonomy';
 import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
 import { OpenAI } from 'openai';
 import { callOpenAIWithZodFormat } from '@/lib/utils/openaiWebSearch';
+import { findMedicalSourceUrl } from '@/lib/utils/perplexitySearch';
 
 const TopicList = z.object({
   topics: z.array(z.string()),
@@ -42,18 +43,18 @@ export async function getUrl({
 }: {
   topic: string;
 }): Promise<{ url: string }> {
-  const content = `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`;
-  const output = await callOpenAIWithZodFormat({
-    content,
-    zodSchema: z.object({ url: z.string() }),
-    model: 'gpt-4.1',
-  });
+  const output = await findMedicalSourceUrl(topic);
+  console.log({ output });
 
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = output.url.match(urlR)?.toString();
   if (url) {
     return {
       url: url ?? NO_URL_PLACEHOLDER_STRING,
+    };
+  } else if (output.url === 'no_url') {
+    return {
+      url: NO_URL_PLACEHOLDER_STRING,
     };
   } else {
     throw new Error('Error generating url');
@@ -69,13 +70,18 @@ export async function getDate({
   url: string;
   startDate: Date;
 }): Promise<{ date: string }> {
-  const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the 1rst of that month (ex: July 25 -> 2025--07-01), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
+  const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the last day of that month (ex: June 2025 -> 2025-06-30), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
   const message = await callOpenAIWithZodFormat({
     content,
     zodSchema: z.object({ date: z.string() }),
     model: 'gpt-4.1',
   });
 
+  if (message.date === '2025-06-30') {
+    console.log({ 'june 31 rst topic': url });
+  } else {
+    console.log({ date: message.date, url });
+  }
   const outputDate = new Date(message.date as string);
 
   if (outputDate) {

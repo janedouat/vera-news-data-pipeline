@@ -5,11 +5,19 @@
       "startDate": "2025-06-01",
       "specialty": "Pulmonology",
       "model": "none",
+      "uploadId": "pulmo_tags_test_1_chest",
+      "unstructuredTopicList": "1. FDA FDA D.I.S.C.O. Burst Edition: FDA approvals of Tabrecta (capmatinib) for metastatic non-small cell lung cancer and Enhertu (fam-trastuzumab deruxtecan-nxki) for HER2-mutant non-small cell lung cancer, 2) FDA FDA D.I.S.C.O.: Osimertinib for Non-Small Cell Lung Cancer, 3) FDA FDA approves taletrectinib for ROS1-positive non-small cell lung cancer"
+    },
+    {
+      "isInSupabase": "true",
+      "startDate": "2025-06-01",
+      "specialty": "Pulmonology",
+      "model": "none",
       "uploadId": "pulmo_tags_test_1_AJRCCM",
       "unstructuredTopicList": "1. AJRCCM Risk Factors for Stress-related UGIB: More than a Gut Feeling, 2) AJRCCM Environmental Sustainability in Intensive Care: From Awareness to Action, 3) AJRCCM On Not Betraying Our Trainees, Especially Now, 4) AJRCCM The Mirage of Individualized Therapy in the United States: Barriers in Pulmonary Hypertension Due to Sickle Cell Disease & Sarcoidosis, 5) AJRCCM A Peek into Pulmonary Hypertension Through the Plasma Proteome, 6) AJRCCM Addressing Knowledge Gaps in the Early Detection of Bronchiolitis Obliterans Syndrome After Hematopoietic Cell Transplantation, 7) AJRCCM DNA Damage in Pulmonary Arterial Hypertension and Veno-occlusive Disease – FANCL as Dual Rescue?, 8) AJRCCM Moving from Observation to Explanation: Probing the Biology of Heterogeneity of Treatment Effects, 9) AJRCCM Reply to Takefuji: Limitations of Linear Dimensional Reduction Methods in COPD Phenotyping, 10) AJRCCM Limitations of Linear Dimensional Reduction Methods in COPD Phenotyping, 11) AJRCCM The Essential Role of Air Quality Monitoring at U.S. Embassies and Consulates, 12) AJRCCM Association of Annual Exposure to Air Pollution Mixture on Asthma Hospitalizations in the U.S., 13) AJRCCM Modeling CF Patient-Specific Responses to CFTR Modulators Using Human Induced Pluripotent Stem Cells, 14) AJRCCM Reply to Hyder et al.: Emergency Intubation—A High-Stakes Procedure with Critical Gaps in Understanding Team Impact, 15) AJRCCM Emergency Intubation—A High-Stakes Procedure with Critical Gaps in Understanding Team Impact, 16) AJRCCM Clinical Remission by a Comprehensive Severe Asthma Management Strategy Guided by Airway Inflammometry and Bioimaging, 17) AJRCCM Epigenome-Wide Analysis Identifies Pollution-Sensitive Loci in Fibrotic Interstitial Lung Disease, 18) AJRCCM Increased Driving Pressure During Assisted Ventilation for Hypoxemic Respiratory Failure Is Associated with Lower ICU Survival: The ICEBERG Study, 19) AJRCCM Is Your Placebo Really Needed?, 20) AJRCCM A New Generation of Clinical Endpoints for Critical Care Trials, 21) AJRCCM Cavitated Pulmonary Nodules: Endemic Kaposi's Sarcoma Recurrence or Another Cause?, 22) AJRCCM A Randomized Controlled Trial of a Post-ICU Telehealth Care Model (WFIT), 23) AJRCCM Bridging the Gap: Small Airways, Mechanical Stress, and the Evolution of Emphysema, 24) AJRCCM Particulate Matter Associations with Lung Function in Pulmonary Sarcoidosis, 25) AJRCCM Performance Characteristics for Physiological Measures of Progressive Pulmonary Fibrosis, 26) AJRCCM Reply to Ding et al.: Imatinib: A Promising Therapeutic Shining Light on Pulmonary Arterial Hypertension Treatment, 27) AJRCCM Imatinib: A Promising Therapeutic Shining Light on Pulmonary Arterial Hypertension Treatment, 28) AJRCCM Reply to Wilson et al.: The 4-Month HPMZ Treatment Regimen for Drug-Susceptible Pulmonary Tuberculosis – A Word of Caution, 29) AJRCCM The 4-Month HPMZ Treatment Regimen for Drug-Susceptible Pulmonary Tuberculosis – A Word of Caution, 30) AJRCCM An Alarming Loss of Pulmonary Rehabilitation Programs: Example from the U.S. Veterans Administration, 31) AJRCCM Outcomes of a Typical Fibrotic Hypersensitivity Pneumonitis Pattern on Chest Computed Tomography, 32) AJRCCM Zinc-mediated Inhibition of Soluble Epoxide Hydrolase Promotes Pulmonary Hypertension, 33) AJRCCM Detection and Evaluation of Drug-associated Pulmonary Arterial Hypertension, 34) AJRCCM Metabolomic Evidence of Biological Overlap with HFpEF in a Subset of Pulmonary Arterial Hypertension, 35) AJRCCM Aging Gracefully: Does Elexacaftor/Tezacaftor/Ivacaftor Safety and Efficacy Stand the Test of Time?, 36) AJRCCM Blurred Boundaries: Rethinking Disease Classifications in ILD Using Molecular Signals, 37) AJRCCM Post-COPD: Can Emphysema Be Repaired?, 38) AJRCCM Temporary Transvenous Diaphragm Neurostimulation for Weaning from Mechanical Ventilation (RESCUE-3), 39) AJRCCM Refining Pulmonary Embolism Management: Balancing Innovation with Accuracy, 40) AJRCCM Biologic Mechanisms Underlying the Heterogeneous Response to Tight Glycemic Control among Differentially Inflamed Patients in the HALF-PINT Trial, 41) AJRCCM Initial Success: Camlipixant in Refractory Chronic Cough, 42) AJRCCM Reply to Rui and Chen: Initial Success: Camlipixant in Refractory Chronic Cough, 43) AJRCCM Dominant Form of SFTPB: A New Paradigm, 44) AJRCCM Deficient FANCL Predisposes Endothelial Damage: A New Therapeutic Target for Pulmonary Hypertension, 45) AJRCCM The Quest for Safe and Effective Bronchoscopic Lung Volume Reduction — A Matter of Correct Scaffolding?, 46) AJRCCM Robotic versus Electromagnetic Bronchoscopy for Peripheral Pulmonary Lesions: A Randomized Trial (RELIANT), 47) AJRCCM Upper Airway Volume Predicts Brain Structure and Cognition in Adolescents, 48) AJRCCM Mucus Plug Density and Type 2 Inflammation in Asthma and/or COPD: Ultra-High-Resolution CT Study, 49) AJRCCM Reply to Zeng: Unveiling the True Cardiovascular Risk in COPD: Is CACS-Tx the Right Approach?, 50) AJRCCM Unveiling the True Cardiovascular Risk in COPD: Is CACS-Tx the Right Approach?, 51) AJRCCM Ansa Cervicalis Stimulation During Non-REM Sleep in a Patient with Obstructive Sleep Apnea, 52) AJRCCM Visualizing Pulmonary Mycobacteriodes abscessus Infections with 11C-PABA PET/CT, 53) AJRCCM Long-Term Safety and Efficacy of Elexacaftor/Tezacaftor/Ivacaftor in Children ≥6 Years with Cystic Fibrosis and at Least One F508del Allele"
     },
     {
-      "isInSupabase": "false",
+      "isInSupabase": "true",
       "startDate": "2025-06-01",
       "specialty": "Pulmonology",
       "model": "none",
@@ -25,7 +33,7 @@
       "unstructuredTopicList": "1. FDA FDA D.I.S.C.O. Burst Edition: FDA approvals of Tabrecta (capmatinib) for metastatic non-small cell lung cancer and Enhertu (fam-trastuzumab deruxtecan-nxki) for HER2-mutant non-small cell lung cancer, 2) FDA FDA D.I.S.C.O.: Osimertinib for Non-Small Cell Lung Cancer, 3) FDA FDA approves taletrectinib for ROS1-positive non-small cell lung cancer"
     },
     {
-      "isInSupabase": "false",
+      "isInSupabase": "true",
       "startDate": "2025-06-01",
       "specialty": "Pulmonology",
       "model": "none",
@@ -41,7 +49,7 @@
       "unstructuredTopicList": "1. Dupilumab for COPD with Blood Eosinophil Evidence of Type 2 Inflammation, 2) Global Initiative for Chronic Obstructive Lung Disease (GOLD) 2024 Report, 3) US FDA Approves Verona Pharma's Inhaled COPD Therapy, 4) An Update on Management of Adult Patients with Acute Respiratory Distress Syndrome: An Official American Thoracic Society Clinical Practice Guideline, 5) Inhaled Sedation in Acute Respiratory Distress Syndrome: The SESAR Randomized Clinical Trial, 6) FDA Declines to Approve Gefapixant for Chronic Cough a Second Time, 7) Efficacy and Safety of Pharmacotherapy for Refractory or Unexplained Chronic Cough: A Systematic Review and Network Meta-Analysis"
     },
     {
-      "isInSupabase": "false",
+      "isInSupabase": "true",
       "startDate": "2025-06-01",
       "specialty": "Pulmonology",
       "model": "none",
@@ -49,7 +57,7 @@
       "unstructuredTopicList": "1. BMJ Right C7 neurotomy at the intervertebral foramen plus intensive speech and language therapy versus intensive speech and language therapy alone for chronic post-stroke aphasia, 2) BMJ Effect of UK pay-for-performance programme on quality of primary care, 3) BMJ Intermittent fasting strategies and their effects on body weight and other cardiometabolic risk factors, 4) BMJ Comparative effectiveness of interventions to facilitate deprescription of benzodiazepines and other sedative hypnotics, 5) BMJ Oral contraceptives with progestogens and risk of intracranial meningioma, 6) BMJ Sacituzumab tirumotecan versus docetaxel for previously treated EGFR-mutated advanced non-small cell lung cancer, 7) BMJ Effect of dapagliflozin on metabolic dysfunction-associated steatohepatitis, 8) BMJ P2Y12 inhibitor or aspirin after percutaneous coronary intervention"
     },
     {
-      "isInSupabase": "false",
+      "isInSupabase": "true",
       "startDate": "2025-06-01",
       "specialty": "Pulmonology",
       "model": "none",
