@@ -289,6 +289,64 @@ export async function getScore({
   return { score };
 }
 
+export function generateNewsletterTitle({
+  url,
+  date,
+  answer,
+}: {
+  url: string;
+  date: string;
+  answer: string;
+}): string {
+  // Extract source from URL for newsletter title
+  const getSourceFromUrl = (url: string): string | null => {
+    try {
+      const hostname = new URL(url).hostname.toLowerCase();
+      if (hostname.includes('fda.gov')) return 'FDA';
+      if (hostname.includes('nih.gov')) return 'NIH';
+      if (hostname.includes('cdc.gov')) return 'CDC';
+      if (hostname.includes('nejm.org')) return 'NEJM';
+      if (hostname.includes('jama')) return 'JAMA';
+      if (hostname.includes('bmj.com')) return 'BMJ';
+      if (hostname.includes('thelancet.com')) return 'Lancet';
+      // Add more mappings as needed
+      return null; // Return null instead of generic hostname
+    } catch {
+      return null;
+    }
+  };
+
+  // Determine article type from content
+  const getArticleType = (answerContent: {
+    title: string;
+    bullet_points: string[];
+    paragraphs: string[];
+  }): string | null => {
+    const content = JSON.stringify(answerContent).toLowerCase();
+    if (content.includes('randomized') || content.includes('rct')) return 'RCT';
+    if (content.includes('cohort') || content.includes('observational'))
+      return 'Cohort';
+    if (content.includes('case-control')) return 'Case-Control';
+    if (content.includes('meta-analysis')) return 'Meta-Analysis';
+    if (content.includes('systematic review')) return 'Systematic Review';
+    if (content.includes('guideline')) return 'Guideline';
+    return null; // Return null instead of generic "Study"
+  };
+
+  const parsedAnswer = typeof answer === 'string' ? JSON.parse(answer) : answer;
+  const source = getSourceFromUrl(url);
+  const articleType = getArticleType(parsedAnswer);
+
+  // Build title conditionally based on available information
+  const titleParts: string[] = [];
+
+  if (source) titleParts.push(source);
+  titleParts.push(date);
+  if (articleType) titleParts.push(articleType);
+
+  return `${titleParts.join(' - ')}: ${parsedAnswer.title}`;
+}
+
 export async function uploadTopic({
   index,
   date,
@@ -322,6 +380,8 @@ export async function uploadTopic({
       `News piece ${index + 1} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
     );
   } else {
+    const newsletterTitle = generateNewsletterTitle({ url, date, answer });
+
     return uploadNewsRow({
       elements: answer,
       score,
@@ -335,6 +395,7 @@ export async function uploadTopic({
       tags: tags,
       upload_id: uploadId,
       is_visible_in_prod: !!is_visible_in_prod,
+      newsletter_title: newsletterTitle,
     });
   }
 }

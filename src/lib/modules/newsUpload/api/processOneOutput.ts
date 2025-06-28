@@ -55,6 +55,13 @@ export async function processOneOutput(output: DeepSearchOutput) {
       topics.map(async (topic: string, index: number) => {
         const { url } = await getUrl({ topic });
         const { date } = await getDate({ topic, url, startDate });
+
+        // Skip processing if date is too old
+        if (date === 'too_old') {
+          console.log(`Skipping topic "${topic}" as date is too old`);
+          return { status: 'skipped', reason: 'date_too_old' };
+        }
+
         const { answer } = await getAnswer({ topic, url });
         const { specialties } = await getSpecialties({ answer, specialty });
         const { tags } = subspecialtyTags?.length

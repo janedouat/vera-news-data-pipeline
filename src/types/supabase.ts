@@ -719,6 +719,7 @@ export type Database = {
           tags?: string[] | null;
           upload_id?: string | null;
           is_visible_in_prod?: boolean | null;
+          newsletter_title?: string | null;
         };
         Insert: {
           created_at?: string | null;
@@ -738,6 +739,7 @@ export type Database = {
           tags?: string[] | null;
           upload_id?: string | null;
           is_visible_in_prod?: boolean | null;
+          newsletter_title?: string | null;
         };
         Update: {
           selecting_model?: string | null;
@@ -757,6 +759,7 @@ export type Database = {
           tags?: string[] | null;
           upload_id?: string | null;
           is_visible_in_prod?: boolean | null;
+          newsletter_title?: string | null;
         };
         Relationships: [];
       };
