@@ -712,6 +712,7 @@ export type Database = {
           specialties: string[] | null;
           specialty: string | null;
           timestamp: string | null;
+          news_date_timestamp: string | null;
           updated_at: string | null;
           url: string | null;
           view_count: number | null;
@@ -732,6 +733,7 @@ export type Database = {
           specialties?: string[] | null;
           specialty?: string | null;
           timestamp?: string | null;
+          news_date_timestamp: string | null;
           updated_at?: string | null;
           selecting_model?: string | null;
           url?: string | null;
@@ -753,6 +755,7 @@ export type Database = {
           specialties?: string[] | null;
           specialty?: string | null;
           timestamp?: string | null;
+          news_date_timestamp: string | null;
           updated_at?: string | null;
           url?: string | null;
           view_count?: number | null;

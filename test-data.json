@@ -41,7 +41,7 @@
       "unstructuredTopicList": "1. JAMA Netw Open Intraosseous vs Intravenous Access for Epinephrine in Pediatric Out-of-Hospital Cardiac Arrest, 2) JAMA Surgery Shifting From Thoracic Epidurals to Nerve Blocks—Redefining Gold Standards, 3) JAMA Inhaled Pharmacotherapy for Stable COPD, 4) JAMA Netw Open Prenatal Tobacco and Alcohol Exposure and Cortical Change Among Youths, 5) JAMA Netw Open Ventilatory Support for Cardiac Arrest—One Size May Not Fit All, 6) JAMA Netw Open Bystander CPR Technique and Outcomes for Cardiac Arrest With and Without Opioid Toxicity, 7) JAMA Netw Open Phenotypes of Atopic Dermatitis and Development of Allergic Diseases, 8) JAMA Netw Open Efficiency and Quality of Generative AI–Assisted Radiograph Reporting, 9) JAMA Pediatrics Acceptance and Commitment Therapy–Based Parenting Program in Children With Co-Occurring Asthma and ADHD"
     },
     {
-      "isInSupabase": "false",
+      "isInSupabase": "true",
       "startDate": "2025-06-01",
       "specialty": "Pulmonology",
       "model": "o3-deep-research",

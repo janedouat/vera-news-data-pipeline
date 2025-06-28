@@ -22,7 +22,7 @@ export async function extractTopicsFromText(
   unstructuredTopicList: string,
 ): Promise<string[]> {
   const result = await generateObject({
-    model: openai('gpt-4o'),
+    model: openai('gpt-4.1'),
     schema: TopicList,
     schemaName: 'TopicList',
     schemaDescription: 'A list of topics extracted from unstructured text.',
@@ -44,7 +44,6 @@ export async function getUrl({
   topic: string;
 }): Promise<{ url: string }> {
   const output = await findMedicalSourceUrl(topic);
-  console.log({ output });
 
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = output.url.match(urlR)?.toString();
@@ -77,11 +76,6 @@ export async function getDate({
     model: 'gpt-4.1',
   });
 
-  if (message.date === '2025-06-30') {
-    console.log({ 'june 31 rst topic': url });
-  } else {
-    console.log({ date: message.date, url });
-  }
   const outputDate = new Date(message.date as string);
 
   if (outputDate) {
@@ -111,19 +105,20 @@ export async function getAnswer({
   topic: string;
   url: string;
 }): Promise<{ answer: string }> {
+  const content = `Topic: ${topic}, with more details here: ${url}.
+
+  1. Write a clinically relevant title that clearly addresses the "so what?"—include the main intervention/exposure, the outcome, and the patient population when applicable.
+  2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
+  3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
+
+  Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).`;
+
   const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
       {
         role: 'user',
-        content: `Topic: ${topic}, with more details here: ${url}.
-
-        1. Write a clinically relevant title that clearly addresses the "so what?"—include the main intervention/exposure, the outcome, and the patient population when applicable.
-        2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
-        3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
-
-        Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).
-        `,
+        content,
       },
     ],
     reasoning: {},
@@ -377,7 +372,7 @@ export async function uploadTopic({
     date == SOURCE_TOO_OLD_PLACEHOLDER_STRING
   ) {
     console.log(
-      `News piece ${index + 1} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
+      `News piece ${index + 1} from upload ${uploadId} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
     );
   } else {
     const newsletterTitle = generateNewsletterTitle({ url, date, answer });
@@ -386,6 +381,7 @@ export async function uploadTopic({
       elements: answer,
       score,
       news_date: date,
+      news_date_timestamp: new Date(date).getTime().toString(),
       news_type: 'test',
       specialty,
       specialties: specialties,

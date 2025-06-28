@@ -54,7 +54,13 @@ export async function callPerplexityWithZodFormat<T extends z.ZodTypeAny>({
 
   if (content_text) {
     try {
-      const parsed = JSON.parse(content_text);
+      // Strip markdown code block syntax if present
+      const cleanedText = content_text
+        .replace(/^```json\s*/, '') // Remove opening ```json
+        .replace(/\s*```$/, '') // Remove closing ```
+        .trim();
+
+      const parsed = JSON.parse(cleanedText);
       return zodSchema.parse(parsed);
     } catch (error) {
       throw new Error(

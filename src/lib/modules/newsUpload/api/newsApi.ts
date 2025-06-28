@@ -44,10 +44,10 @@ export async function getUserNewsRows(
       query = query.eq('is_visible_in_prod', true);
     }
 
-    // Sort by score descending, then by date descending
+    // Sort by score descending, then by date timestamp descending (more precise than news_date)
     query = query
       .order('score', { ascending: false })
-      .order('news_date', { ascending: false })
+      .order('news_date_timestamp', { ascending: false })
       .limit(limit);
 
     const { data, error } = await query;
