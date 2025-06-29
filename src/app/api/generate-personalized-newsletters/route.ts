@@ -11,6 +11,7 @@ import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
 // Configuration: Set the date for newsletter generation
 // Format: YYYY-MM-DD or leave empty to use today's date
 const NEWSLETTER_DATE = '2025-06-30'; // Default to June 30, 2025
+const NEWS_DATE_LIMIT = '2025-07-01'; // Only include news up to July 1, 2025
 const NEWSLETTER_SPECIALTY = PhysicianSpecialty.PULMONOLOGY;
 
 // Specific articles that all recipients should receive as the last two items
@@ -34,6 +35,7 @@ interface NewsItem {
   url: string;
   tags: string[];
   score: number;
+  newsletter_title: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -85,6 +87,7 @@ export async function POST(request: NextRequest) {
           subtopics,
           4,
           testMode,
+          NEWS_DATE_LIMIT,
         );
 
         // Step 3: Fill remaining slots up to 4 with chronic_cough, shortness_of_breath, or ipf
@@ -96,6 +99,7 @@ export async function POST(request: NextRequest) {
             fillerNewsNeeded,
             testMode,
             personalizedNews.map((n) => n.id), // Exclude already selected articles
+            NEWS_DATE_LIMIT,
           );
         }
 
@@ -230,6 +234,7 @@ async function getPersonalizedNews(
   subtopics: string[],
   limit: number,
   testMode: boolean = false,
+  dateLimit?: string,
 ): Promise<NewsItem[]> {
   try {
     console.log('Getting personalized news for subtopics:', subtopics);
@@ -239,6 +244,7 @@ async function getPersonalizedNews(
       subtopics,
       limit,
       testMode,
+      dateLimit,
     )) as NewsItem[];
 
     console.log(`Found ${matchingNews.length} personalized news items`);
@@ -264,6 +270,7 @@ async function getFillerPulmonologyNews(
   limit: number,
   testMode: boolean = false,
   excludeIds: string[] = [],
+  dateLimit?: string,
 ): Promise<NewsItem[]> {
   const fillerTopics = ['chronic_cough', 'shortness_of_breath', 'ipf'];
 
@@ -275,6 +282,7 @@ async function getFillerPulmonologyNews(
       fillerTopics,
       limit * 3, // Get more than needed to allow for filtering
       testMode,
+      dateLimit,
     )) as NewsItem[];
 
     // Filter out articles that are already selected
@@ -323,8 +331,8 @@ async function updateLoopsContactProperties(
     const newsIndex = index + 1;
     const title = getNewsTitle(item);
 
-    // Add subspecialties as URL parameters for tracking
-    const url = new URL(item.url);
+    // Create Vera website URL with news ID
+    const url = new URL(`https://app.vera-health.ai/news/${item.id}`);
     if (subspecialtiesParam) {
       url.searchParams.set('subspecialties', subspecialtiesParam);
       url.searchParams.set('md_email', email.split('@')[0]); // Add MD identifier (username part)
@@ -359,10 +367,5 @@ async function updateLoopsContactProperties(
 }
 
 function getNewsTitle(item: NewsItem): string {
-  const parsedElements =
-    typeof item.elements === 'string'
-      ? JSON.parse(item.elements)
-      : item.elements;
-
-  return parsedElements.title || 'Untitled';
+  return item.newsletter_title || 'Untitled';
 }

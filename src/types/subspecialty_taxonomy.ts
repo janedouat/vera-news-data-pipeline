@@ -14,6 +14,7 @@ export enum PulmonologySubspecialty {
   Narcolepsy = 'narcolepsy',
   LungCancer = 'lung_cancer',
   Mesothelioma = 'mesothelioma',
+
   ARDS = 'ards',
   Ventilation = 'ventilation',
   Sepsis = 'sepsis',

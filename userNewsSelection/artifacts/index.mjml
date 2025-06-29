@@ -164,25 +164,6 @@
       </mj-column>
     </mj-section>
 
-    <!-- Universal News Header -->
-    <mj-section
-      background-color="#ffffff"
-      padding-top="20px"
-      padding-bottom="20px"
-    >
-      <mj-column>
-        <mj-text
-          font-size="16px"
-          color="#6b7280"
-          font-weight="500"
-          padding-left="30px"
-          padding-right="30px"
-        >
-          Essential Updates for All Pulmonologists:
-        </mj-text>
-      </mj-column>
-    </mj-section>
-
     <!-- Universal News Item 1 -->
     <mj-section background-color="#ffffff" padding="0 30px 15px 30px">
       <mj-column>

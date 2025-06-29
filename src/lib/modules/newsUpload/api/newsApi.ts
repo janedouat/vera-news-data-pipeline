@@ -34,6 +34,7 @@ export async function getUserNewsRows(
   userTags: string[],
   limit: number,
   testMode: boolean = false,
+  dateLimit?: string,
 ) {
   try {
     // Start building the query
@@ -42,6 +43,12 @@ export async function getUserNewsRows(
     // If not in test mode, only get articles visible in production
     if (!testMode) {
       query = query.eq('is_visible_in_prod', true);
+    }
+
+    // Add date limit filter if provided
+    if (dateLimit) {
+      const dateLimitTimestamp = new Date(dateLimit).getTime().toString();
+      query = query.lte('news_date_timestamp', dateLimitTimestamp);
     }
 
     // Sort by score descending, then by date timestamp descending (more precise than news_date)
