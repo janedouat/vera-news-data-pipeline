@@ -1,15 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserNewsRows } from '@/lib/modules/newsUpload/api/newsApi';
+import {
+  getUserNewsRows,
+  getNewsRowsByIds,
+} from '@/lib/modules/newsUpload/api/newsApi';
 import { callOpenAIWithZodFormat } from '@/lib/utils/openaiWebSearch';
 import { z } from 'zod';
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
-import { Special_Elite } from 'next/font/google';
 
 // Configuration: Set the date for newsletter generation
 // Format: YYYY-MM-DD or leave empty to use today's date
 const NEWSLETTER_DATE = '2025-06-30'; // Default to June 30, 2025
 const NEWSLETTER_SPECIALTY = PhysicianSpecialty.PULMONOLOGY;
+
+// Specific articles that all recipients should receive as the last two items
+const REQUIRED_ARTICLE_IDS = [
+  '775a2bfe-6979-4ff1-b7c8-dd8f27876f07', // Article 4
+  '22db7048-7ce1-41a6-b777-ea941c28f00b', // Article 5
+];
 
 interface LoopsContact {
   id: string;
@@ -67,46 +75,58 @@ export async function POST(request: NextRequest) {
     for (const contact of contacts) {
       try {
         // Step 1: Get pulmonology subtopics for this MD
-        const subtopics = await getContactSubtopics(
+        const subtopics = await getContactSubtopics({
           contact,
-          testMode,
-          NEWSLETTER_SPECIALTY,
-        );
+          specialty: NEWSLETTER_SPECIALTY,
+        });
 
-        // Step 2: Find matching news in Supabase
+        // Step 2: Find matching personalized news (up to 4 items)
         const personalizedNews = await getPersonalizedNews(
           subtopics,
-          3,
+          4,
           testMode,
         );
 
-        // Step 3: Get universal pulmonology news (chronic cough + shortness of breath)
-        const universalNews = await getUniversalPulmonologyNews(2, testMode);
+        // Step 3: Fill remaining slots up to 4 with chronic_cough, shortness_of_breath, or ipf
+        const fillerNewsNeeded = 4 - personalizedNews.length;
+        let fillerNews: NewsItem[] = [];
 
-        // Step 4: Combine and format news
-        const allNews = [...personalizedNews, ...universalNews];
+        if (fillerNewsNeeded > 0) {
+          fillerNews = await getFillerPulmonologyNews(
+            fillerNewsNeeded,
+            testMode,
+            personalizedNews.map((n) => n.id), // Exclude already selected articles
+          );
+        }
 
-        // Step 5: Ensure we have exactly 5 news items for the template
-        if (allNews.length < 5) {
-          // Create dummy news to fill remaining slots
-          const dummyNewsNeeded = 5 - allNews.length;
-          for (let i = 0; i < dummyNewsNeeded; i++) {
-            const dummyIndex = allNews.length + i + 1;
-            allNews.push({
-              id: `dummy${dummyIndex}`,
-              elements: { title: `Recent Pulmonology Update ${dummyIndex}` },
-              news_date: '2025-01-15',
-              url: 'https://veracity-health.ai/news',
-              tags: ['general'],
-              score: 1,
-            });
-          }
+        // Step 4: Get the two required articles that all recipients should receive
+        const requiredNews = await getNewsRowsByIds(
+          REQUIRED_ARTICLE_IDS,
+          testMode,
+        );
 
-          if (testMode) {
-            console.log(
-              `Added ${dummyNewsNeeded} dummy news items to reach 5 total`,
-            );
-          }
+        // Step 5: Combine news - personalized first, then filler, then required articles
+        const allNews = [...personalizedNews, ...fillerNews];
+
+        // Add the two required articles as positions 5 and 6
+        if (requiredNews.length >= 2) {
+          allNews.push(...requiredNews.slice(0, 2));
+        } else {
+          // If we can't find the required articles, add what we can find
+          console.warn(
+            `Could not find all required articles. Found ${requiredNews.length} of 2 required articles.`,
+          );
+          allNews.push(...requiredNews);
+        }
+
+        if (testMode) {
+          console.log('Newsletter composition:', {
+            personalizedCount: personalizedNews.length,
+            fillerCount: fillerNews.length,
+            requiredCount: requiredNews.length,
+            totalCount: allNews.length,
+            requiredArticleIds: requiredNews.map((n) => n.id),
+          });
         }
 
         // Step 6: Update contact properties in Loops
@@ -114,8 +134,9 @@ export async function POST(request: NextRequest) {
           await updateLoopsContactProperties(
             loopsApiKey,
             contact.email,
-            allNews.slice(0, 5), // Ensure exactly 5 items
+            allNews, // Use all available articles
             today,
+            subtopics, // Pass subspecialties for URL tracking
           );
         }
 
@@ -124,7 +145,8 @@ export async function POST(request: NextRequest) {
             email: contact.email,
             subtopics,
             personalizedNewsFound: personalizedNews.length,
-            universalNewsFound: universalNews.length,
+            fillerNewsFound: fillerNews.length,
+            requiredNewsFound: requiredNews.length,
             totalNews: allNews.length,
           });
         }
@@ -191,19 +213,12 @@ async function fetchLoopsContacts(apiKey: string): Promise<LoopsContact[]> {
 async function getContactSubtopics({
   contact,
   specialty,
-  testMode,
 }: {
   contact: LoopsContact;
-  testMode: boolean;
   specialty: PhysicianSpecialty;
 }): Promise<string[]> {
-  if (testMode && contact.email === 'jane@veracity-health.ai') {
-    // Test mode: return predefined tags for Jane
-    return ['lung_cancer', 'asthma'];
-  }
-
   const message = await callOpenAIWithZodFormat({
-    content: `Find the topics the MD, ${contact.firstName} ${contact.lastName} might in interested in the list below. Only return a list of strings such a ["asthma", "copd ]. \n #### clinical interest list: \n ${JSON.stringify(SubspecialtiesEnumMap?.[specialty])}`,
+    content: `Find the topics the MD, ${contact.firstName} ${contact.lastName} might in interested in the list below. Only return a list of strings such a ["asthma", "copd"]. \n #### clinical interest list: \n ${JSON.stringify(SubspecialtiesEnumMap?.[specialty])}`,
     model: 'gpt-4.1',
     zodSchema: z.object({ tags: z.array(z.string()) }),
   });
@@ -245,37 +260,46 @@ async function getPersonalizedNews(
   }
 }
 
-async function getUniversalPulmonologyNews(
+async function getFillerPulmonologyNews(
   limit: number,
   testMode: boolean = false,
+  excludeIds: string[] = [],
 ): Promise<NewsItem[]> {
-  const universalTopics = ['chronic_cough', 'shortness_of_breath'];
+  const fillerTopics = ['chronic_cough', 'shortness_of_breath', 'ipf'];
 
   try {
-    console.log('Getting universal news for topics:', universalTopics);
+    console.log('Getting filler news for topics:', fillerTopics);
 
-    // Use the new getUserNewsRows function
+    // Use the new getUserNewsRows function to get more articles than needed
     const matchingNews = (await getUserNewsRows(
-      universalTopics,
-      limit,
+      fillerTopics,
+      limit * 3, // Get more than needed to allow for filtering
       testMode,
     )) as NewsItem[];
 
-    console.log(`Found ${matchingNews.length} universal news items`);
+    // Filter out articles that are already selected
+    const filteredNews = matchingNews.filter(
+      (item) => !excludeIds.includes(item.id),
+    );
+
+    // Take only the limit needed
+    const selectedNews = filteredNews.slice(0, limit);
+
+    console.log(`Found ${selectedNews.length} filler news items`);
 
     // Log matching news for debugging
-    matchingNews.forEach((item) => {
+    selectedNews.forEach((item) => {
       console.log(
-        `Found matching universal news: ${getNewsTitle(item)} with tags:`,
+        `Found matching filler news: ${getNewsTitle(item)} with tags:`,
         item.tags,
       );
     });
 
-    return matchingNews;
+    return selectedNews;
   } catch (error) {
-    console.error('Error getting universal news:', error);
+    console.error('Error getting filler news:', error);
     throw new Error(
-      `Failed to fetch universal news: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Failed to fetch filler news: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
   }
 }
@@ -285,17 +309,33 @@ async function updateLoopsContactProperties(
   email: string,
   newsItems: NewsItem[],
   datePrefix: string,
+  subspecialties: string[] = [],
 ): Promise<void> {
-  // Create properties for each news item (title and link)
-  const properties: Record<string, string> = {};
+  // Create properties for each news item (title and link with subspecialties tracking)
+  const properties: Record<string, string | boolean> = {};
+
+  // Create URL-safe subspecialties string for tracking
+  const subspecialtiesParam = subspecialties
+    .map((s) => s.replace(/\s+/g, '_').toLowerCase()) // Replace spaces with underscores and lowercase
+    .join(','); // Join with commas
 
   newsItems.forEach((item, index) => {
     const newsIndex = index + 1;
     const title = getNewsTitle(item);
 
+    // Add subspecialties as URL parameters for tracking
+    const url = new URL(item.url);
+    if (subspecialtiesParam) {
+      url.searchParams.set('subspecialties', subspecialtiesParam);
+      url.searchParams.set('md_email', email.split('@')[0]); // Add MD identifier (username part)
+    }
+
     properties[`${datePrefix}_${newsIndex}_title`] = title;
-    properties[`${datePrefix}_${newsIndex}_link`] = item.url;
+    properties[`${datePrefix}_${newsIndex}_link`] = url.toString();
   });
+
+  // Add hasSubspecialties tracking column
+  properties['hasSubspecialties'] = subspecialties.length > 0;
 
   // Update contact properties in Loops
   const response = await fetch(`https://app.loops.so/api/v1/contacts/update`, {

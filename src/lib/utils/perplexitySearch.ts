@@ -1,4 +1,8 @@
 import { z } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
+
+// Simple delay function for throttling
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Utility to call Perplexity's Sonar API for web search tasks with structured JSON responses
@@ -18,58 +22,104 @@ export async function callPerplexityWithZodFormat<T extends z.ZodTypeAny>({
   model?: string;
   temperature?: number;
 }): Promise<z.infer<T>> {
-  const response = await fetch('https://api.perplexity.ai/chat/completions', {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'content-type': 'application/json',
-      Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: 'system',
-          content:
-            'You are a helpful assistant that provides accurate, up-to-date information from the web. Always respond with valid JSON in the exact format requested.',
-        },
-        {
-          role: 'user',
-          content,
-        },
-      ],
-      temperature,
-    }),
-  });
+  const maxRetries = 3;
+  const baseDelay = 1000; // 1 second base delay
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(
-      `Perplexity API error: ${response.status} ${response.statusText} - ${errorText}`,
-    );
-  }
-
-  const data = await response.json();
-  const content_text = data.choices?.[0]?.message?.content;
-
-  if (content_text) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      // Strip markdown code block syntax if present
-      const cleanedText = content_text
-        .replace(/^```json\s*/, '') // Remove opening ```json
-        .replace(/\s*```$/, '') // Remove closing ```
-        .trim();
+      // Add exponential backoff delay for retries
+      if (attempt > 1) {
+        const retryDelay = baseDelay * Math.pow(2, attempt - 1);
+        console.log(
+          `⏳ Retrying Perplexity API call (attempt ${attempt}/${maxRetries}) after ${retryDelay}ms delay`,
+        );
+        await delay(retryDelay);
+      }
 
-      const parsed = JSON.parse(cleanedText);
-      return zodSchema.parse(parsed);
-    } catch (error) {
-      throw new Error(
-        `Failed to parse or validate Perplexity response: ${error}`,
+      const response = await fetch(
+        'https://api.perplexity.ai/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            accept: 'application/json',
+            'content-type': 'application/json',
+            Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are a helpful assistant that provides accurate, up-to-date information from the web. Always respond with valid JSON in the exact format requested.',
+              },
+              {
+                role: 'user',
+                content,
+              },
+            ],
+            temperature,
+            response_format: {
+              type: 'json_schema',
+              json_schema: { schema: zodToJsonSchema(zodSchema) },
+            },
+          }),
+          signal: AbortSignal.timeout(30000), // 30 second timeout
+        },
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Perplexity API error: ${response.status} ${response.statusText} - ${errorText}`,
+        );
+      }
+
+      const data = await response.json();
+      const content_text = data.choices?.[0]?.message?.content;
+
+      if (content_text) {
+        try {
+          // Strip markdown code block syntax if present
+          const cleanedText = content_text
+            .replace(/^```json\s*/, '') // Remove opening ```json
+            .replace(/\s*```$/, '') // Remove closing ```
+            .trim();
+
+          const parsed = JSON.parse(cleanedText);
+          return zodSchema.parse(parsed);
+        } catch (error) {
+          console.error('❌ Perplexity parse error:', error);
+          throw new Error(
+            `Failed to parse or validate Perplexity response: ${error}`,
+          );
+        }
+      } else {
+        throw new Error('No content returned from Perplexity');
+      }
+    } catch (fetchError) {
+      const errorMessage = (fetchError as Error).message;
+
+      // Check if it's a retryable error (timeout, connection issues)
+      const isRetryableError =
+        errorMessage.includes('Connect Timeout') ||
+        errorMessage.includes('fetch failed') ||
+        errorMessage.includes('ECONNRESET') ||
+        errorMessage.includes('ETIMEDOUT') ||
+        errorMessage.includes('TimeoutError');
+
+      if (attempt === maxRetries || !isRetryableError) {
+        console.error(`❌ Perplexity API error (final): ${errorMessage}`);
+        throw fetchError;
+      }
+
+      console.warn(
+        `⚠️ Perplexity API error (attempt ${attempt}/${maxRetries}): ${errorMessage}`,
       );
     }
-  } else {
-    throw new Error('No content returned from Perplexity');
   }
+
+  throw new Error('Perplexity API call failed after all retries');
 }
 
 /**

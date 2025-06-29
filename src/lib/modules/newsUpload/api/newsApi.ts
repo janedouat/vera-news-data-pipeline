@@ -61,3 +61,28 @@ export async function getUserNewsRows(
     );
   }
 }
+
+export async function getNewsRowsByIds(
+  ids: string[],
+  testMode: boolean = false,
+) {
+  try {
+    // Start building the query
+    let query = supabase.from('news').select('*').in('id', ids);
+
+    // If not in test mode, only get articles visible in production
+    if (!testMode) {
+      query = query.eq('is_visible_in_prod', true);
+    }
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+    return data || [];
+  } catch (error) {
+    console.error('Error fetching news rows by IDs:', error);
+    throw new Error(
+      `Failed to fetch news by IDs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    );
+  }
+}
