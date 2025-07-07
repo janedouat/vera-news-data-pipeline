@@ -70,9 +70,17 @@ export async function processOneOutput(output: DeepSearchOutput) {
             return { status: 'skipped', reason: 'no_url' };
           }
 
-          const date = rssResult?.date
-            ? new Date(rssResult?.date).toISOString().slice(0, 10)
-            : (await getDate({ topic, url, startDate })).date;
+          // Get the raw date from RSS or by scraping
+          const rawDate =
+            rssResult?.date ?? (await getDate({ topic, url })).date;
+
+          // Check if date is too old
+          const articleDate = new Date(rawDate);
+
+          const date =
+            articleDate > startDate
+              ? articleDate.toISOString().slice(0, 10)
+              : 'too_old';
 
           // Skip processing if date is too old
           if (date === 'too_old') {

@@ -91,14 +91,12 @@ export async function getUrl({
 }
 
 export async function getDate({
-  startDate,
   topic,
   url,
 }: {
   topic: string;
   url: string;
-  startDate: Date;
-}): Promise<{ date: string }> {
+}): Promise<{ date: Date }> {
   const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the last day of that month (ex: June 2025 -> 2025-06-30), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
   const message = await callOpenAIWithZodFormat({
     content,
@@ -110,10 +108,7 @@ export async function getDate({
 
   if (outputDate) {
     return {
-      date:
-        outputDate > startDate
-          ? outputDate.toISOString().slice(0, 10)
-          : SOURCE_TOO_OLD_PLACEHOLDER_STRING,
+      date: new Date(outputDate),
     };
   } else {
     throw new Error('Error generating news_date');
