@@ -14,8 +14,8 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function callPerplexityWithZodFormat<T extends z.ZodTypeAny>({
   content,
   zodSchema,
-  model = 'sonar-pro',
-  temperature = 0.2,
+  model = 'llama-3.1-sonar-large-128k-online',
+  temperature = 0.1,
 }: {
   content: string;
   zodSchema: T;
@@ -26,6 +26,7 @@ export async function callPerplexityWithZodFormat<T extends z.ZodTypeAny>({
   const baseDelay = 1000; // 1 second base delay
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log({ attempt });
     try {
       // Add exponential backoff delay for retries
       if (attempt > 1) {
@@ -46,19 +47,26 @@ export async function callPerplexityWithZodFormat<T extends z.ZodTypeAny>({
             Authorization: `Bearer ${process.env.PERPLEXITY_API_KEY}`,
           },
           body: JSON.stringify({
+            search_mode: 'web',
+            reasoning_effort: 'medium',
+            temperature,
+            top_p: 0.9,
+            return_images: false,
+            return_related_questions: false,
+            top_k: 0,
+            stream: false,
+            presence_penalty: 0,
+            frequency_penalty: 0,
+            web_search_options: {
+              search_context_size: 'high',
+            },
             model,
             messages: [
-              {
-                role: 'system',
-                content:
-                  'You are a helpful assistant that provides accurate, up-to-date information from the web. Always respond with valid JSON in the exact format requested.',
-              },
               {
                 role: 'user',
                 content,
               },
             ],
-            temperature,
             response_format: {
               type: 'json_schema',
               json_schema: { schema: zodToJsonSchema(zodSchema) },
@@ -76,6 +84,7 @@ export async function callPerplexityWithZodFormat<T extends z.ZodTypeAny>({
       }
 
       const data = await response.json();
+
       const content_text = data.choices?.[0]?.message?.content;
 
       if (content_text) {
@@ -130,19 +139,28 @@ export async function callPerplexityWithZodFormat<T extends z.ZodTypeAny>({
 export async function findMedicalSourceUrl(
   topic: string,
 ): Promise<{ url: string }> {
-  const content = `Find the most recent and authoritative source URL for this medical topic. 
+  const content = `Find the most recent and authoritative source URL for this medical topic: ${topic}. 
 
-Prioritize sources in this order:
-1. High-impact factor medical journals (Nature Medicine, NEJM, Lancet, JAMA, etc.)
-2. Official medical society websites and guidelines
-3. Reputable medical news sources (Medscape, WebMD professional sections)
-4. Government health agency websites (CDC, FDA, NIH)
+ONLY search for sources from these specific journals and websites:
+- New England Journal of Medicine (nejm.org)
+- The Lancet (thelancet.com)
+- JAMA Network (jamanetwork.com)
+- BMJ (bmj.com)
+- CHEST Journal (chestnet.org)
+- American Journal of Respiratory and Critical Care Medicine (atsjournals.org)
+- Nature Medicine (nature.com)
+- CDC (cdc.gov)
+- FDA (fda.gov)
+
+Do NOT include:
+- PubMed links (pubmed.ncbi.nlm.nih.gov)
+- General medical news sites
+- Non-peer reviewed sources
+- Preprint servers
 
 Return a JSON object with either:
-- {"url": "https://actual-url-here"} if you find a reliable source
-- {"url": "no_url"} if no authoritative source can be found
-
-Topic: ${topic}`;
+- {"url": "https://actual-url-here"} if you find a source from the above journals/websites
+- {"url": "no_url"} if no source from these specific journals can be found`;
 
   return callPerplexityWithZodFormat({
     content,

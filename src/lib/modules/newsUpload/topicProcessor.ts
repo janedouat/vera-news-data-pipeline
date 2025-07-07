@@ -38,6 +38,28 @@ export async function extractTopicsFromText(
 const NO_URL_PLACEHOLDER_STRING = 'no_url';
 const SOURCE_TOO_OLD_PLACEHOLDER_STRING = 'too_old';
 
+// Helper function to validate if URL is from approved domains
+function isValidDomain(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    const approvedDomains = [
+      'fda.gov',
+      'cdc.gov',
+      'nejm.org',
+      'jama',
+      'bmj.com',
+      'thelancet.com',
+      'chestnet',
+      'atsjournals',
+      'nature.com',
+    ];
+
+    return approvedDomains.some((domain) => hostname.includes(domain));
+  } catch {
+    return false;
+  }
+}
+
 export async function getUrl({
   topic,
 }: {
@@ -48,6 +70,14 @@ export async function getUrl({
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = output.url.match(urlR)?.toString();
   if (url) {
+    // Validate that the URL is from an approved domain
+    if (!isValidDomain(url)) {
+      console.log(`❌ URL rejected - not from approved domain: ${url}`);
+      return {
+        url: NO_URL_PLACEHOLDER_STRING,
+      };
+    }
+
     return {
       url: url ?? NO_URL_PLACEHOLDER_STRING,
     };
@@ -298,12 +328,13 @@ export function generateNewsletterTitle({
     try {
       const hostname = new URL(url).hostname.toLowerCase();
       if (hostname.includes('fda.gov')) return 'FDA';
-      if (hostname.includes('nih.gov')) return 'NIH';
       if (hostname.includes('cdc.gov')) return 'CDC';
       if (hostname.includes('nejm.org')) return 'NEJM';
       if (hostname.includes('jama')) return 'JAMA';
       if (hostname.includes('bmj.com')) return 'BMJ';
       if (hostname.includes('thelancet.com')) return 'Lancet';
+      if (hostname.includes('chestnet')) return 'CHEST';
+      if (hostname.includes('atsjournals')) return 'AJRCCM';
       // Add more mappings as needed
       return null; // Return null instead of generic hostname
     } catch {

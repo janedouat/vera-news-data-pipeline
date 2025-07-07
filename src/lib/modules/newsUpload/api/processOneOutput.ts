@@ -5,11 +5,12 @@ import {
   getSpecialties,
   getTags,
   getDate,
-  getUrl,
+  getUrl as getUrlFromPerplexity,
   uploadTopic,
   extractTopicsFromText,
   getScore,
 } from '../topicProcessor';
+import { searchLancetRssForTopic } from '@/lib/utils/lancetRssSearch';
 
 // Define the type for the input
 export type DeepSearchOutput = {
@@ -54,42 +55,43 @@ export async function processOneOutput(output: DeepSearchOutput) {
     await Promise.all(
       topics.map(async (topic: string, index: number) => {
         try {
-          console.log(
-            `Processing topic ${index}: ${topic.substring(0, 50)}...`,
-          );
+          // First try to find the topic in RSS feeds
+          let url = 'no_url';
 
-          const { url } = await getUrl({ topic });
-          console.log(`Got URL for topic ${index}: ${url}`);
+          const rssResult = await searchLancetRssForTopic(topic);
 
-          const { date } = await getDate({ topic, url, startDate });
-          console.log(`Got date for topic ${index}: ${date}`);
+          url = rssResult?.url ?? (await getUrlFromPerplexity({ topic })).url;
+
+          // Skip processing if no URL found
+          if (url === 'no_url') {
+            console.log(
+              `Skipping topic ${index + 1} because no URL found: "${topic}"`,
+            );
+            return { status: 'skipped', reason: 'no_url' };
+          }
+
+          const date = rssResult?.date
+            ? new Date(rssResult?.date).toISOString().slice(0, 10)
+            : (await getDate({ topic, url, startDate })).date;
 
           // Skip processing if date is too old
           if (date === 'too_old') {
             console.log(
-              `Skipping topic ${index} in ${uploadId} as date is too old`,
+              `Skipping topic ${index} because date is too old; url:${url}`,
             );
             return { status: 'skipped', reason: 'date_too_old' };
           }
 
-          console.log(`Getting answer for topic ${index}...`);
           const { answer } = await getAnswer({ topic, url });
-          console.log(`Got answer for topic ${index}`);
 
-          console.log(`Getting specialties for topic ${index}...`);
           const { specialties } = await getSpecialties({ answer, specialty });
-          console.log(`Got specialties for topic ${index}:`, specialties);
 
           const { tags } = subspecialtyTags?.length
             ? await getTags({ answer, tags: subspecialtyTags })
             : { tags: [] };
-          console.log(`Got tags for topic ${index}:`, tags);
 
-          console.log(`Getting score for topic ${index}...`);
           const { score } = await getScore({ answer, url, specialty });
-          console.log(`Got score for topic ${index}: ${score}`);
 
-          console.log(`Uploading topic ${index}...`);
           const result = await uploadTopic({
             index,
             date,
