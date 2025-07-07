@@ -132,31 +132,15 @@ export async function findMedicalSourceUrl(
 ): Promise<{ url: string }> {
   const content = `Find the most recent and authoritative source URL for this medical topic. 
 
-ONLY search for sources from these top medical journals and websites:
-- New England Journal of Medicine (nejm.org)
-- The Lancet (thelancet.com)
-- JAMA (jamanetwork.com)
-- BMJ (bmj.com)
-- Nature Medicine (nature.com)
-- Cell (cell.com)
-- Journal of Clinical Oncology (ascopubs.org)
-- Circulation (ahajournals.org)
-- Nature journals (nature.com)
-- Blood (bloodjournal.org)
-- Gastroenterology (gastrojournal.org)
-- American Journal of Respiratory and Critical Care Medicine (atsjournals.org)
-- CDC MMWR (cdc.gov)
-- Other major medical journals from academic publishers or
-
-Do NOT include:
-- PubMed links (pubmed.ncbi.nlm.nih.gov)
-- General medical news sites
-- Non-peer reviewed sources
-- Preprint servers
+Prioritize sources in this order:
+1. High-impact factor medical journals (Nature Medicine, NEJM, Lancet, JAMA, etc.)
+2. Official medical society websites and guidelines
+3. Reputable medical news sources (Medscape, WebMD professional sections)
+4. Government health agency websites (CDC, FDA, NIH)
 
 Return a JSON object with either:
-- {"url": "https://actual-url-here"} if you find a source from the above journals
-- {"url": "no_url"} if no source from these top journals can be found
+- {"url": "https://actual-url-here"} if you find a reliable source
+- {"url": "no_url"} if no authoritative source can be found
 
 Topic: ${topic}`;
 
