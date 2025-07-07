@@ -5,11 +5,12 @@ import {
   getSpecialties,
   getTags,
   getDate,
-  getUrl,
+  getUrl as getUrlFromPerplexity,
   uploadTopic,
   extractTopicsFromText,
   getScore,
 } from '../topicProcessor';
+import { searchLancetRssForTopic } from '@/lib/utils/lancetRssSearch';
 
 // Define the type for the input
 export type DeepSearchOutput = {
@@ -53,28 +54,72 @@ export async function processOneOutput(output: DeepSearchOutput) {
 
     await Promise.all(
       topics.map(async (topic: string, index: number) => {
-        const { url } = await getUrl({ topic });
-        const { date } = await getDate({ topic, url, startDate });
-        const { answer } = await getAnswer({ topic, url });
-        const { specialties } = await getSpecialties({ answer, specialty });
-        const { tags } = subspecialtyTags?.length
-          ? await getTags({ answer, tags: subspecialtyTags })
-          : { tags: [] };
-        const { score } = await getScore({ answer, url, specialty });
+        try {
+          // First try to find the topic in RSS feeds
+          let url = 'no_url';
 
-        return uploadTopic({
-          index,
-          date,
-          url,
-          specialty,
-          specialties,
-          tags,
-          answer,
-          score,
-          model,
-          uploadId,
-          is_visible_in_prod: false,
-        });
+          const rssResult = await searchLancetRssForTopic(topic);
+
+          url = rssResult?.url ?? (await getUrlFromPerplexity({ topic })).url;
+
+          // Skip processing if no URL found
+          if (url === 'no_url') {
+            console.log(
+              `Skipping topic ${index + 1} because no URL found: "${topic}"`,
+            );
+            return { status: 'skipped', reason: 'no_url' };
+          }
+
+          // Get the raw date from RSS or by scraping
+          const rawDate =
+            rssResult?.date ?? (await getDate({ topic, url })).date;
+
+          // Check if date is too old
+          const articleDate = new Date(rawDate);
+
+          const date =
+            articleDate > startDate
+              ? articleDate.toISOString().slice(0, 10)
+              : 'too_old';
+
+          // Skip processing if date is too old
+          if (date === 'too_old') {
+            console.log(
+              `Skipping topic ${index} because date is too old; url:${url}`,
+            );
+            return { status: 'skipped', reason: 'date_too_old' };
+          }
+
+          const { answer } = await getAnswer({ topic, url });
+
+          const { specialties } = await getSpecialties({ answer, specialty });
+
+          const { tags } = subspecialtyTags?.length
+            ? await getTags({ answer, tags: subspecialtyTags })
+            : { tags: [] };
+
+          const { score } = await getScore({ answer, url, specialty });
+
+          const result = await uploadTopic({
+            index,
+            date,
+            url,
+            specialty,
+            specialties,
+            tags,
+            answer,
+            score,
+            model,
+            uploadId,
+            is_visible_in_prod: true,
+          });
+          console.log(`Successfully uploaded topic ${index}`);
+
+          return result;
+        } catch (error) {
+          console.error(`Error processing topic ${index}:`, error);
+          throw error; // Re-throw to be caught by outer catch
+        }
       }),
     );
 

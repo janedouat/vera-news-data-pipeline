@@ -6,6 +6,7 @@ import { ALL_SPECIALTIES, Specialty } from '../../../types/taxonomy';
 import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
 import { OpenAI } from 'openai';
 import { callOpenAIWithZodFormat } from '@/lib/utils/openaiWebSearch';
+import { findMedicalSourceUrl } from '@/lib/utils/perplexitySearch';
 
 const TopicList = z.object({
   topics: z.array(z.string()),
@@ -21,11 +22,11 @@ export async function extractTopicsFromText(
   unstructuredTopicList: string,
 ): Promise<string[]> {
   const result = await generateObject({
-    model: openai('gpt-4o'),
+    model: openai('gpt-4.1'),
     schema: TopicList,
     schemaName: 'TopicList',
     schemaDescription: 'A list of topics extracted from unstructured text.',
-    prompt: `Extract a list of topics from the following text (one per title) and return ONLY a JSON object with a "topics" array of strings. Text: ${unstructuredTopicList}`,
+    prompt: `Extract a list of strings from the topic text below (one per title, the titles are separated by commas and numbers), do not change any of the words in the topic text below and return ONLY a JSON object with a "topics" array of strings. \n ### Topic list: ${unstructuredTopicList}`,
     temperature: 1,
   });
 
@@ -37,23 +38,52 @@ export async function extractTopicsFromText(
 const NO_URL_PLACEHOLDER_STRING = 'no_url';
 const SOURCE_TOO_OLD_PLACEHOLDER_STRING = 'too_old';
 
+// Helper function to validate if URL is from approved domains
+function isValidDomain(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    const approvedDomains = [
+      'fda.gov',
+      'cdc.gov',
+      'nejm.org',
+      'jama',
+      'bmj.com',
+      'thelancet.com',
+      'chestnet',
+      'atsjournals',
+      'nature.com',
+    ];
+
+    return approvedDomains.some((domain) => hostname.includes(domain));
+  } catch {
+    return false;
+  }
+}
+
 export async function getUrl({
   topic,
 }: {
   topic: string;
 }): Promise<{ url: string }> {
-  const content = `Find the source url of this topic and either return the url (nothing else) or "no url". Don't write anything else in the answer. Topic: ${topic}`;
-  const output = await callOpenAIWithZodFormat({
-    content,
-    zodSchema: z.object({ url: z.string() }),
-    model: 'gpt-4.1',
-  });
+  const output = await findMedicalSourceUrl(topic);
 
   const urlR = /(https?:\/\/[^\s]+)/g;
   const url = output.url.match(urlR)?.toString();
   if (url) {
+    // Validate that the URL is from an approved domain
+    if (!isValidDomain(url)) {
+      console.log(`❌ URL rejected - not from approved domain: ${url}`);
+      return {
+        url: NO_URL_PLACEHOLDER_STRING,
+      };
+    }
+
     return {
       url: url ?? NO_URL_PLACEHOLDER_STRING,
+    };
+  } else if (output.url === 'no_url') {
+    return {
+      url: NO_URL_PLACEHOLDER_STRING,
     };
   } else {
     throw new Error('Error generating url');
@@ -61,15 +91,13 @@ export async function getUrl({
 }
 
 export async function getDate({
-  startDate,
   topic,
   url,
 }: {
   topic: string;
   url: string;
-  startDate: Date;
-}): Promise<{ date: string }> {
-  const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the 1rst of that month (ex: July 25 -> 2025--07-01), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
+}): Promise<{ date: Date }> {
+  const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the last day of that month (ex: June 2025 -> 2025-06-30), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
   const message = await callOpenAIWithZodFormat({
     content,
     zodSchema: z.object({ date: z.string() }),
@@ -80,10 +108,7 @@ export async function getDate({
 
   if (outputDate) {
     return {
-      date:
-        outputDate > startDate
-          ? outputDate.toISOString().slice(0, 10)
-          : SOURCE_TOO_OLD_PLACEHOLDER_STRING,
+      date: new Date(outputDate),
     };
   } else {
     throw new Error('Error generating news_date');
@@ -105,19 +130,20 @@ export async function getAnswer({
   topic: string;
   url: string;
 }): Promise<{ answer: string }> {
+  const content = `Topic: ${topic}, with more details here: ${url}.
+
+  1. Write a clinically relevant title that clearly addresses the "so what?"—include the main intervention/exposure, the outcome, and the patient population when applicable.
+  2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
+  3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
+
+  Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).`;
+
   const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
       {
         role: 'user',
-        content: `Topic: ${topic}, with more details here: ${url}.
-
-        1. Write a clinically relevant title that clearly addresses the "so what?"—include the main intervention/exposure, the outcome, and the patient population when applicable.
-        2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
-        3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
-
-        Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).
-        `,
+        content,
       },
     ],
     reasoning: {},
@@ -283,6 +309,65 @@ export async function getScore({
   return { score };
 }
 
+export function generateNewsletterTitle({
+  url,
+  date,
+  answer,
+}: {
+  url: string;
+  date: string;
+  answer: string;
+}): string {
+  // Extract source from URL for newsletter title
+  const getSourceFromUrl = (url: string): string | null => {
+    try {
+      const hostname = new URL(url).hostname.toLowerCase();
+      if (hostname.includes('fda.gov')) return 'FDA';
+      if (hostname.includes('cdc.gov')) return 'CDC';
+      if (hostname.includes('nejm.org')) return 'NEJM';
+      if (hostname.includes('jama')) return 'JAMA';
+      if (hostname.includes('bmj.com')) return 'BMJ';
+      if (hostname.includes('thelancet.com')) return 'Lancet';
+      if (hostname.includes('chestnet')) return 'CHEST';
+      if (hostname.includes('atsjournals')) return 'AJRCCM';
+      // Add more mappings as needed
+      return null; // Return null instead of generic hostname
+    } catch {
+      return null;
+    }
+  };
+
+  // Determine article type from content
+  const getArticleType = (answerContent: {
+    title: string;
+    bullet_points: string[];
+    paragraphs: string[];
+  }): string | null => {
+    const content = JSON.stringify(answerContent).toLowerCase();
+    if (content.includes('randomized') || content.includes('rct')) return 'RCT';
+    if (content.includes('cohort') || content.includes('observational'))
+      return 'Cohort';
+    if (content.includes('case-control')) return 'Case-Control';
+    if (content.includes('meta-analysis')) return 'Meta-Analysis';
+    if (content.includes('systematic review')) return 'Systematic Review';
+    if (content.includes('guideline')) return 'Guideline';
+    return null; // Return null instead of generic "Study"
+  };
+
+  const parsedAnswer = typeof answer === 'string' ? JSON.parse(answer) : answer;
+  const source = getSourceFromUrl(url);
+  const articleType = getArticleType(parsedAnswer);
+
+  // Build title conditionally based on available information
+  const titleParts: string[] = [];
+
+  if (source) titleParts.push(source);
+  titleParts.push(date);
+  if (articleType) titleParts.push(articleType);
+
+  return `${titleParts.join(' - ')}: ${parsedAnswer.title}`;
+}
+
 export async function uploadTopic({
   index,
   date,
@@ -313,13 +398,16 @@ export async function uploadTopic({
     date == SOURCE_TOO_OLD_PLACEHOLDER_STRING
   ) {
     console.log(
-      `News piece ${index + 1} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
+      `News piece ${index + 1} from upload ${uploadId} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
     );
   } else {
+    const newsletterTitle = generateNewsletterTitle({ url, date, answer });
+
     return uploadNewsRow({
       elements: answer,
       score,
       news_date: date,
+      news_date_timestamp: new Date(date).getTime().toString(),
       news_type: 'test',
       specialty,
       specialties: specialties,
@@ -329,6 +417,7 @@ export async function uploadTopic({
       tags: tags,
       upload_id: uploadId,
       is_visible_in_prod: !!is_visible_in_prod,
+      newsletter_title: newsletterTitle,
     });
   }
 }

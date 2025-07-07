@@ -712,6 +712,7 @@ export type Database = {
           specialties: string[] | null;
           specialty: string | null;
           timestamp: string | null;
+          news_date_timestamp: string | null;
           updated_at: string | null;
           url: string | null;
           view_count: number | null;
@@ -719,6 +720,7 @@ export type Database = {
           tags?: string[] | null;
           upload_id?: string | null;
           is_visible_in_prod?: boolean | null;
+          newsletter_title?: string | null;
         };
         Insert: {
           created_at?: string | null;
@@ -731,6 +733,7 @@ export type Database = {
           specialties?: string[] | null;
           specialty?: string | null;
           timestamp?: string | null;
+          news_date_timestamp: string | null;
           updated_at?: string | null;
           selecting_model?: string | null;
           url?: string | null;
@@ -738,6 +741,7 @@ export type Database = {
           tags?: string[] | null;
           upload_id?: string | null;
           is_visible_in_prod?: boolean | null;
+          newsletter_title?: string | null;
         };
         Update: {
           selecting_model?: string | null;
@@ -751,12 +755,14 @@ export type Database = {
           specialties?: string[] | null;
           specialty?: string | null;
           timestamp?: string | null;
+          news_date_timestamp: string | null;
           updated_at?: string | null;
           url?: string | null;
           view_count?: number | null;
           tags?: string[] | null;
           upload_id?: string | null;
           is_visible_in_prod?: boolean | null;
+          newsletter_title?: string | null;
         };
         Relationships: [];
       };

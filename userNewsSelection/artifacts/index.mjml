@@ -1,0 +1,273 @@
+<mjml>
+  <mj-head>
+    <mj-title>Vera Health - Personalized Pulmonology Updates</mj-title>
+    <mj-font
+      name="Inter"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+    />
+    <mj-attributes>
+      <mj-all
+        font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+      />
+      <mj-text color="#374151" line-height="1.6" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f9fafb">
+    <!-- Header Section -->
+    <mj-section
+      background-color="#ffffff"
+      padding-top="40px"
+      padding-bottom="30px"
+    >
+      <mj-column>
+        <mj-image
+          src="https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=100&h=100&q=80"
+          alt="Vera Health Logo"
+          width="60px"
+          height="60px"
+          border-radius="30px"
+          align="center"
+        />
+        <mj-text
+          align="center"
+          font-size="28px"
+          font-weight="600"
+          color="#1f2937"
+          padding-top="15px"
+          padding-bottom="0"
+        >
+          vera health
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Introduction Section -->
+    <mj-section
+      background-color="#ffffff"
+      padding-top="0"
+      padding-bottom="30px"
+    >
+      <mj-column>
+        <mj-text
+          font-size="16px"
+          color="#4b5563"
+          line-height="1.7"
+          padding-left="30px"
+          padding-right="30px"
+        >
+          Your personalized pulmonology updates - curated by Vera Health's AI
+          based on your clinical interests and the latest high-impact research.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- News Header Section -->
+    <mj-section
+      background-color="#ffffff"
+      padding-top="20px"
+      padding-bottom="15px"
+    >
+      <mj-column>
+        <mj-text
+          align="center"
+          font-size="20px"
+          font-weight="600"
+          color="#1f2937"
+          text-decoration="underline"
+          padding-left="30px"
+          padding-right="30px"
+        >
+          Recent Highlights - Live in Vera
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Personalized News Section -->
+    <mj-section
+      background-color="#ffffff"
+      padding-top="10px"
+      padding-bottom="20px"
+    >
+      <mj-column>
+        <mj-text
+          font-size="16px"
+          color="#6b7280"
+          font-weight="500"
+          padding-left="30px"
+          padding-right="30px"
+        >
+          Your personalized selection based on your clinical interests:
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- News Item 1 -->
+    <mj-section background-color="#ffffff" padding="0 30px 15px 30px">
+      <mj-column>
+        <mj-text
+          background-color="#f8fafc"
+          border-left="3px solid #3b82f6"
+          border-radius="4px"
+          padding="15px"
+          font-size="16px"
+        >
+          <strong style="color: #1e40af">•</strong>
+          {20250630_1_title}
+          <a
+            href="{20250630_1_link}"
+            style="color: #3b82f6; text-decoration: underline; margin-left: 8px"
+            >read more</a
+          >
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- News Item 2 -->
+    <mj-section background-color="#ffffff" padding="0 30px 15px 30px">
+      <mj-column>
+        <mj-text
+          background-color="#f8fafc"
+          border-left="3px solid #3b82f6"
+          border-radius="4px"
+          padding="15px"
+          font-size="16px"
+        >
+          <strong style="color: #1e40af">•</strong>
+          {20250630_2_title}
+          <a
+            href="{20250630_2_link}"
+            style="color: #3b82f6; text-decoration: underline; margin-left: 8px"
+            >read more</a
+          >
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- News Item 3 -->
+    <mj-section background-color="#ffffff" padding="0 30px 20px 30px">
+      <mj-column>
+        <mj-text
+          background-color="#f8fafc"
+          border-left="3px solid #3b82f6"
+          border-radius="4px"
+          padding="15px"
+          font-size="16px"
+        >
+          <strong style="color: #1e40af">•</strong>
+          {20250630_3_title}
+          <a
+            href="{20250630_3_link}"
+            style="color: #3b82f6; text-decoration: underline; margin-left: 8px"
+            >read more</a
+          >
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Universal News Item 1 -->
+    <mj-section background-color="#ffffff" padding="0 30px 15px 30px">
+      <mj-column>
+        <mj-text
+          background-color="#fef3c7"
+          border-left="3px solid #f59e0b"
+          border-radius="4px"
+          padding="15px"
+          font-size="16px"
+        >
+          <strong style="color: #d97706">•</strong>
+          {20250630_4_title}
+          <a
+            href="{20250630_4_link}"
+            style="color: #d97706; text-decoration: underline; margin-left: 8px"
+            >read more</a
+          >
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Universal News Item 2 -->
+    <mj-section background-color="#ffffff" padding="0 30px 40px 30px">
+      <mj-column>
+        <mj-text
+          background-color="#fef3c7"
+          border-left="3px solid #f59e0b"
+          border-radius="4px"
+          padding="15px"
+          font-size="16px"
+        >
+          <strong style="color: #d97706">•</strong>
+          {20250630_5_title}
+          <a
+            href="{20250630_5_link}"
+            style="color: #d97706; text-decoration: underline; margin-left: 8px"
+            >read more</a
+          >
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Call to Action Section -->
+    <mj-section
+      background-color="#ffffff"
+      padding-top="20px"
+      padding-bottom="30px"
+    >
+      <mj-column>
+        <mj-text
+          align="center"
+          font-size="16px"
+          color="#4b5563"
+          padding-left="30px"
+          padding-right="30px"
+        >
+          Want to explore these updates further?
+        </mj-text>
+        <mj-button
+          background-color="#3b82f6"
+          color="#ffffff"
+          font-size="16px"
+          font-weight="600"
+          border-radius="6px"
+          padding="12px 24px"
+          href="https://vera-health.ai/dashboard"
+        >
+          Visit Vera Dashboard
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer Section -->
+    <mj-section
+      background-color="#f3f4f6"
+      padding-top="30px"
+      padding-bottom="30px"
+    >
+      <mj-column>
+        <mj-text
+          align="center"
+          font-size="14px"
+          color="#6b7280"
+          padding-left="30px"
+          padding-right="30px"
+        >
+          <a
+            href="{unsubscribe_link}"
+            style="color: #6b7280; text-decoration: underline"
+          >
+            Unsubscribe
+          </a>
+        </mj-text>
+        <mj-text
+          align="center"
+          font-size="12px"
+          color="#9ca3af"
+          padding-top="15px"
+          padding-left="30px"
+          padding-right="30px"
+        >
+          © 2025 Vera Health. All rights reserved.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
