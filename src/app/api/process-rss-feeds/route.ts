@@ -9,6 +9,7 @@ import {
   uploadTopic,
 } from '@/lib/modules/newsUpload/topicProcessor';
 import { parseRssFeed } from '@/lib/utils/rssParser';
+import { getEnabledRssFeeds } from '@/lib/config/rssFeeds';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -18,13 +19,6 @@ export type RssFeedProcessInput = {
   model: string;
   uploadId: string;
 };
-
-const RSS_FEEDS = [
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanres_current.xml',
-    source: 'Lancet',
-  },
-];
 
 //todo: score by specialty?
 //todo: add rss feed sync history to supabase
@@ -43,9 +37,10 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     let skippedCount = 0;
 
     // Process each RSS feed URL
-    for (const feed of RSS_FEEDS) {
+    const enabledFeeds = getEnabledRssFeeds();
+    for (const feed of enabledFeeds) {
       try {
-        console.log(`🔍 Processing RSS feed: ${feed}`);
+        console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.source})`);
 
         // Parse the RSS feed to get items
         const rssItems = await parseRssFeed(feed.url);
@@ -149,7 +144,10 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           }),
         );
       } catch (error) {
-        console.error(`Error processing RSS feed ${feed}:`, error);
+        console.error(
+          `Error processing RSS feed ${feed.url} (${feed.source}):`,
+          error,
+        );
         // Continue with next RSS feed even if one fails
       }
     }
