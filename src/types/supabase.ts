@@ -7,6 +7,11 @@ export type Json =
   | Json[];
 
 export type Database = {
+  // Allows to automatically instanciate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: '12.2.2 (db9da0b)';
+  };
   public: {
     Tables: {
       answers: {
@@ -705,64 +710,70 @@ export type Database = {
           created_at: string | null;
           elements: Json | null;
           id: string;
+          is_visible_in_prod: boolean | null;
           news_date: string | null;
+          news_date_timestamp: string | null;
           news_type: string | null;
+          newsletter_title: string | null;
           ranking_model_ranking: number | null;
           score: number | null;
+          scores: Json | null;
+          selecting_model: string | null;
+          source: string | null;
           specialties: string[] | null;
           specialty: string | null;
+          tags: string[] | null;
           timestamp: string | null;
-          news_date_timestamp: string | null;
           updated_at: string | null;
+          upload_id: string | null;
           url: string | null;
           view_count: number | null;
-          selecting_model?: string | null;
-          tags?: string[] | null;
-          upload_id?: string | null;
-          is_visible_in_prod?: boolean | null;
-          newsletter_title?: string | null;
         };
         Insert: {
           created_at?: string | null;
           elements?: Json | null;
           id?: string;
+          is_visible_in_prod?: boolean | null;
           news_date?: string | null;
+          news_date_timestamp?: string | null;
           news_type?: string | null;
+          newsletter_title?: string | null;
           ranking_model_ranking?: number | null;
           score?: number | null;
+          scores?: Json | null;
+          selecting_model?: string | null;
+          source?: string | null;
           specialties?: string[] | null;
           specialty?: string | null;
+          tags?: string[] | null;
           timestamp?: string | null;
-          news_date_timestamp: string | null;
           updated_at?: string | null;
-          selecting_model?: string | null;
+          upload_id?: string | null;
           url?: string | null;
           view_count?: number | null;
-          tags?: string[] | null;
-          upload_id?: string | null;
-          is_visible_in_prod?: boolean | null;
-          newsletter_title?: string | null;
         };
         Update: {
-          selecting_model?: string | null;
           created_at?: string | null;
           elements?: Json | null;
           id?: string;
+          is_visible_in_prod?: boolean | null;
           news_date?: string | null;
+          news_date_timestamp?: string | null;
           news_type?: string | null;
+          newsletter_title?: string | null;
           ranking_model_ranking?: number | null;
           score?: number | null;
+          scores?: Json | null;
+          selecting_model?: string | null;
+          source?: string | null;
           specialties?: string[] | null;
           specialty?: string | null;
+          tags?: string[] | null;
           timestamp?: string | null;
-          news_date_timestamp: string | null;
           updated_at?: string | null;
+          upload_id?: string | null;
           url?: string | null;
           view_count?: number | null;
-          tags?: string[] | null;
-          upload_id?: string | null;
-          is_visible_in_prod?: boolean | null;
-          newsletter_title?: string | null;
         };
         Relationships: [];
       };
@@ -858,6 +869,7 @@ export type Database = {
           id: string;
           invitation_code: string | null;
           is_anonymous: string | null;
+          is_new: boolean | null;
           is_onboarded: boolean | null;
           last_login: string | null;
           last_name: string | null;
@@ -889,6 +901,7 @@ export type Database = {
           id: string;
           invitation_code?: string | null;
           is_anonymous?: string | null;
+          is_new?: boolean | null;
           is_onboarded?: boolean | null;
           last_login?: string | null;
           last_name?: string | null;
@@ -920,6 +933,7 @@ export type Database = {
           id?: string;
           invitation_code?: string | null;
           is_anonymous?: string | null;
+          is_new?: boolean | null;
           is_onboarded?: boolean | null;
           last_login?: string | null;
           last_name?: string | null;
@@ -1643,6 +1657,7 @@ export type Database = {
           id: string;
           invitation_code: string | null;
           is_anonymous: string | null;
+          is_new: boolean | null;
           is_onboarded: boolean | null;
           last_login: string | null;
           last_name: string | null;
@@ -1673,21 +1688,28 @@ export type Database = {
   };
 };
 
-type DefaultSchema = Database[Extract<keyof Database, 'public'>];
+type DatabaseWithoutInternals = Omit<Database, '__InternalSupabase'>;
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<
+  keyof Database,
+  'public'
+>];
 
 export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema['Tables'] & DefaultSchema['Views'])
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-        Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? (Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
-      Database[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Views'])[TableName] extends {
       Row: infer R;
     }
     ? R
@@ -1705,14 +1727,16 @@ export type Tables<
 export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema['Tables']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Insert: infer I;
     }
     ? I
@@ -1728,14 +1752,16 @@ export type TablesInsert<
 export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema['Tables']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   TableName extends DefaultSchemaTableNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[DefaultSchemaTableNameOrOptions['schema']]['Tables']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables']
     : never = never,
-> = DefaultSchemaTableNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions['schema']]['Tables'][TableName] extends {
       Update: infer U;
     }
     ? U
@@ -1751,14 +1777,16 @@ export type TablesUpdate<
 export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema['Enums']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   EnumName extends DefaultSchemaEnumNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums']
     : never = never,
-> = DefaultSchemaEnumNameOrOptions extends { schema: keyof Database }
-  ? Database[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions['schema']]['Enums'][EnumName]
   : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema['Enums']
     ? DefaultSchema['Enums'][DefaultSchemaEnumNameOrOptions]
     : never;
@@ -1766,14 +1794,16 @@ export type Enums<
 export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema['CompositeTypes']
-    | { schema: keyof Database },
+    | { schema: keyof DatabaseWithoutInternals },
   CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof Database;
+    schema: keyof DatabaseWithoutInternals;
   }
-    ? keyof Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes']
     : never = never,
-> = PublicCompositeTypeNameOrOptions extends { schema: keyof Database }
-  ? Database[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals;
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions['schema']]['CompositeTypes'][CompositeTypeName]
   : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema['CompositeTypes']
     ? DefaultSchema['CompositeTypes'][PublicCompositeTypeNameOrOptions]
     : never;

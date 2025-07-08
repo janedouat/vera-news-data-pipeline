@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  processOneOutput,
+  processTopicList,
   DeepSearchOutput,
 } from '@/lib/modules/newsUpload/api/processOneOutput';
 
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Process all outputs in parallel using the helper
     const results = await Promise.all(
       deepSearchOutputs.map((output: DeepSearchOutput) =>
-        processOneOutput(output),
+        processTopicList(output),
       ),
     );
 
