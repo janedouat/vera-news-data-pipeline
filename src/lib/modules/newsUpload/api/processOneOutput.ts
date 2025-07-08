@@ -24,7 +24,7 @@ export type DeepSearchOutput = {
 };
 
 // The helper function to process a single output
-export async function processOneOutput(output: DeepSearchOutput) {
+export async function processTopicList(output: DeepSearchOutput) {
   try {
     if (output.isInSupabase == 'true') return { status: 'skipped' };
 

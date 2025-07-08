@@ -185,7 +185,7 @@ export async function getSpecialties({
   specialty,
 }: {
   answer: string;
-  specialty: Specialty;
+  specialty?: Specialty;
 }): Promise<{ specialties: Specialty[] }> {
   const content = `Tag this answer with MD specialties that might be interested in reading it ${JSON.stringify(answer)}, from the list of specialties, using the exact same words for them. Go through these specialties one by one and only return the ones it's really clinical-practice changing for: ${ALL_SPECIALTIES.join()}`;
   const response = await openaiClient.responses.create({
@@ -219,9 +219,11 @@ export async function getSpecialties({
 
   const message = response.output_text;
   const messageSpecialties = JSON.parse(message).specialties;
-  const specialties = messageSpecialties.includes(specialty)
-    ? messageSpecialties
-    : [...messageSpecialties, specialty];
+  const specialties = specialty
+    ? messageSpecialties.includes(specialty)
+      ? messageSpecialties
+      : [...messageSpecialties, specialty]
+    : messageSpecialties;
 
   if (message) {
     return { specialties };
@@ -283,10 +285,13 @@ export async function getScore({
 }: {
   answer: string;
   url: string;
-  specialty: Specialty;
+  specialty?: Specialty;
 }) {
+  const content = specialty
+    ? `Score the topic below for MDs of specialty ${specialty} on trustfulness, clinical-impactfulness and how hard to treat the underlying diagnosis is to treat for MDs of that specialty, each from 1 to 3 (3 is max). Return a json in the format {trust: 1, clinical_impact: 3, tricky_diagnosis: 3}./n ### Topic: ${JSON.stringify(answer)} \n ### url: ${url}}`
+    : `Score the topic below for MDs on trustfulness, clinical-impactfulness and how hard to treat the underlying diagnosis is to treat for MDs, each from 1 to 3 (3 is max). Return a json in the format {trust: 1, clinical_impact: 3, tricky_diagnosis: 3}./n ### Topic: ${JSON.stringify(answer)} \n ### url: ${url}}`;
   const message = await callOpenAIWithZodFormat({
-    content: `Score the topic below for MDs of specialty ${specialty} on trustfulness, clinical-impactfulness and how hard to treat the underlying diagnosis is to treat for MDs of that specialt, each from 1 to 3 (3 is max). Return a json in the format {trust: 1, clinical_impact: 3, tricky_diagnosis: 3}./n ### Topic: ${JSON.stringify(answer)} \n ### url: ${url}}`,
+    content: content,
     model: 'gpt-4.1',
     zodSchema: z.object({
       trust: z.number(),
@@ -380,18 +385,22 @@ export async function uploadTopic({
   model,
   uploadId,
   is_visible_in_prod,
+  source,
+  scores,
 }: {
   index: number;
   date: string;
   url: string;
-  specialty: Specialty;
+  specialty?: Specialty;
   specialties: string[];
   tags: string[];
   answer: string;
   score: number;
-  model: string;
+  model?: string;
   uploadId: string;
   is_visible_in_prod?: boolean;
+  source?: string;
+  scores?: Record<string, number>;
 }) {
   if (
     url == NO_URL_PLACEHOLDER_STRING ||
@@ -407,17 +416,18 @@ export async function uploadTopic({
       elements: answer,
       score,
       news_date: date,
-      news_date_timestamp: new Date(date).getTime().toString(),
+      news_date_timestamp: new Date(date).toISOString(),
       news_type: 'test',
-      specialty,
+      specialty: specialty ?? null,
       specialties: specialties,
-      ranking_model_ranking: 1,
-      selecting_model: model,
+      selecting_model: model ?? null,
       url: url,
       tags: tags,
       upload_id: uploadId,
       is_visible_in_prod: !!is_visible_in_prod,
       newsletter_title: newsletterTitle,
+      source,
+      scores,
     });
   }
 }
