@@ -36,13 +36,44 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     let processedCount = 0;
     let skippedCount = 0;
 
+    // Track counts per RSS feed
+    const feedStats: Record<
+      string,
+      {
+        group: string;
+        name: string;
+        url: string;
+        totalItems: number;
+        goodDateItems: number;
+        badDateItems: number;
+        processedItems: number;
+        skippedItems: number;
+      }
+    > = {};
+
     // Process each RSS feed URL
     for (const feed of RSS_FEEDS) {
+      // Initialize feed stats
+      const feedKey = `${feed.group}_${feed.name}_${feed.url}`;
+      feedStats[feedKey] = {
+        group: feed.group,
+        name: feed.name,
+        url: feed.url,
+        totalItems: 0,
+        goodDateItems: 0,
+        badDateItems: 0,
+        processedItems: 0,
+        skippedItems: 0,
+      };
+
       try {
         console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.group})`);
 
         // Parse the RSS feed to get items
         const rssItems = await parseRssFeed(feed.url);
+
+        // Update total items count
+        feedStats[feedKey].totalItems = rssItems.length;
 
         // Process each RSS item
         await Promise.all(
@@ -56,6 +87,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                   `Skipping RSS item ${index + 1} because missing URL or title or date`,
                 );
                 skippedCount++;
+                feedStats[feedKey].skippedItems++;
                 return {
                   status: 'skipped',
                   reason: 'missing_url_or_title_or_date',
@@ -67,8 +99,13 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
               // Check if date is too old
               if (articleDate < startDate) {
                 skippedCount++;
+                feedStats[feedKey].badDateItems++;
+                feedStats[feedKey].skippedItems++;
                 return { status: 'skipped', reason: 'date_too_old' };
               }
+
+              // Count as good date item
+              feedStats[feedKey].goodDateItems++;
 
               // Use the RSS item title as the topic for processing
               const topic = title;
@@ -123,18 +160,20 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 score,
                 model: 'none',
                 uploadId: 'test_rss',
-                is_visible_in_prod: true,
+                is_visible_in_prod: false,
                 source: feed.group,
                 scores: specialtyScores,
               });
 
               processedCount++;
+              feedStats[feedKey].processedItems++;
               console.log(`Successfully uploaded RSS item: ${title}`);
 
               return result;
             } catch (error) {
               console.error(`Error processing RSS item ${index}:`, error);
               skippedCount++;
+              feedStats[feedKey].skippedItems++;
               return {
                 status: 'error',
                 reason: error instanceof Error ? error.message : String(error),
@@ -154,11 +193,24 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     console.log(
       `✅ RSS processing complete. Processed: ${processedCount}, Skipped: ${skippedCount}`,
     );
+
+    // Log feed statistics
+    console.log('\n📊 Feed Statistics:');
+    Object.values(feedStats).forEach((stat) => {
+      console.log(`${stat.group} - ${stat.name}:`);
+      console.log(`  Total items: ${stat.totalItems}`);
+      console.log(`  Good date items: ${stat.goodDateItems}`);
+      console.log(`  Bad date items: ${stat.badDateItems}`);
+      console.log(`  Processed: ${stat.processedItems}`);
+      console.log(`  Skipped: ${stat.skippedItems}`);
+    });
+
     return {
       status: 'ok',
       processedCount,
       skippedCount,
       message: `Successfully processed ${processedCount} RSS items, skipped ${skippedCount}`,
+      feedStats: Object.values(feedStats),
     };
   } catch (error) {
     return {
