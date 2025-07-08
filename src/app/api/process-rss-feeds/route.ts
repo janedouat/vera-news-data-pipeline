@@ -9,7 +9,7 @@ import {
   uploadTopic,
 } from '@/lib/modules/newsUpload/topicProcessor';
 import { parseRssFeed } from '@/lib/utils/rssParser';
-import { getEnabledRssFeeds } from '@/lib/config/rssFeeds';
+import { RSS_FEEDS } from '@/lib/config/rssFeeds';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -37,10 +37,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     let skippedCount = 0;
 
     // Process each RSS feed URL
-    const enabledFeeds = getEnabledRssFeeds();
-    for (const feed of enabledFeeds) {
+    for (const feed of RSS_FEEDS) {
       try {
-        console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.source})`);
+        console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.group})`);
 
         // Parse the RSS feed to get items
         const rssItems = await parseRssFeed(feed.url);
@@ -125,7 +124,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 model: 'none',
                 uploadId: 'test_rss',
                 is_visible_in_prod: true,
-                source: feed.source,
+                source: feed.group,
                 scores: specialtyScores,
               });
 
@@ -145,7 +144,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         );
       } catch (error) {
         console.error(
-          `Error processing RSS feed ${feed.url} (${feed.source}):`,
+          `Error processing RSS feed ${feed.url} (${feed.group}):`,
           error,
         );
         // Continue with next RSS feed even if one fails
