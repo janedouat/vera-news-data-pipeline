@@ -575,6 +575,127 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     name: 'Journal of Epidemiology and Community Health (Online First)',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
   },
+  /// NEJM feeds
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=allergy-immunology',
+    group: 'NEJM',
+    name: 'Allergy/Immunology',
+    specialty: PhysicianSpecialty.ALLERGY_IMMUNOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=cardiology',
+    group: 'NEJM',
+    name: 'Cardiology',
+    specialty: PhysicianSpecialty.CARDIOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=clinical-medicine',
+    group: 'NEJM',
+    name: 'Clinical Medicine',
+    specialty: PhysicianSpecialty.OTHER,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=dermatology',
+    group: 'NEJM',
+    name: 'Dermatology',
+    specialty: PhysicianSpecialty.DERMATOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=emergency-medicine',
+    group: 'NEJM',
+    name: 'Emergency Medicine',
+    specialty: PhysicianSpecialty.EMERGENCY_MEDICINE,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=endocrinology',
+    group: 'NEJM',
+    name: 'Endocrinology',
+    specialty: PhysicianSpecialty.ENDOCRINOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=gastroenterology',
+    group: 'NEJM',
+    name: 'Gastroenterology',
+    specialty: PhysicianSpecialty.GASTROENTEROLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=genetics',
+    group: 'NEJM',
+    name: 'Genetics',
+    specialty: PhysicianSpecialty.OTHER,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=geriatrics-aging',
+    group: 'NEJM',
+    name: 'Geriatrics/Aging',
+    specialty: PhysicianSpecialty.GERIATRICS,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=health-policy',
+    group: 'NEJM',
+    name: 'Health Policy',
+    specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=hematology-oncology',
+    group: 'NEJM',
+    name: 'Hematology/Oncology',
+    specialty: PhysicianSpecialty.ONCOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=infectious-disease',
+    group: 'NEJM',
+    name: 'Infectious Disease',
+    specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=nephrology',
+    group: 'NEJM',
+    name: 'Nephrology',
+    specialty: PhysicianSpecialty.NEPHROLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=neurology-neurosurgery',
+    group: 'NEJM',
+    name: 'Neurology/Neurosurgery',
+    specialty: PhysicianSpecialty.NEUROLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=obstetrics-gynecology',
+    group: 'NEJM',
+    name: 'Obstetrics/Gynecology',
+    specialty: PhysicianSpecialty.OBSTETRICS_GYNECOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=pediatrics',
+    group: 'NEJM',
+    name: 'Pediatrics',
+    specialty: PhysicianSpecialty.PEDIATRICS,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=psychiatry',
+    group: 'NEJM',
+    name: 'Psychiatry',
+    specialty: PhysicianSpecialty.PSYCHIATRY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=pulmonary-critical-care',
+    group: 'NEJM',
+    name: 'Pulmonary/Critical Care',
+    specialty: PhysicianSpecialty.PULMONOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=rheumatology',
+    group: 'NEJM',
+    name: 'Rheumatology',
+    specialty: PhysicianSpecialty.RHEUMATOLOGY,
+  },
+  {
+    url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=surgery',
+    group: 'NEJM',
+    name: 'Surgery',
+    specialty: PhysicianSpecialty.GENERAL_SURGERY,
+  },
 ];
 
 // Helper functions for filtering and organizing feeds
