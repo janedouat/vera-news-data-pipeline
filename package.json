@@ -13,6 +13,7 @@
     "@ai-sdk/perplexity": "^1.1.9",
     "@supabase/supabase-js": "^2.50.0",
     "ai": "^4.3.16",
+    "cheerio": "^1.0.0",
     "fs": "0.0.1-security",
     "next": "15.3.4",
     "openai": "^5.5.1",

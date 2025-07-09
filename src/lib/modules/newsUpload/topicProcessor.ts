@@ -128,16 +128,20 @@ const AnswerZObject = z.object({
 export async function getAnswer({
   topic,
   url,
+  text,
 }: {
   topic: string;
   url: string;
+  text: string;
 }): Promise<{ answer: string }> {
   const content = `Topic: ${topic}, with more details at this url : ${url}.
 
-  Using only text found in the url above (no hallucinations), and without referencing sources (i.e. no [1] etc):
+  Using only text found in the url above or in the text below (no hallucinations), and without referencing sources (i.e. no [1] etc):
   1. Write a clinically relevant title that clearly addresses the "so what?"—include the main intervention/exposure, the outcome, and the patient population when applicable.
   2. Using only text found at the url (no hallucinations), summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
   3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
+
+  ### text: ${text}
 `;
 
   const output = await generateObject({
@@ -148,9 +152,9 @@ export async function getAnswer({
       'A structured response with title, bullet points, and paragraphs for medical news.',
     prompt: content,
     temperature: 0.1, // Very low temperature for factual URL finding
-    providerOptions: {
-      perplexity: { searchMode: 'web', search_domain_filter: [url] },
-    },
+    // providerOptions: {
+    //   perplexity: { searchMode: 'web', search_domain_filter: [url] },
+    // },
   });
 
   const message = output.object;
