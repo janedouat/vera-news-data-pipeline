@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PhysicianSpecialty } from '@/types/taxonomy';
-import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
-import {
-  getAnswer,
-  getSpecialties,
-  getSubspecialtyTags,
-  getScore,
-  uploadTopic,
-} from '@/lib/modules/newsUpload/topicProcessor';
 import { parseRssFeed } from '@/lib/utils/rssParser';
 import { RSS_FEEDS } from '@/lib/config/rssFeeds';
+import { processRssItem } from '@/lib/modules/newsUpload/rssItemProcessor';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -48,11 +41,17 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         badDateItems: number;
         processedItems: number;
         skippedItems: number;
+        skipReasons: {
+          missing_url_or_title_or_date: number;
+          date_too_old: number;
+          not_scientific_paper: number;
+          error: number;
+        };
       }
     > = {};
 
     // Process each RSS feed URL
-    for (const feed of RSS_FEEDS) {
+    for (const feed of RSS_FEEDS.slice(0, 20)) {
       // Initialize feed stats
       const feedKey = `${feed.group}_${feed.name}_${feed.url}`;
       feedStats[feedKey] = {
@@ -64,6 +63,12 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         badDateItems: 0,
         processedItems: 0,
         skippedItems: 0,
+        skipReasons: {
+          missing_url_or_title_or_date: 0,
+          date_too_old: 0,
+          not_scientific_paper: 0,
+          error: 0,
+        },
       };
 
       try {
@@ -77,110 +82,43 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
 
         // Process each RSS item
         await Promise.all(
-          rssItems.map(async (rssItem, index) => {
-            try {
-              const { title, link: url, pubDate } = rssItem;
+          rssItems
+            .filter(
+              (rssItem) => rssItem.pubDate && rssItem.title && rssItem.link,
+            ) // Filter out items with missing required fields
+            .map(async (rssItem, index) => {
+              const result = await processRssItem({
+                rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
+                index,
+                startDate,
+                feedGroup: feed.group,
+                processedCount,
+              });
 
-              // Skip if no URL or title
-              if (!url || !title || !pubDate) {
-                console.log(
-                  `Skipping RSS item ${index + 1} because missing URL or title or date`,
-                );
+              // Update counters based on result
+              if (result.status === 'success') {
+                processedCount++;
+                feedStats[feedKey].processedItems++;
+                feedStats[feedKey].goodDateItems++;
+              } else if (result.status === 'skipped') {
                 skippedCount++;
                 feedStats[feedKey].skippedItems++;
-                return {
-                  status: 'skipped',
-                  reason: 'missing_url_or_title_or_date',
-                };
-              }
-
-              const articleDate = new Date(pubDate);
-
-              // Check if date is too old
-              if (articleDate < startDate) {
+                if (result.reason === 'date_too_old') {
+                  feedStats[feedKey].badDateItems++;
+                  feedStats[feedKey].skipReasons.date_too_old++;
+                } else if (result.reason === 'missing_url_or_title_or_date') {
+                  feedStats[feedKey].skipReasons.missing_url_or_title_or_date++;
+                } else if (result.reason === 'not_scientific_paper') {
+                  feedStats[feedKey].skipReasons.not_scientific_paper++;
+                }
+              } else if (result.status === 'error') {
                 skippedCount++;
-                feedStats[feedKey].badDateItems++;
                 feedStats[feedKey].skippedItems++;
-                return { status: 'skipped', reason: 'date_too_old' };
+                feedStats[feedKey].skipReasons.error++;
               }
-
-              // Count as good date item
-              feedStats[feedKey].goodDateItems++;
-
-              // Use the RSS item title as the topic for processing
-              const topic = title;
-
-              // Process the item through the same pipeline as processOneOutput
-              const { answer } = await getAnswer({ topic, url });
-
-              const { specialties } = await getSpecialties({
-                answer,
-              });
-
-              // Get all subspecialties for found specialties
-              const allSubspecialties = specialties
-                .map(
-                  (specialty) =>
-                    SubspecialtiesEnumMap?.[specialty as PhysicianSpecialty] ||
-                    [],
-                )
-                .flat();
-
-              // Get subspecialty tags from the combined list
-              const { tags: allTags } = await getSubspecialtyTags({
-                answer,
-                tags: allSubspecialties,
-              });
-
-              // Remove duplicates
-              const tags = [...new Set(allTags)];
-
-              // Compute scores for each specialty found
-              const specialtyScores: Record<string, number> = {};
-              for (const foundSpecialty of specialties) {
-                const { score } = await getScore({
-                  answer,
-                  url,
-                  specialty: foundSpecialty as PhysicianSpecialty,
-                });
-                specialtyScores[foundSpecialty] = score;
-              }
-
-              // Use the highest score as the main score
-              const score = Math.max(...Object.values(specialtyScores));
-
-              const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
-              console.log({ date, specialtyScores });
-              const result = await uploadTopic({
-                index: processedCount,
-                date,
-                url,
-                specialties,
-                tags,
-                answer,
-                score,
-                model: 'none',
-                uploadId: 'test_rss',
-                is_visible_in_prod: false,
-                source: feed.group,
-                scores: specialtyScores,
-              });
-
-              processedCount++;
-              feedStats[feedKey].processedItems++;
-              console.log(`Successfully uploaded RSS item: ${title}`);
 
               return result;
-            } catch (error) {
-              console.error(`Error processing RSS item ${index}:`, error);
-              skippedCount++;
-              feedStats[feedKey].skippedItems++;
-              return {
-                status: 'error',
-                reason: error instanceof Error ? error.message : String(error),
-              };
-            }
-          }),
+            }),
         );
       } catch (error) {
         console.error(
@@ -204,7 +142,47 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       console.log(`  Bad date items: ${stat.badDateItems}`);
       console.log(`  Processed: ${stat.processedItems}`);
       console.log(`  Skipped: ${stat.skippedItems}`);
+      console.log(`  Skip reasons:`);
+      console.log(`    📅 Too old: ${stat.skipReasons.date_too_old}`);
+      console.log(
+        `    📄 Missing info: ${stat.skipReasons.missing_url_or_title_or_date}`,
+      );
+      console.log(
+        `    🔬 Not scientific: ${stat.skipReasons.not_scientific_paper}`,
+      );
+      console.log(`    ❌ Errors: ${stat.skipReasons.error}`);
     });
+
+    // Log overall skip reasons summary
+    const totalSkipReasons = Object.values(feedStats).reduce(
+      (acc, stat) => ({
+        date_too_old: acc.date_too_old + stat.skipReasons.date_too_old,
+        missing_url_or_title_or_date:
+          acc.missing_url_or_title_or_date +
+          stat.skipReasons.missing_url_or_title_or_date,
+        not_scientific_paper:
+          acc.not_scientific_paper + stat.skipReasons.not_scientific_paper,
+        error: acc.error + stat.skipReasons.error,
+      }),
+      {
+        date_too_old: 0,
+        missing_url_or_title_or_date: 0,
+        not_scientific_paper: 0,
+        error: 0,
+      },
+    );
+
+    console.log('\n📋 Overall Skip Reasons Summary:');
+    console.log(`📅 Articles too old: ${totalSkipReasons.date_too_old}`);
+    console.log(
+      `📄 Missing required info: ${totalSkipReasons.missing_url_or_title_or_date}`,
+    );
+    console.log(
+      `🔬 Not scientific papers: ${totalSkipReasons.not_scientific_paper}`,
+    );
+    console.log(`❌ Processing errors: ${totalSkipReasons.error}`);
+    console.log(`📊 Total skipped: ${skippedCount}`);
+    console.log(`✅ Total processed: ${processedCount}`);
 
     return {
       status: 'ok',
@@ -212,6 +190,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       skippedCount,
       message: `Successfully processed ${processedCount} RSS items, skipped ${skippedCount}`,
       feedStats: Object.values(feedStats),
+      skipReasonsSummary: totalSkipReasons,
     };
   } catch (error) {
     return {

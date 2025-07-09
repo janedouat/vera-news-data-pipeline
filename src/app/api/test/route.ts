@@ -21,7 +21,7 @@ export async function POST() {
     .flat();
 
   const { tags } = await getSubspecialtyTags({
-    answer,
+    answer: JSON.stringify(answer),
     tags: allSubspecialties,
   });
 
