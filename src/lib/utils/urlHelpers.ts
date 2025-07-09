@@ -20,4 +20,4 @@ export function removeRssRouteParameters(url: string): string {
     );
     return url;
   }
-
+}
