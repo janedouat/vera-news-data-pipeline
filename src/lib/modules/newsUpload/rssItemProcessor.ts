@@ -33,6 +33,7 @@ export type RssItemProcessOptions = {
   startDate: Date;
   feedGroup: string;
   processedCount: number;
+  uploadId: string;
 };
 
 const ScientificPaperFilter = z.object({
@@ -74,6 +75,7 @@ export async function processRssItem({
   startDate,
   feedGroup,
   processedCount,
+  uploadId,
 }: RssItemProcessOptions): Promise<RssItemProcessResult> {
   try {
     const { title, link: url, pubDate, description } = rssItem;
@@ -104,9 +106,6 @@ export async function processRssItem({
     );
 
     if (!scientificPaperCheck.isScientificPaper) {
-      console.log(
-        `Skipping RSS item ${index + 1} because it's not a scientific paper: ${scientificPaperCheck.reasoning}`,
-      );
       return {
         status: 'skipped',
         reason: 'not_scientific_paper',
@@ -193,7 +192,7 @@ export async function processRssItem({
       answer,
       score,
       model: 'none',
-      uploadId: 'test_rss',
+      uploadId,
       is_visible_in_prod: false,
       source: feedGroup,
       scores: specialtyScores,

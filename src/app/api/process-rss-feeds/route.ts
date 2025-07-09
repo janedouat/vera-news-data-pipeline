@@ -3,14 +3,6 @@ import { PhysicianSpecialty } from '@/types/taxonomy';
 import { parseRssFeed } from '@/lib/utils/rssParser';
 import { RSS_FEEDS } from '@/lib/config/rssFeeds';
 import { processRssItem } from '@/lib/modules/newsUpload/rssItemProcessor';
-import {
-  checkFeedProcessedToday,
-  checkItemsProcessedRecently,
-  startFeedProcessing,
-  recordItemProcessing,
-  completeFeedProcessing,
-  cleanupOldHistory,
-} from '@/lib/utils/rssFeedHistory';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -33,11 +25,6 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     if (!startDate.valueOf()) {
       return { error: 'Request StartDate not correct', status: 400 };
     }
-
-    const processingDate = new Date().toISOString().split('T')[0];
-
-    // Clean up old history (older than 30 days)
-    await cleanupOldHistory(30);
 
     let processedCount = 0;
     let skippedCount = 0;
@@ -65,7 +52,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     > = {};
 
     // Process each RSS feed URL
-    for (const feed of RSS_FEEDS.slice(0, 20)) {
+    for (const feed of RSS_FEEDS) {
       // Initialize feed stats
       const feedKey = `${feed.group}_${feed.name}_${feed.url}`;
       feedStats[feedKey] = {
@@ -89,95 +76,22 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       try {
         console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.group})`);
 
-        // Check if this feed was already processed today
-        const alreadyProcessed = await checkFeedProcessedToday(
-          feed.url,
-          processingDate,
-        );
-        if (alreadyProcessed) {
-          console.log(`⏭️ Feed ${feed.url} already processed today, skipping`);
-          continue;
-        }
-
-        // Start tracking this feed processing session
-        const feedHistoryId = await startFeedProcessing(
-          feed.url,
-          feed.group,
-          feed.name,
-          processingDate,
-          startDateString,
-          uploadId,
-        );
-
-        if (!feedHistoryId) {
-          console.error(`❌ Failed to start history tracking for ${feed.url}`);
-          continue;
-        }
-
         // Parse the RSS feed to get items
         const rssItems = await parseRssFeed(feed.url);
 
-        // Update total items count
         feedStats[feedKey].totalItems = rssItems.length;
-
-        // Check which items were processed recently (last 7 days)
-        const validItems = rssItems.filter(
-          (rssItem) => rssItem.pubDate && rssItem.title && rssItem.link,
-        );
-
-        const recentlyProcessedUrls = await checkItemsProcessedRecently(
-          validItems.map((item) => ({
-            url: item.link,
-            pubDate: item.pubDate!,
-          })),
-          feed.url,
-          7,
-        );
 
         // Process each RSS item
         await Promise.all(
-          validItems.map(async (rssItem, index) => {
-            // Skip if already processed recently
-            if (recentlyProcessedUrls.has(rssItem.link)) {
-              console.log(
-                `⏭️ Item already processed recently: ${rssItem.title}`,
-              );
-              skippedCount++;
-              feedStats[feedKey].skippedItems++;
-              feedStats[feedKey].skipReasons.already_processed++;
-
-              await recordItemProcessing(
-                feedHistoryId,
-                rssItem.link,
-                rssItem.title,
-                rssItem.pubDate!,
-                'skipped',
-                'already_processed',
-              );
-              return { status: 'skipped', reason: 'already_processed' };
-            }
-
+          rssItems.map(async (rssItem, index) => {
             const result = await processRssItem({
               rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
               index,
               startDate,
               feedGroup: feed.group,
               processedCount,
+              uploadId,
             });
-
-            // Record the processing result
-            await recordItemProcessing(
-              feedHistoryId,
-              rssItem.link,
-              rssItem.title,
-              rssItem.pubDate!,
-              result.status === 'success'
-                ? 'processed'
-                : result.status === 'skipped'
-                  ? 'skipped'
-                  : 'failed',
-              result.reason,
-            );
 
             // Update counters based on result
             if (result.status === 'success') {
@@ -205,19 +119,6 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
 
             return result;
           }),
-        );
-
-        // Complete the feed processing session
-        const lastItemDate =
-          validItems.length > 0 ? validItems[0].pubDate : undefined;
-        await completeFeedProcessing(
-          feedHistoryId,
-          feedStats[feedKey].totalItems,
-          feedStats[feedKey].processedItems,
-          feedStats[feedKey].skippedItems,
-          feedStats[feedKey].processedItems > 0 ? 'success' : 'partial',
-          undefined,
-          lastItemDate,
         );
       } catch (error) {
         console.error(
@@ -310,7 +211,20 @@ export async function POST(request: NextRequest) {
   try {
     const input: RssFeedProcessInput = await request.json();
 
-    const result = await processRssFeedItems(input);
+    // Generate timestamp-based uploadId
+    const now = new Date();
+    const timestamp = now
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .replace(/\.\d{3}Z$/, '')
+      .replace('T', '_');
+    const uploadId = `rss_${timestamp}`;
+    console.log(`🆔 Generated uploadId: ${uploadId}`);
+
+    const result = await processRssFeedItems({
+      ...input,
+      uploadId,
+    });
 
     if (result.error) {
       return NextResponse.json(

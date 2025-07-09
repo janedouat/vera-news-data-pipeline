@@ -158,16 +158,10 @@ export async function getAnswer({
     schemaDescription:
       'A structured response with title, bullet points, and paragraphs for medical news.',
     prompt: content,
-    temperature: 0.1, // Very low temperature for factual URL finding
-    // providerOptions: {
-    //   perplexity: { searchMode: 'web', search_domain_filter: [url] },
-    // },
+    temperature: 0.1,
   });
 
   const message = output.object;
-
-  console.log({ message });
-  console.log({ messagestrinigy: JSON.stringify(message) });
 
   if (message) {
     return { answer: message };
