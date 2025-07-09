@@ -8,6 +8,7 @@ import {
   uploadTopic,
 } from './topicProcessor';
 import { scrapeWithFirecrawlStructured } from '@/lib/utils/webScraper';
+import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
@@ -114,12 +115,20 @@ export async function processRssItem({
     // Use the RSS item title as the topic for processing
     const topic = title;
 
-    const scrapedContent = await scrapeWithFirecrawlStructured(url);
+    // Remove RSS route parameters from URL
+    const cleanedUrl = removeRssRouteParameters(url);
+
+    // Check if any RSS parameters remain in the URL
+    if (cleanedUrl.toLowerCase().includes('rss')) {
+      console.log(`⚠️ RSS still found in cleaned URL: ${cleanedUrl}`);
+    }
+
+    const scrapedContent = await scrapeWithFirecrawlStructured(cleanedUrl);
 
     // Process the item through the same pipeline as processOneOutput
     const { answer } = await getAnswer({
       topic,
-      url,
+      url: cleanedUrl,
       text: scrapedContent.content,
     });
 
@@ -151,12 +160,11 @@ export async function processRssItem({
     for (const foundSpecialty of specialties) {
       const { score } = await getScore({
         answer: stringifiedAnswer,
-        url,
+        url: cleanedUrl,
         specialty: foundSpecialty as PhysicianSpecialty,
       });
       specialtyScores[foundSpecialty] = score;
     }
-
     // Use the highest score as the main score
     const score = Math.max(...Object.values(specialtyScores));
 
@@ -165,7 +173,7 @@ export async function processRssItem({
     await uploadTopic({
       index: processedCount,
       date,
-      url,
+      url: cleanedUrl,
       specialties,
       tags,
       answer,
