@@ -4,7 +4,7 @@ import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
 import {
   getAnswer,
   getSpecialties,
-  getTags,
+  getSubspecialtyTags,
   getScore,
   uploadTopic,
 } from '@/lib/modules/newsUpload/topicProcessor';
@@ -117,19 +117,20 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 answer,
               });
 
-              // Get subspecialty tags for each found specialty
-              let allTags: string[] = [];
-              for (const foundSpecialty of specialties) {
-                const foundSpecialtyTags =
-                  SubspecialtiesEnumMap?.[foundSpecialty as PhysicianSpecialty];
-                if (foundSpecialtyTags?.length) {
-                  const { tags } = await getTags({
-                    answer,
-                    tags: foundSpecialtyTags,
-                  });
-                  allTags = [...allTags, ...tags];
-                }
-              }
+              // Get all subspecialties for found specialties
+              const allSubspecialties = specialties
+                .map(
+                  (specialty) =>
+                    SubspecialtiesEnumMap?.[specialty as PhysicianSpecialty] ||
+                    [],
+                )
+                .flat();
+
+              // Get subspecialty tags from the combined list
+              const { tags: allTags } = await getSubspecialtyTags({
+                answer,
+                tags: allSubspecialties,
+              });
 
               // Remove duplicates
               const tags = [...new Set(allTags)];

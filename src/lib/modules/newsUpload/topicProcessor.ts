@@ -3,10 +3,12 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod.mjs';
 import { ALL_SPECIALTIES, Specialty } from '../../../types/taxonomy';
+import { ALL_SUBSPECIALTIES } from '../../../types/subspecialty_taxonomy';
 import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
 import { OpenAI } from 'openai';
 import { callOpenAIWithZodFormat } from '@/lib/utils/openaiWebSearch';
 import { findMedicalSourceUrl } from '@/lib/utils/perplexitySearch';
+import { perplexity } from '@ai-sdk/perplexity';
 
 const TopicList = z.object({
   topics: z.array(z.string()),
@@ -130,44 +132,31 @@ export async function getAnswer({
   topic: string;
   url: string;
 }): Promise<{ answer: string }> {
-  const content = `Topic: ${topic}, with more details here: ${url}.
+  const content = `Topic: ${topic}, with more details at this url : ${url}.
 
+  Using only text found in the url above (no hallucinations), and without referencing sources (i.e. no [1] etc):
   1. Write a clinically relevant title that clearly addresses the "so what?"—include the main intervention/exposure, the outcome, and the patient population when applicable.
-  2. Summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
+  2. Using only text found at the url (no hallucinations), summarize the practice-impacting takeaways in 2-3 bullet points using evidence-focused, non-prescriptive, MD-level language. Do not use vague terms like "ethically obligated." Focus on legally binding, clinical, or operational implications.
   3. Write a short, clinically relevant explanation (1-2 paragraphs). Prioritize what a practicing MD needs to know to understand and apply this in a clinical context. Avoid prescriptions. Frame implications without telling MDs what to do.
+`;
 
-  Return as JSON: title, bullet_points (list of strings), paragraphs (list of strings).`;
-
-  const response = await openaiClient.responses.create({
-    model: 'gpt-4.1',
-    input: [
-      {
-        role: 'user',
-        content,
-      },
-    ],
-    reasoning: {},
-    text: {
-      format: zodTextFormat(AnswerZObject, 'answer'),
+  const output = await generateObject({
+    model: perplexity('sonar-pro'),
+    schema: AnswerZObject,
+    schemaName: 'AnswerZObject',
+    schemaDescription:
+      'A structured response with title, bullet points, and paragraphs for medical news.',
+    prompt: content,
+    temperature: 0.1, // Very low temperature for factual URL finding
+    providerOptions: {
+      perplexity: { searchMode: 'web', search_domain_filter: [url] },
     },
-    tools: [
-      {
-        type: 'web_search_preview',
-        user_location: {
-          type: 'approximate',
-          country: 'US',
-        },
-        search_context_size: 'medium',
-      },
-    ],
-    temperature: 1,
-    top_p: 1,
   });
 
-  const message = response.output_text;
+  const message = output.object;
 
   if (message) {
-    return { answer: JSON.parse(message) };
+    return { answer: JSON.stringify(message) };
   } else {
     throw new Error('Error generating title and/or bullet_points');
   }
@@ -176,6 +165,11 @@ export async function getAnswer({
 // *** Topic symptom tagging functions ***
 
 export const SpecialtyZod = z.enum([...ALL_SPECIALTIES] as [
+  string,
+  ...string[],
+]);
+
+export const SubspecialtyZod = z.enum([...ALL_SUBSPECIALTIES] as [
   string,
   ...string[],
 ]);
@@ -234,7 +228,7 @@ export async function getSpecialties({
 
 // tag with clinical interests
 
-export async function getTags({
+export async function getSubspecialtyTags({
   answer,
   tags,
 }: {
@@ -243,6 +237,7 @@ export async function getTags({
 }): Promise<{ tags: string[] }> {
   const content = `Given the medical update below, return only the relevant clinical interests as a JSON array of strings. Only use the exact strings provided in the clinical interests list. Do not include any tag unless the medical update is clearly and directly relevant to it. If none are relevant, return an empty array. Do not include any explanation or extra text. \n ### medical update ${JSON.stringify(answer)}) \n ### clinical interests ${JSON.stringify(tags)})`;
 
+  console.log({ content });
   const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -253,7 +248,10 @@ export async function getTags({
     ],
     reasoning: {},
     text: {
-      format: zodTextFormat(z.object({ tags: z.array(z.string()) }), 'tags'),
+      format: zodTextFormat(
+        z.object({ tags: z.array(SubspecialtyZod) }),
+        'tags',
+      ),
     },
     tools: [
       {

@@ -3,7 +3,7 @@ import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
 import {
   getAnswer,
   getSpecialties,
-  getTags,
+  getSubspecialtyTags,
   getDate,
   getUrl as getUrlFromPerplexity,
   uploadTopic,
@@ -95,7 +95,7 @@ export async function processTopicList(output: DeepSearchOutput) {
           const { specialties } = await getSpecialties({ answer, specialty });
 
           const { tags } = subspecialtyTags?.length
-            ? await getTags({ answer, tags: subspecialtyTags })
+            ? await getSubspecialtyTags({ answer, tags: subspecialtyTags })
             : { tags: [] };
 
           const { score } = await getScore({ answer, url, specialty });
