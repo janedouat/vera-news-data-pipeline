@@ -93,3 +93,27 @@ export async function getNewsRowsByIds(
     );
   }
 }
+
+export async function checkNewsItemExists(
+  url: string,
+  newsDate: string,
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('news')
+      .select('id')
+      .eq('url', url)
+      .eq('news_date', newsDate)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking for duplicate news item:', error);
+      return false; // Return false on error to continue processing
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error in checkNewsItemExists:', error);
+    return false; // Return false on error to continue processing
+  }
+}

@@ -3,6 +3,14 @@ import { PhysicianSpecialty } from '@/types/taxonomy';
 import { parseRssFeed } from '@/lib/utils/rssParser';
 import { RSS_FEEDS } from '@/lib/config/rssFeeds';
 import { processRssItem } from '@/lib/modules/newsUpload/rssItemProcessor';
+import {
+  checkFeedProcessedToday,
+  checkItemsProcessedRecently,
+  startFeedProcessing,
+  recordItemProcessing,
+  completeFeedProcessing,
+  cleanupOldHistory,
+} from '@/lib/utils/rssFeedHistory';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -18,13 +26,18 @@ export type RssFeedProcessInput = {
 
 export async function processRssFeedItems(input: RssFeedProcessInput) {
   try {
-    const { startDate: startDateString } = input;
+    const { startDate: startDateString, uploadId } = input;
 
     const startDate = new Date(startDateString);
     console.log({ startDate });
     if (!startDate.valueOf()) {
       return { error: 'Request StartDate not correct', status: 400 };
     }
+
+    const processingDate = new Date().toISOString().split('T')[0];
+
+    // Clean up old history (older than 30 days)
+    await cleanupOldHistory(30);
 
     let processedCount = 0;
     let skippedCount = 0;
@@ -46,6 +59,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           date_too_old: number;
           not_scientific_paper: number;
           error: number;
+          already_processed: number;
         };
       }
     > = {};
@@ -68,11 +82,37 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           date_too_old: 0,
           not_scientific_paper: 0,
           error: 0,
+          already_processed: 0,
         },
       };
 
       try {
         console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.group})`);
+
+        // Check if this feed was already processed today
+        const alreadyProcessed = await checkFeedProcessedToday(
+          feed.url,
+          processingDate,
+        );
+        if (alreadyProcessed) {
+          console.log(`⏭️ Feed ${feed.url} already processed today, skipping`);
+          continue;
+        }
+
+        // Start tracking this feed processing session
+        const feedHistoryId = await startFeedProcessing(
+          feed.url,
+          feed.group,
+          feed.name,
+          processingDate,
+          startDateString,
+          uploadId,
+        );
+
+        if (!feedHistoryId) {
+          console.error(`❌ Failed to start history tracking for ${feed.url}`);
+          continue;
+        }
 
         // Parse the RSS feed to get items
         const rssItems = await parseRssFeed(feed.url);
@@ -80,45 +120,104 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         // Update total items count
         feedStats[feedKey].totalItems = rssItems.length;
 
+        // Check which items were processed recently (last 7 days)
+        const validItems = rssItems.filter(
+          (rssItem) => rssItem.pubDate && rssItem.title && rssItem.link,
+        );
+
+        const recentlyProcessedUrls = await checkItemsProcessedRecently(
+          validItems.map((item) => ({
+            url: item.link,
+            pubDate: item.pubDate!,
+          })),
+          feed.url,
+          7,
+        );
+
         // Process each RSS item
         await Promise.all(
-          rssItems
-            .filter(
-              (rssItem) => rssItem.pubDate && rssItem.title && rssItem.link,
-            ) // Filter out items with missing required fields
-            .map(async (rssItem, index) => {
-              const result = await processRssItem({
-                rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
-                index,
-                startDate,
-                feedGroup: feed.group,
-                processedCount,
-              });
+          validItems.map(async (rssItem, index) => {
+            // Skip if already processed recently
+            if (recentlyProcessedUrls.has(rssItem.link)) {
+              console.log(
+                `⏭️ Item already processed recently: ${rssItem.title}`,
+              );
+              skippedCount++;
+              feedStats[feedKey].skippedItems++;
+              feedStats[feedKey].skipReasons.already_processed++;
 
-              // Update counters based on result
-              if (result.status === 'success') {
-                processedCount++;
-                feedStats[feedKey].processedItems++;
-                feedStats[feedKey].goodDateItems++;
-              } else if (result.status === 'skipped') {
-                skippedCount++;
-                feedStats[feedKey].skippedItems++;
-                if (result.reason === 'date_too_old') {
-                  feedStats[feedKey].badDateItems++;
-                  feedStats[feedKey].skipReasons.date_too_old++;
-                } else if (result.reason === 'missing_url_or_title_or_date') {
-                  feedStats[feedKey].skipReasons.missing_url_or_title_or_date++;
-                } else if (result.reason === 'not_scientific_paper') {
-                  feedStats[feedKey].skipReasons.not_scientific_paper++;
-                }
-              } else if (result.status === 'error') {
-                skippedCount++;
-                feedStats[feedKey].skippedItems++;
-                feedStats[feedKey].skipReasons.error++;
+              await recordItemProcessing(
+                feedHistoryId,
+                rssItem.link,
+                rssItem.title,
+                rssItem.pubDate!,
+                'skipped',
+                'already_processed',
+              );
+              return { status: 'skipped', reason: 'already_processed' };
+            }
+
+            const result = await processRssItem({
+              rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
+              index,
+              startDate,
+              feedGroup: feed.group,
+              processedCount,
+            });
+
+            // Record the processing result
+            await recordItemProcessing(
+              feedHistoryId,
+              rssItem.link,
+              rssItem.title,
+              rssItem.pubDate!,
+              result.status === 'success'
+                ? 'processed'
+                : result.status === 'skipped'
+                  ? 'skipped'
+                  : 'failed',
+              result.reason,
+            );
+
+            // Update counters based on result
+            if (result.status === 'success') {
+              processedCount++;
+              feedStats[feedKey].processedItems++;
+              feedStats[feedKey].goodDateItems++;
+            } else if (result.status === 'skipped') {
+              skippedCount++;
+              feedStats[feedKey].skippedItems++;
+              if (result.reason === 'date_too_old') {
+                feedStats[feedKey].badDateItems++;
+                feedStats[feedKey].skipReasons.date_too_old++;
+              } else if (result.reason === 'missing_url_or_title_or_date') {
+                feedStats[feedKey].skipReasons.missing_url_or_title_or_date++;
+              } else if (result.reason === 'not_scientific_paper') {
+                feedStats[feedKey].skipReasons.not_scientific_paper++;
+              } else if (result.reason === 'already_in_supabase') {
+                feedStats[feedKey].skipReasons.already_processed++;
               }
+            } else if (result.status === 'error') {
+              skippedCount++;
+              feedStats[feedKey].skippedItems++;
+              feedStats[feedKey].skipReasons.error++;
+            }
 
-              return result;
-            }),
+            return result;
+          }),
+        );
+
+        // Complete the feed processing session
+        const lastItemDate =
+          validItems.length > 0 ? validItems[0].pubDate : undefined;
+        await completeFeedProcessing(
+          feedHistoryId,
+          feedStats[feedKey].totalItems,
+          feedStats[feedKey].processedItems,
+          feedStats[feedKey].skippedItems,
+          feedStats[feedKey].processedItems > 0 ? 'success' : 'partial',
+          undefined,
+          lastItemDate,
         );
       } catch (error) {
         console.error(
@@ -151,6 +250,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         `    🔬 Not scientific: ${stat.skipReasons.not_scientific_paper}`,
       );
       console.log(`    ❌ Errors: ${stat.skipReasons.error}`);
+      console.log(
+        `    🔄 Already processed: ${stat.skipReasons.already_processed}`,
+      );
     });
 
     // Log overall skip reasons summary
@@ -163,12 +265,15 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         not_scientific_paper:
           acc.not_scientific_paper + stat.skipReasons.not_scientific_paper,
         error: acc.error + stat.skipReasons.error,
+        already_processed:
+          acc.already_processed + stat.skipReasons.already_processed,
       }),
       {
         date_too_old: 0,
         missing_url_or_title_or_date: 0,
         not_scientific_paper: 0,
         error: 0,
+        already_processed: 0,
       },
     );
 
@@ -181,6 +286,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       `🔬 Not scientific papers: ${totalSkipReasons.not_scientific_paper}`,
     );
     console.log(`❌ Processing errors: ${totalSkipReasons.error}`);
+    console.log(`🔄 Already processed: ${totalSkipReasons.already_processed}`);
     console.log(`📊 Total skipped: ${skippedCount}`);
     console.log(`✅ Total processed: ${processedCount}`);
 

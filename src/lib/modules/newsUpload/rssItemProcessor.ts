@@ -12,6 +12,7 @@ import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
+import { checkNewsItemExists } from './api/newsApi';
 
 export type RssItem = {
   title: string;
@@ -123,6 +124,20 @@ export async function processRssItem({
       console.log(`⚠️ RSS still found in cleaned URL: ${cleanedUrl}`);
     }
 
+    // Check if this item is already in Supabase before expensive operations
+    const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
+    const itemExists = await checkNewsItemExists(cleanedUrl, date);
+
+    if (itemExists) {
+      console.log(
+        `Skipping RSS item ${index + 1} because it's already in Supabase: ${title}`,
+      );
+      return {
+        status: 'skipped',
+        reason: 'already_in_supabase',
+      };
+    }
+
     const scrapedContent = await scrapeWithFirecrawlStructured(cleanedUrl);
 
     // Process the item through the same pipeline as processOneOutput
@@ -168,7 +183,6 @@ export async function processRssItem({
     // Use the highest score as the main score
     const score = Math.max(...Object.values(specialtyScores));
 
-    const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
     console.log({ date, specialtyScores });
     await uploadTopic({
       index: processedCount,
