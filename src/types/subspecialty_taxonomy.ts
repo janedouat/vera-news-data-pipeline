@@ -119,14 +119,18 @@ export enum DermatologySubspecialties {
 
 export enum EndocrinologySubspecialties {
   DiabetesMellitus = 'diabetes_mellitus',
-  ThyroidDiseases = 'thyroid_diseases',
+  ThyroidDiseases = 'thyroid_diseases', // they do
   PituitaryDiseases = 'pituitary_diseases',
   AdrenalGlandDiseases = 'adrenal_gland_diseases',
   ReproductiveEndocrinology = 'reproductive_endocrinology',
-  MetabolicDiseases = 'metabolic_diseases',
+  MetabolicDiseases = 'metabolic_diseases', // very very specialized
   BoneAndMineralDisorders = 'bone_and_mineral_disorders',
-  NeuroendocrineTumors = 'neuroendocrine_tumors',
+  EndocrineOncology = 'endocrine_oncology', // recommended by an endocrinologist, not MESH
+  Oncology = 'oncology', // according to an endocrinologist, neuroendocrine_tumors too specific
   PediatricEndocrinology = 'pediatric_endocrinology',
+  Obesity = 'obesity', // added following endocrinologist suggestion; MeSH: Obesity (D009765)
+  ParathyroidDiseases = 'parathyroid_diseases', // added following endocrinologist suggestion; MeSH: Parathyroid Diseases (D010269)
+  NutritionAndMetabolism = 'nutrition_and_metabolism', // added following endocrinologist suggestion; MeSH: Nutrition Disorders (D009753)
 }
 
 export enum GastroenterologySubspecialties {
