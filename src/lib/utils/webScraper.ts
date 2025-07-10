@@ -4,18 +4,55 @@ import { z } from 'zod';
 // Constants
 const MIN_CONTENT_LENGTH = 100;
 const MAX_RETRIES = 3;
-const RETRY_DELAY = 1000; // ms
+const BASE_RETRY_DELAY = 1000; // ms for normal errors
+const RATE_LIMIT_BASE_DELAY = 5000; // ms for 429 errors - start with 5 seconds
+const MAX_RETRY_DELAY = 30000; // ms - cap at 30 seconds
 
 export interface ScrapedContent {
   title: string;
   content: string;
   success: boolean;
   error?: string;
+  content_type: string;
 }
+
+export const NEWS_TYPES = [
+  'original_article',
+  'article',
+  'scientific_article',
+  'original_investigation',
+  'review',
+  'clinical_trials',
+  'research_letter',
+  'case_report_case_series',
+  'clinical_guidelines',
+  'clinical_reviews_education',
+  'viewpoint',
+  'editorial',
+  'opinion',
+  'health_policy_report',
+  'medical_news_special_reports',
+  'visual_abstract',
+  'podcast_video',
+  'patient_page',
+  'letter_to_the_editor',
+  'correction_retraction',
+];
+
+// Content types that should be processed (stricter filtering)
+export const ACCEPTED_NEWS_TYPES = [
+  'article',
+  'scientific_article',
+  'review',
+  'clinical_trials',
+  'clinical_guidelines',
+  'original_article',
+];
 
 // Medical article schema for structured extraction
 const MedicalArticleSchema = z.object({
   article: z.object({
+    content_type: z.string(),
     title: z.string(),
     description: z.string().optional(),
     method: z.string().optional(),
@@ -53,6 +90,52 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Check if error is rate limiting
+function isRateLimitError(error: any): boolean {
+  return (
+    error?.message?.includes('429') ||
+    error?.statusCode === 429 ||
+    error?.status === 429
+  );
+}
+
+// Check if error is a server error that should be retried
+function isRetryableServerError(error: any): boolean {
+  const serverErrorCodes = [502, 503, 504]; // Bad Gateway, Service Unavailable, Gateway Timeout
+  return serverErrorCodes.some(
+    (code) =>
+      error?.message?.includes(code.toString()) ||
+      error?.statusCode === code ||
+      error?.status === code,
+  );
+}
+
+// Calculate retry delay with exponential backoff and jitter
+function calculateRetryDelay(
+  attempt: number,
+  isRateLimit: boolean,
+  isServerError: boolean,
+): number {
+  let baseDelay = BASE_RETRY_DELAY;
+
+  if (isRateLimit) {
+    baseDelay = RATE_LIMIT_BASE_DELAY; // 5 seconds for rate limits
+  } else if (isServerError) {
+    baseDelay = 3000; // 3 seconds for server errors
+  }
+
+  // Exponential backoff: delay doubles each attempt
+  const exponentialDelay = baseDelay * Math.pow(2, attempt - 1);
+
+  // Add jitter (random variation) to avoid thundering herd
+  const jitter = Math.random() * 0.3 * exponentialDelay; // 0-30% jitter
+
+  const totalDelay = exponentialDelay + jitter;
+
+  // Cap at maximum delay
+  return Math.min(totalDelay, MAX_RETRY_DELAY);
+}
+
 // Initialize Firecrawl app
 const firecrawlApp = process.env.FIRECRAWL_API_KEY
   ? new FireCrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY })
@@ -81,18 +164,35 @@ export async function scrapeWithFirecrawlStructured(
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         extractResult = await firecrawlApp.extract([url], {
-          prompt:
-            "Extract text from this medical article page which will be relevant for a medical news feed. Don't transform the text; only extract please.",
+          prompt: `Extract text from this medical article page which will be relevant for a medical news feed. Don't transform the text; only extract please. In content_type, return one of the following values: ${NEWS_TYPES.join()}`,
           schema: MedicalArticleSchema,
         });
         break; // Success, exit retry loop
       } catch (error) {
         lastError = error;
+        const isRateLimit = isRateLimitError(error);
+        const isServerError = isRetryableServerError(error);
+
         console.log(`⚠️ Attempt ${attempt} failed:`, error);
 
+        if (isRateLimit) {
+          console.log(`🚫 Rate limit detected (429 error)`);
+        }
+
+        if (isServerError) {
+          console.log(`🚫 Server error detected (502, 503, 504)`);
+        }
+
         if (attempt < MAX_RETRIES) {
-          console.log(`⏳ Retrying in ${RETRY_DELAY}ms...`);
-          await sleep(RETRY_DELAY);
+          const delay = calculateRetryDelay(
+            attempt,
+            isRateLimit,
+            isServerError,
+          );
+          console.log(
+            `⏳ Retrying in ${Math.round(delay)}ms... (attempt ${attempt + 1}/${MAX_RETRIES})`,
+          );
+          await sleep(delay);
         }
       }
     }
@@ -141,6 +241,7 @@ export async function scrapeWithFirecrawlStructured(
       title: article.title || '',
       content: content,
       success: true,
+      content_type: article.content_type,
     };
   } catch (error) {
     return {
@@ -148,8 +249,19 @@ export async function scrapeWithFirecrawlStructured(
       content: '',
       success: false,
       error: error instanceof Error ? error.message : String(error),
+      content_type: '',
     };
   }
+}
+
+/**
+ * Check if content type should be processed
+ */
+function should_process_content_type(contentType: string): boolean {
+  const normalized_type = contentType.toLowerCase().trim();
+  return ACCEPTED_NEWS_TYPES.some(
+    (accepted_type: string) => normalized_type === accepted_type.toLowerCase(),
+  );
 }
 
 /**
@@ -166,6 +278,20 @@ export async function scrapeWebContent(url: string): Promise<ScrapedContent> {
       firecrawlResult.success &&
       firecrawlResult.content.length > MIN_CONTENT_LENGTH
     ) {
+      // Check if content type should be processed
+      if (!should_process_content_type(firecrawlResult.content_type)) {
+        console.log(
+          `⏭️ Skipping article with content type: ${firecrawlResult.content_type}`,
+        );
+        return {
+          title: firecrawlResult.title,
+          content: firecrawlResult.content,
+          success: false,
+          error: `Content type '${firecrawlResult.content_type}' is not in accepted types`,
+          content_type: firecrawlResult.content_type,
+        };
+      }
+
       console.log(
         '✅ Successfully scraped with Firecrawl structured extraction',
       );
@@ -181,5 +307,6 @@ export async function scrapeWebContent(url: string): Promise<ScrapedContent> {
     content: '',
     success: false,
     error: 'No Firecrawl API key configured',
+    content_type: '',
   };
 }

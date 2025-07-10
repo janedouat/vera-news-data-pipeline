@@ -7,7 +7,10 @@ import {
   getScore,
   uploadTopic,
 } from './topicProcessor';
-import { scrapeWithFirecrawlStructured } from '@/lib/utils/webScraper';
+import {
+  ACCEPTED_NEWS_TYPES,
+  scrapeWithFirecrawlStructured,
+} from '@/lib/utils/webScraper';
 import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
@@ -58,11 +61,18 @@ async function isScientificPaper(
 - Is it an opinion piece, editorial, or commentary?
 - Is it a press release or marketing material?
 
+Keep these specific content types:
+- Scientific articles
+- Research articles
+- Scientific reviews
+- Clinical trials
+- Clinical guidelines
+
 Title: ${title}
 Description: ${description}
 URL: ${url}
 
-Return true only if this is likely to be an actual scientific paper or research article, not just news coverage of research.`,
+Return true only if this is likely to be an actual scientific paper, research article, scientific review, clinical trial, or clinical guideline, not just news coverage of research.`,
     temperature: 0.3,
   });
 
@@ -139,6 +149,17 @@ export async function processRssItem({
 
     const scrapedContent = await scrapeWithFirecrawlStructured(cleanedUrl);
 
+    if (
+      !!scrapedContent.content_type &&
+      !ACCEPTED_NEWS_TYPES.includes(scrapedContent.content_type)
+    ) {
+      console.log(`skipppppped: ${url}`);
+      return {
+        status: 'skipped',
+        reason: 'not_accepted_news_type',
+      };
+    }
+
     // Process the item through the same pipeline as processOneOutput
     const { answer } = await getAnswer({
       topic,
@@ -182,7 +203,6 @@ export async function processRssItem({
     // Use the highest score as the main score
     const score = Math.max(...Object.values(specialtyScores));
 
-    console.log({ date, specialtyScores });
     await uploadTopic({
       index: processedCount,
       date,

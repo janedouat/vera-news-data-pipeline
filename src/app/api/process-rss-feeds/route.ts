@@ -21,7 +21,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     const { startDate: startDateString, uploadId } = input;
 
     const startDate = new Date(startDateString);
-    console.log({ startDate });
+
     if (!startDate.valueOf()) {
       return { error: 'Request StartDate not correct', status: 400 };
     }

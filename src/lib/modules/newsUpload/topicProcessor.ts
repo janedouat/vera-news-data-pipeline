@@ -245,7 +245,6 @@ export async function getSubspecialtyTags({
 }): Promise<{ tags: string[] }> {
   const content = `Given the medical update below, return only the relevant clinical interests as a JSON array of strings. Only use the exact strings provided in the clinical interests list. Do not include any tag unless the medical update is clearly and directly relevant to it. If none are relevant, return an empty array. Do not include any explanation or extra text. \n ### medical update ${JSON.stringify(answer)}) \n ### clinical interests ${JSON.stringify(tags)})`;
 
-  console.log({ content });
   const response = await openaiClient.responses.create({
     model: 'gpt-4.1',
     input: [
@@ -416,7 +415,11 @@ export async function uploadTopic({
       `News piece ${index + 1} from upload ${uploadId} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
     );
   } else {
-    const newsletterTitle = generateNewsletterTitle({ url, date, answer });
+    const newsletterTitle = generateNewsletterTitle({
+      url,
+      date,
+      answer: JSON.stringify(answer),
+    });
 
     return uploadNewsRow({
       elements: answer,
