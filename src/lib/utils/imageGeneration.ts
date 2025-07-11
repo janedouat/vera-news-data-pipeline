@@ -98,32 +98,3 @@ export async function generateAndUploadImage({
     };
   }
 }
-
-export function createArticleImagePrompt(
-  title: string,
-  description?: string,
-  specialty?: string,
-): string {
-  const basePrompt = `Create an illustration for the article "${title}". The illustration should contain exactly three simple, clean icons representing key concepts of the article. The background is monochrome. Use colors that are mostly grey, blue, white, and black with the medical turquoise color #1b779b as an accent. No text should be included in the image.`;
-
-  if (specialty) {
-    return `${basePrompt} The article is related to ${specialty} medical specialty.`;
-  }
-
-  return basePrompt;
-}
-
-export async function generateArticleImage(
-  title: string,
-  description?: string,
-  specialty?: string,
-): Promise<ImageGenerationResult> {
-  const prompt = createArticleImagePrompt(title, description, specialty);
-
-  return generateAndUploadImage({
-    prompt,
-    size: '1536x1024',
-    quality: 'medium',
-    bucketName: 'news-images',
-  });
-}

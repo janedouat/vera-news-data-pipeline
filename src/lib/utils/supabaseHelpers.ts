@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { BucketName } from '../constants/buckets';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -32,7 +31,7 @@ export async function getRows(
 }
 
 export async function uploadFile(
-  bucketName: BucketName,
+  bucketName: string,
   filePath: string,
   fileBuffer: Buffer,
   options: {
@@ -54,7 +53,7 @@ export async function uploadFile(
   return data;
 }
 
-export async function getFileUrl(bucketName: BucketName, filePath: string) {
+export async function getFileUrl(bucketName: string, filePath: string) {
   // Use admin client if available, fallback to regular client
   const client = supabaseAdmin || supabase;
   const { data } = client.storage.from(bucketName).getPublicUrl(filePath);
