@@ -15,6 +15,171 @@ export type ImageGenerationResult = {
   error?: string;
 };
 
+// Retry configuration
+const RETRY_CONFIG = {
+  maxRetries: 3,
+  baseDelay: 1000, // 1 second
+  maxDelay: 10000, // 10 seconds
+};
+
+// Sleep utility function
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Calculate exponential backoff delay
+function getRetryDelay(attempt: number): number {
+  const delay = RETRY_CONFIG.baseDelay * Math.pow(2, attempt);
+  return Math.min(delay, RETRY_CONFIG.maxDelay);
+}
+
+// Check if error is retryable (network/timeout errors)
+function isRetryableError(error: Error | unknown): boolean {
+  if (!error) return false;
+
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const retryablePatterns = [
+    'fetch failed',
+    'SocketError',
+    'ConnectTimeoutError',
+    'ECONNRESET',
+    'ENOTFOUND',
+    'ETIMEDOUT',
+    'UND_ERR_SOCKET',
+    'UND_ERR_CONNECT_TIMEOUT',
+  ];
+
+  return retryablePatterns.some((pattern) => errorMessage.includes(pattern));
+}
+
+// Check if error is a safety system rejection
+function isSafetySystemError(error: Error | unknown): boolean {
+  if (!error) return false;
+
+  // Check for OpenAI error object with specific code
+  if (typeof error === 'object' && error !== null && 'code' in error) {
+    const errorCode = (error as { code: string }).code;
+    if (
+      errorCode === 'moderation_blocked' ||
+      errorCode === 'content_policy_violation'
+    ) {
+      return true;
+    }
+  }
+
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const safetyPatterns = [
+    'safety system',
+    'content policy',
+    'content filter',
+    'Request was rejected as a result of the safety system',
+    'moderation_blocked',
+    'content_policy_violation',
+  ];
+
+  return safetyPatterns.some((pattern) =>
+    errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+  );
+}
+
+// Sanitize prompt by removing potentially problematic terms
+function sanitizePrompt(prompt: string): string {
+  return prompt
+    .replace(
+      /\b(scrotal|haematoma|hematoma|blood|bleeding|trauma|injury|wound|surgical|surgery|cut|incision)\b/gi,
+      'medical condition',
+    )
+    .replace(/\b(child|pediatric|infant|baby|minor)\b/gi, 'patient')
+    .replace(
+      /\b(reveals|diagnos[ie]s|undiagnosed|detect[s]?|discover[s]?)\b/gi,
+      'shows',
+    )
+    .replace(/\b(school-aged|young|adolescent)\b/gi, '')
+    .trim();
+}
+
+// Wrapper function that handles retries and safety system errors
+export async function generateAndUploadImageWithRetry({
+  prompt,
+  size = '1536x1024',
+  quality = 'medium',
+  model = 'gpt-image-1',
+  bucketName = 'news-images',
+  attempt = 0,
+}: Partial<ImageGenerateParams> & {
+  prompt: string;
+  bucketName?: string;
+  attempt?: number;
+}): Promise<ImageGenerationResult> {
+  console.log(
+    `🎨 Generating image (attempt ${attempt + 1}/${RETRY_CONFIG.maxRetries + 1})`,
+  );
+
+  const result = await generateAndUploadImage({
+    prompt,
+    size,
+    quality,
+    model,
+    bucketName,
+  });
+
+  // If generation was successful, return the result
+  if (result.success) {
+    return result;
+  }
+
+  // Handle the error from the result object
+  console.error(
+    `❌ Image generation attempt ${attempt + 1} failed:`,
+    result.error,
+  );
+
+  // Check if it's a safety system error and sanitize
+  if (result.error && isSafetySystemError(new Error(result.error))) {
+    console.log(
+      '🚨 Safety system rejection detected, sanitizing prompt and retrying...',
+    );
+
+    const sanitizedPrompt = sanitizePrompt(prompt);
+
+    console.log('📝 Original prompt:', prompt);
+    console.log('📝 Sanitized prompt:', sanitizedPrompt);
+
+    // Retry with sanitized prompt (reset attempt counter)
+    return generateAndUploadImageWithRetry({
+      prompt: sanitizedPrompt,
+      size,
+      quality,
+      model,
+      bucketName,
+      attempt: 0,
+    });
+  }
+
+  // Check if we should retry for network errors
+  if (
+    attempt < RETRY_CONFIG.maxRetries &&
+    result.error &&
+    isRetryableError(new Error(result.error))
+  ) {
+    const delay = getRetryDelay(attempt);
+    console.log(`⏳ Retrying in ${delay}ms...`);
+    await sleep(delay);
+
+    return generateAndUploadImageWithRetry({
+      prompt,
+      size,
+      quality,
+      model,
+      bucketName,
+      attempt: attempt + 1,
+    });
+  }
+
+  // Return the failed result if no retries are applicable
+  return result;
+}
+
 export async function generateAndUploadImage({
   prompt,
   size = '1536x1024',

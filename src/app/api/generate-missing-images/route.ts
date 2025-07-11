@@ -1,45 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/utils/supabaseHelpers';
-import { generateAndUploadImage } from '@/lib/utils/imageGeneration';
+import { generateAndUploadImageWithRetry } from '@/lib/utils/imageGeneration';
 import { Database } from '@/types/supabase';
 
 type NewsRow = Database['public']['Tables']['news']['Row'];
 
-// Retry configuration
-const RETRY_CONFIG = {
-  maxRetries: 3,
-  baseDelay: 1000, // 1 second
-  maxDelay: 10000, // 10 seconds
-};
-
-// Sleep utility function
+// Sleep utility function for batch processing
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Calculate exponential backoff delay
-function getRetryDelay(attempt: number): number {
-  const delay = RETRY_CONFIG.baseDelay * Math.pow(2, attempt);
-  return Math.min(delay, RETRY_CONFIG.maxDelay);
-}
-
-// Check if error is retryable (network/timeout errors)
-function isRetryableError(error: Error | unknown): boolean {
-  if (!error) return false;
-
-  const errorMessage = error instanceof Error ? error.message : String(error);
-  const retryablePatterns = [
-    'fetch failed',
-    'SocketError',
-    'ConnectTimeoutError',
-    'ECONNRESET',
-    'ENOTFOUND',
-    'ETIMEDOUT',
-    'UND_ERR_SOCKET',
-    'UND_ERR_CONNECT_TIMEOUT',
-  ];
-
-  return retryablePatterns.some((pattern) => errorMessage.includes(pattern));
 }
 
 // Get all news items without images
@@ -81,47 +49,6 @@ async function updateNewsItemWithImage(
   }
 }
 
-// Generate image with retry logic
-async function generateImageWithRetry(
-  prompt: string,
-  newsItemId: string,
-  attempt: number = 0,
-): Promise<{ success: boolean; imageUrl?: string; error?: string }> {
-  try {
-    console.log(
-      `🎨 Generating image (attempt ${attempt + 1}/${RETRY_CONFIG.maxRetries + 1}) for news item: ${newsItemId}`,
-    );
-
-    const result = await generateAndUploadImage({
-      prompt: prompt,
-      size: '1536x1024',
-      quality: 'medium',
-      model: 'gpt-image-1',
-      bucketName: 'news-images',
-    });
-
-    return result;
-  } catch (error) {
-    console.error(
-      `❌ Image generation attempt ${attempt + 1} failed for ${newsItemId}:`,
-      error,
-    );
-
-    // Check if we should retry
-    if (attempt < RETRY_CONFIG.maxRetries && isRetryableError(error)) {
-      const delay = getRetryDelay(attempt);
-      console.log(`⏳ Retrying in ${delay}ms...`);
-      await sleep(delay);
-      return generateImageWithRetry(prompt, newsItemId, attempt + 1);
-    }
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-
 // Generate image for a single news item
 async function generateImageForNewsItem(
   newsItem: NewsRow,
@@ -143,10 +70,13 @@ async function generateImageForNewsItem(
     console.log(`🚀 Starting image generation for: ${title}`);
 
     // Generate and upload the image with retry logic
-    const { success, imageUrl, error } = await generateImageWithRetry(
-      prompt,
-      newsItem.id,
-    );
+    const { success, imageUrl, error } = await generateAndUploadImageWithRetry({
+      prompt: prompt,
+      size: '1536x1024',
+      quality: 'medium',
+      model: 'gpt-image-1',
+      bucketName: 'news-images',
+    });
 
     if (!success || !imageUrl) {
       console.error(
@@ -213,9 +143,6 @@ export async function POST() {
     }
 
     console.log(`📊 Found ${newsItems.length} news items without images`);
-    console.log(
-      `🔄 Retry configuration: ${RETRY_CONFIG.maxRetries} retries, ${RETRY_CONFIG.baseDelay}ms base delay`,
-    );
 
     // Process items with limited concurrency to avoid overwhelming the API
     const BATCH_SIZE = 3; // Process 3 items at a time
@@ -266,7 +193,6 @@ export async function POST() {
       errors: failed,
       errorDetails: errors,
       total: newsItems.length,
-      retryConfig: RETRY_CONFIG,
     });
   } catch (error) {
     console.error('❌ Error in generate-missing-images route:', error);
