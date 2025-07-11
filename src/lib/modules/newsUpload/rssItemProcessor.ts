@@ -16,7 +16,10 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { checkNewsItemExists } from './api/newsApi';
-import { generateAndUploadImage } from '@/lib/utils/imageGeneration';
+import {
+  generateAndUploadImage,
+  uploadImageToSupabase,
+} from '@/lib/utils/imageGeneration';
 
 export type RssItem = {
   title: string;
@@ -154,7 +157,6 @@ export async function processRssItem({
       !!scrapedContent.content_type &&
       !ACCEPTED_NEWS_TYPES.includes(scrapedContent.content_type)
     ) {
-      console.log(`skipppppped: ${url}`);
       return {
         status: 'skipped',
         reason: 'not_accepted_news_type',
@@ -206,13 +208,20 @@ export async function processRssItem({
 
     const prompt = `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
 
-    const { imageUrl } = await generateAndUploadImage({
+    let extractedImageUrl = scrapedContent.image_url ?? undefined;
+    if (extractedImageUrl) {
+      extractedImageUrl = (
+        await uploadImageToSupabase({ imageUrl: extractedImageUrl })
+      ).imageUrl;
+    }
+
+    const imageUrl = await generateAndUploadImage({
       prompt: prompt,
       size: '1536x1024',
       quality: 'medium',
       model: 'gpt-image-1',
       bucketName: 'news-images',
-    });
+    }).then((res) => res.imageUrl);
 
     await uploadTopic({
       index: processedCount,
@@ -228,6 +237,7 @@ export async function processRssItem({
       source: feedGroup,
       scores: specialtyScores,
       imageUrl,
+      extractedImageUrl,
     });
 
     console.log(`Successfully uploaded RSS item: ${title}`);

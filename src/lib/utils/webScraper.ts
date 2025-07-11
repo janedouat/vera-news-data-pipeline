@@ -14,6 +14,8 @@ export interface ScrapedContent {
   success: boolean;
   error?: string;
   content_type: string;
+  image_url?: string;
+  image_description?: string;
 }
 
 export const NEWS_TYPES = [
@@ -37,6 +39,7 @@ export const NEWS_TYPES = [
   'patient_page',
   'letter_to_the_editor',
   'correction_retraction',
+  'other',
 ];
 
 // Content types that should be processed (stricter filtering)
@@ -244,6 +247,8 @@ export async function scrapeWithFirecrawlStructured(
       content: content,
       success: true,
       content_type: article.content_type,
+      image_url: article.image_url,
+      image_description: article.image_description,
     };
   } catch (error) {
     return {

@@ -98,6 +98,88 @@ function sanitizePrompt(prompt: string): string {
     .trim();
 }
 
+// Upload image to Supabase from base64 or URL
+export async function uploadImageToSupabase({
+  imageBase64,
+  imageUrl,
+  bucketName = 'news-images',
+  fileName,
+}: {
+  imageBase64?: string;
+  imageUrl?: string;
+  bucketName?: string;
+  fileName?: string;
+}): Promise<{
+  success: boolean;
+  imageUrl?: string;
+  fileName?: string;
+  error?: string;
+}> {
+  try {
+    if (!imageBase64 && !imageUrl) {
+      return {
+        success: false,
+        error: 'Either imageBase64 or imageUrl must be provided',
+      };
+    }
+
+    // Generate unique filename if not provided
+    const finalFileName = fileName || `${uuidv4()}.png`;
+
+    console.log('🔍 Generated UUID:', finalFileName.replace('.png', ''));
+    console.log('📁 Generated filename:', finalFileName);
+
+    let imageBuffer: Buffer;
+
+    if (imageBase64) {
+      // Convert base64 to buffer
+      imageBuffer = Buffer.from(imageBase64, 'base64');
+    } else if (imageUrl) {
+      // Download image from URL
+      console.log('📥 Downloading image from URL:', imageUrl);
+      const response = await fetch(imageUrl);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to download image: ${response.status} ${response.statusText}`,
+        );
+      }
+      const arrayBuffer = await response.arrayBuffer();
+      imageBuffer = Buffer.from(arrayBuffer);
+    } else {
+      throw new Error('No image source provided');
+    }
+
+    // Upload to Supabase
+    const uploadResult = await uploadFile(
+      bucketName,
+      finalFileName,
+      imageBuffer,
+      {
+        contentType: 'image/png',
+        upsert: true,
+      },
+    );
+
+    console.log('📤 Image uploaded to Supabase:', uploadResult);
+
+    // Get the public URL
+    const publicUrl = await getFileUrl(bucketName, finalFileName);
+    console.log('🌐 Supabase public URL:', publicUrl);
+
+    return {
+      success: true,
+      imageUrl: publicUrl,
+      fileName: finalFileName,
+    };
+  } catch (error) {
+    console.error('❌ Image upload failed:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+}
+
 // Wrapper function that handles retries and safety system errors
 export async function generateAndUploadImageWithRetry({
   prompt,
@@ -228,32 +310,23 @@ export async function generateAndUploadImage({
       };
     }
 
-    // Generate unique filename
-    const imageId = uuidv4();
-    const fileName = `${imageId}.png`;
-
-    console.log('🔍 Generated UUID:', imageId);
-    console.log('📁 Generated filename:', fileName);
-
-    // Convert base64 to buffer
-    const imageBuffer = Buffer.from(imageBase64, 'base64');
-
-    // Upload to Supabase
-    const uploadResult = await uploadFile(bucketName, fileName, imageBuffer, {
-      contentType: 'image/png',
-      upsert: true,
+    // Upload image to Supabase
+    const uploadResult = await uploadImageToSupabase({
+      imageBase64,
+      bucketName,
     });
 
-    console.log('📤 Image uploaded to Supabase:', uploadResult);
-
-    // Get the public URL
-    const imageUrl = await getFileUrl(bucketName, fileName);
-    console.log('🌐 Supabase public URL:', imageUrl);
+    if (!uploadResult.success) {
+      return {
+        success: false,
+        error: uploadResult.error || 'Failed to upload image',
+      };
+    }
 
     return {
       success: true,
-      imageUrl,
-      fileName,
+      imageUrl: uploadResult.imageUrl,
+      fileName: uploadResult.fileName,
     };
   } catch (error) {
     console.error('❌ Image generation failed:', error);

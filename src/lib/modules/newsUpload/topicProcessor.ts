@@ -392,6 +392,7 @@ export async function uploadTopic({
   source,
   scores,
   imageUrl,
+  extractedImageUrl,
 }: {
   index: number;
   date: string;
@@ -407,6 +408,7 @@ export async function uploadTopic({
   source?: string;
   scores?: Record<string, number>;
   imageUrl?: string;
+  extractedImageUrl?: string;
 }) {
   if (
     url == NO_URL_PLACEHOLDER_STRING ||
@@ -438,6 +440,7 @@ export async function uploadTopic({
       source,
       scores,
       imageUrl,
+      extracted_image_url: extractedImageUrl ?? null,
     });
   }
 }
