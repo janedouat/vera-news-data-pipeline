@@ -9,6 +9,11 @@ export interface RssFeedConfig {
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
+  {
+    url: 'https://www.nature.com/nm.rss',
+    group: 'Nature',
+    name: 'Medicine',
+  },
   // Lancet: "current" rss feeds
   {
     url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
@@ -697,38 +702,3 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
   },
 ];
-
-// Helper functions for filtering and organizing feeds
-
-// Filter to only get enabled feeds
-export const getEnabledRssFeeds = (): RssFeedConfig[] => {
-  return RSS_FEEDS.filter((feed) => feed.enabled !== false);
-};
-
-// Get feeds by group (e.g., 'Lancet', 'NEJM', 'JAMA', 'BMJ')
-export const getFeedsByGroup = (group: string): RssFeedConfig[] => {
-  return RSS_FEEDS.filter((feed) => feed.group === group);
-};
-
-// Get feeds by specialty
-export const getFeedsBySpecialty = (
-  specialty: PhysicianSpecialty,
-): RssFeedConfig[] => {
-  return RSS_FEEDS.filter((feed) => feed.specialty === specialty);
-};
-
-// Get all unique groups
-export const getAllGroups = (): string[] => {
-  return [...new Set(RSS_FEEDS.map((feed) => feed.group))];
-};
-
-// Get all unique specialties (excluding undefined)
-export const getAllSpecialties = (): PhysicianSpecialty[] => {
-  return [
-    ...new Set(
-      RSS_FEEDS.map((feed) => feed.specialty).filter(
-        (specialty): specialty is PhysicianSpecialty => specialty !== undefined,
-      ),
-    ),
-  ];
-};

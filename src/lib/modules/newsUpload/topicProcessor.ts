@@ -391,6 +391,7 @@ export async function uploadTopic({
   is_visible_in_prod,
   source,
   scores,
+  imageUrl,
 }: {
   index: number;
   date: string;
@@ -405,6 +406,7 @@ export async function uploadTopic({
   is_visible_in_prod?: boolean;
   source?: string;
   scores?: Record<string, number>;
+  imageUrl?: string;
 }) {
   if (
     url == NO_URL_PLACEHOLDER_STRING ||
@@ -435,6 +437,7 @@ export async function uploadTopic({
       newsletter_title: newsletterTitle,
       source,
       scores,
+      imageUrl,
     });
   }
 }

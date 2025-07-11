@@ -16,6 +16,7 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { checkNewsItemExists } from './api/newsApi';
+import { generateAndUploadImage } from '@/lib/utils/imageGeneration';
 
 export type RssItem = {
   title: string;
@@ -203,6 +204,16 @@ export async function processRssItem({
     // Use the highest score as the main score
     const score = Math.max(...Object.values(specialtyScores));
 
+    const prompt = `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
+
+    const { imageUrl } = await generateAndUploadImage({
+      prompt: prompt,
+      size: '1536x1024',
+      quality: 'medium',
+      model: 'gpt-image-1',
+      bucketName: 'news-images',
+    });
+
     await uploadTopic({
       index: processedCount,
       date,
@@ -216,6 +227,7 @@ export async function processRssItem({
       is_visible_in_prod: false,
       source: feedGroup,
       scores: specialtyScores,
+      imageUrl,
     });
 
     console.log(`Successfully uploaded RSS item: ${title}`);

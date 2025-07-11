@@ -30,6 +30,7 @@
     "eslint-config-next": "15.3.4",
     "prettier": "^3.5.3",
     "supabase": "^2.26.9",
-    "typescript": "^5"
+    "typescript": "^5",
+    "uuid": "^11.1.0"
   }
 }

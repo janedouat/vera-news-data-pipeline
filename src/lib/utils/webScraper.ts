@@ -72,6 +72,8 @@ const MedicalArticleSchema = z.object({
     'HOW THIS STUDY MIGHT AFFECT RESEARCH, PRACTICE OR POLICY': z
       .string()
       .optional(),
+    image_url: z.string().optional(),
+    image_description: z.string().optional(),
   }),
 });
 
