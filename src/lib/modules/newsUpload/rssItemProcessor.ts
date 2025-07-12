@@ -48,6 +48,46 @@ const ScientificPaperFilter = z.object({
   reasoning: z.string(),
 });
 
+const keywords = {
+  'meta-analysis': [
+    'meta analysis',
+    'méta-analyse',
+    'meta-analysis',
+    'méta analyse',
+  ],
+  'systematic review': ['systematic review', 'revue systématique'],
+  'randomized controlled trial': [
+    'randomized controlled trial',
+    'essai randomisé',
+    'rct',
+  ],
+};
+
+const checkKeywords = (
+  text: string | undefined,
+  keywordSet: string[],
+): boolean => {
+  if (!text) return false;
+  const lowerText = text.toLowerCase();
+
+  return keywordSet.some((keyword) => lowerText.includes(keyword));
+};
+
+// Function to classify news type based on content
+function classifyNewsType(content: string): string | undefined {
+  const text = content.toLowerCase();
+
+  // Check each news type in order of specificity (most specific first)
+  for (const [newsType, keywordSet] of Object.entries(keywords)) {
+    if (checkKeywords(text, keywordSet)) {
+      return newsType;
+    }
+  }
+
+  // Default fallback
+  return undefined;
+}
+
 async function isScientificPaper(
   title: string,
   description: string,
@@ -163,6 +203,12 @@ export async function processRssItem({
       };
     }
 
+    // Classify news type based on content
+    const detectedNewsType = classifyNewsType(scrapedContent.content);
+    console.log(
+      `📊 Detected news type: ${detectedNewsType} for article: ${title}`,
+    );
+
     // Process the item through the same pipeline as processOneOutput
     const { answer } = await getAnswer({
       topic,
@@ -209,7 +255,7 @@ export async function processRssItem({
     const prompt = `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
 
     let extractedImageUrl = scrapedContent.image_url ?? undefined;
-    if (extractedImageUrl) {
+    if (extractedImageUrl && !url.includes('nejm')) {
       extractedImageUrl = (
         await uploadImageToSupabase({ imageUrl: extractedImageUrl })
       ).imageUrl;
@@ -237,7 +283,7 @@ export async function processRssItem({
       source: feedGroup,
       scores: specialtyScores,
       imageUrl,
-      extractedImageUrl,
+      newsType: detectedNewsType,
     });
 
     console.log(`Successfully uploaded RSS item: ${title}`);

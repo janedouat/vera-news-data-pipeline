@@ -14,7 +14,7 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     group: 'Nature',
     name: 'Medicine',
   },
-  // Lancet: "current" rss feeds
+  //Lancet: "current" rss feeds
   {
     url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
     group: 'Lancet',
@@ -65,11 +65,11 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     group: 'Lancet',
     name: 'Public Health',
   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanplh_current.xml',
-    group: 'Lancet',
-    name: 'Planetary Health',
-  },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanplh_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Planetary Health',
+  // },
   //   {
   //     url: 'https://www.thelancet.com/rssfeed/lanam_current.xml',
   //     group: 'Lancet',
@@ -157,16 +157,16 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     group: 'Lancet',
     name: 'Public Health',
   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanplh_online.xml',
-    group: 'Lancet',
-    name: 'Planetary Health',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanam_online.xml',
-    group: 'Lancet',
-    name: 'Americas',
-  },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanplh_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Planetary Health',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanam_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Americas',
+  // },
   {
     url: 'https://www.thelancet.com/rssfeed/lanchi_online.xml',
     group: 'Lancet',
@@ -257,18 +257,18 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     name: 'Public Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanplh_current.xml',
-    group: 'Lancet',
-    name: 'Planetary Health',
-    specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanam_current.xml',
-    group: 'Lancet',
-    name: 'Americas',
-    specialty: PhysicianSpecialty.OTHER,
-  },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanplh_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Planetary Health',
+  //   specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanam_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Americas',
+  //   specialty: PhysicianSpecialty.OTHER,
+  // },
   {
     url: 'https://www.thelancet.com/rssfeed/lanchi_current.xml',
     group: 'Lancet',
@@ -287,12 +287,12 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     name: 'EClinicalMedicine',
     specialty: PhysicianSpecialty.OTHER,
   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanjpx_current.xml',
-    group: 'Lancet',
-    name: 'Regional Health – Western Pacific',
-    specialty: PhysicianSpecialty.OTHER,
-  },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanjpx_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Regional Health – Western Pacific',
+  //   specialty: PhysicianSpecialty.OTHER,
+  // },
   {
     url: 'https://www.thelancet.com/rssfeed/lanme_current.xml',
     group: 'Lancet',

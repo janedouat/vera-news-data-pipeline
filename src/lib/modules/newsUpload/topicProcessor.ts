@@ -392,6 +392,7 @@ export async function uploadTopic({
   source,
   scores,
   imageUrl,
+  newsType,
   extractedImageUrl,
 }: {
   index: number;
@@ -409,6 +410,7 @@ export async function uploadTopic({
   scores?: Record<string, number>;
   imageUrl?: string;
   extractedImageUrl?: string;
+  newsType?: string;
 }) {
   if (
     url == NO_URL_PLACEHOLDER_STRING ||
@@ -429,7 +431,7 @@ export async function uploadTopic({
       score,
       news_date: date,
       news_date_timestamp: new Date(date).toISOString(),
-      news_type: 'test',
+      news_type: newsType ?? null,
       specialties: specialties,
       selecting_model: model ?? null,
       url: url,
