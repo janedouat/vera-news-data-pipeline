@@ -22,6 +22,7 @@ import {
   VALIDATION_ERROR_PATTERNS,
 } from '@/lib/config/apiConfig';
 import { validateContentSufficiency } from '@/lib/services/contentSufficiencyValidationService';
+import { generateAndUploadImageWithRetry } from '@/lib/utils/imageGeneration';
 
 export type RssItem = {
   title: string;
@@ -296,6 +297,14 @@ export async function processRssItem({
 
     const extractedImageUrl = scrapedContent.image_url ?? undefined;
 
+    const {imageUrl} = await generateAndUploadImageWithRetry({
+      prompt:  `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
+      size: '1536x1024',
+      quality: 'medium',
+      model: 'gpt-image-1',
+      bucketName: 'news-images',
+    });
+
     await uploadTopic({
       index: processedCount,
       date,
@@ -310,6 +319,7 @@ export async function processRssItem({
       source: feedGroup,
       scores: specialtyScores,
       extractedImageUrl,
+      imageUrl,
       newsType: detectedNewsType,
       doi,
     });
