@@ -14,36 +14,6 @@ export async function insertNewsRow(row: NewsRow) {
 }
 
 export async function uploadNewsRow(row: NewsRow) {
-  // Check if a row with the same url and news_date already exists
-  const { data: existing, error } = await supabase
-    .from('news')
-    .select('*')
-    .eq('url', row.url)
-    .eq('news_date', row.news_date)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (existing) {
-    return { message: 'Row already exists for this url and date', existing };
-  }
-
-  // Check if a row with the same DOI already exists (if DOI is provided)
-  if (row.doi) {
-    const { data: existingByDoi, error: doiError } = await supabase
-      .from('news')
-      .select('*')
-      .eq('doi', row.doi)
-      .maybeSingle();
-
-    if (doiError) throw doiError;
-    if (existingByDoi) {
-      return {
-        message: 'Row already exists for this DOI',
-        existing: existingByDoi,
-      };
-    }
-  }
-
   return insertNewsRow(row);
 }
 

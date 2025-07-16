@@ -17,7 +17,7 @@ import { z } from 'zod';
 import {
   checkNewsItemExists,
   checkNewsItemExistsByDoi,
-  uploadNewsRow,
+  insertNewsRow,
 } from './api/newsApi';
 import {
   RETRYABLE_ERROR_PATTERNS,
@@ -26,7 +26,7 @@ import {
 } from '@/lib/config/apiConfig';
 import { validateContentSufficiency } from '@/lib/modules/newsUpload/services/contentSufficiencyValidationService';
 import { generateAndUploadImageWithRetry } from '@/lib/utils/imageGeneration';
-import { generateAndStoreSuggestedQuestions } from '@/lib/modules/newsUpload/services/newsSuggestedQuestions';
+import { generateSuggestedQuestions } from '@/lib/modules/newsUpload/services/newsSuggestedQuestions';
 
 export type RssItem = {
   title: string;
@@ -144,6 +144,7 @@ export async function processRssItem({
 }: RssItemProcessOptions): Promise<RssItemProcessResult> {
   try {
     const { title, link: url, pubDate, description, doi } = rssItem;
+    console.log({ doi });
 
     // Skip if no URL or title
     if (!url || !title || !pubDate) {
@@ -313,7 +314,13 @@ export async function processRssItem({
       bucketName: 'news-images',
     });
 
-    const uploadResult = await uploadNewsRow({
+    const { suggestedQuestions } = await generateSuggestedQuestions({
+      answer: stringifiedAnswer,
+      title: answer.title,
+      parentTraceId: traceId,
+    });
+
+    await insertNewsRow({
       news_date: date,
       url: cleanedUrl,
       specialties,
@@ -330,17 +337,8 @@ export async function processRssItem({
       news_type: detectedNewsType,
       doi,
       news_date_timestamp: new Date(date).toISOString(),
+      suggested_questions: suggestedQuestions,
     });
-
-    // Generate and store suggested questions for the news piece
-    if (uploadResult && typeof uploadResult === 'object' && 'id' in uploadResult) {
-      await generateAndStoreSuggestedQuestions({
-        newsId: uploadResult.id,
-        answer: stringifiedAnswer,
-        title: answer.title,
-        parentTraceId: traceId,
-      });
-    }
 
     console.log(`Successfully uploaded RSS item: ${title}`);
 
