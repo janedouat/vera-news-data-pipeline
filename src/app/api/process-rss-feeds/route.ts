@@ -17,6 +17,7 @@ export type RssFeedProcessInput = {
 //todo: add rss feed sync history to supabase
 
 export async function processRssFeedItems(input: RssFeedProcessInput) {
+  const startTime = Date.now();
   try {
     const { startDate: startDateString, uploadId } = input;
 
@@ -204,6 +205,13 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     console.log(`📊 Total skipped: ${skippedCount}`);
     console.log(`✅ Total processed: ${processedCount}`);
 
+    const endTime = Date.now();
+    const totalDuration = endTime - startTime;
+    const durationSeconds = (totalDuration / 1000).toFixed(2);
+    console.log(
+      `⏱️ Total processing time: ${durationSeconds}s (${totalDuration}ms)`,
+    );
+
     return {
       status: 'ok',
       processedCount,
@@ -211,6 +219,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       message: `Successfully processed ${processedCount} RSS items, skipped ${skippedCount}`,
       feedStats: Object.values(feedStats),
       skipReasonsSummary: totalSkipReasons,
+      processingTimeMs: totalDuration,
     };
   } catch (error) {
     return {
