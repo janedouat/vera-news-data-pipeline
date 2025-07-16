@@ -448,6 +448,7 @@ export async function uploadTopic({
   imageUrl,
   newsType,
   extractedImageUrl,
+  extractedImageDescription,
   doi,
 }: {
   index: number;
@@ -465,6 +466,7 @@ export async function uploadTopic({
   scores?: Record<string, number>;
   imageUrl?: string;
   extractedImageUrl?: string;
+  extractedImageDescription?: string;
   newsType?: string;
   doi?: string;
 }) {
@@ -499,6 +501,7 @@ export async function uploadTopic({
       scores,
       imageUrl,
       extracted_image_url: extractedImageUrl ?? null,
+      extracted_image_description: extractedImageDescription ?? null,
       doi: doi ?? null,
     });
   }

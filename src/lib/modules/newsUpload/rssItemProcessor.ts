@@ -296,6 +296,7 @@ export async function processRssItem({
     const score = Math.max(...Object.values(specialtyScores));
 
     const extractedImageUrl = scrapedContent.image_url ?? undefined;
+    const extractedImageDescription = scrapedContent.image_description ?? undefined;
 
     const {imageUrl} = await generateAndUploadImageWithRetry({
       prompt:  `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
@@ -319,6 +320,7 @@ export async function processRssItem({
       source: feedGroup,
       scores: specialtyScores,
       extractedImageUrl,
+      extractedImageDescription,
       imageUrl,
       newsType: detectedNewsType,
       doi,

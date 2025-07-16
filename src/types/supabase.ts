@@ -710,6 +710,7 @@ export type Database = {
           created_at: string | null
           doi: string | null
           elements: Json | null
+          extracted_image_description: string | null
           extracted_image_url: string | null
           id: string
           imageUrl: string | null
@@ -734,6 +735,7 @@ export type Database = {
           created_at?: string | null
           doi?: string | null
           elements?: Json | null
+          extracted_image_description?: string | null
           extracted_image_url?: string | null
           id?: string
           imageUrl?: string | null
@@ -758,6 +760,7 @@ export type Database = {
           created_at?: string | null
           doi?: string | null
           elements?: Json | null
+          extracted_image_description?: string | null
           extracted_image_url?: string | null
           id?: string
           imageUrl?: string | null
