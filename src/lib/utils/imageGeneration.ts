@@ -137,14 +137,28 @@ export async function uploadImageToSupabase({
     } else if (imageUrl) {
       // Download image from URL
       console.log('📥 Downloading image from URL:', imageUrl);
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error(
-          `Failed to download image: ${response.status} ${response.statusText}`,
+      try {
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          console.log(
+            `⚠️ Failed to download image: ${response.status} ${response.statusText} - skipping image upload`,
+          );
+          return {
+            success: false,
+            error: `Image download failed: ${response.status} ${response.statusText}`,
+          };
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        imageBuffer = Buffer.from(arrayBuffer);
+      } catch (downloadError) {
+        console.log(
+          `⚠️ Error downloading image: ${downloadError} - skipping image upload`,
         );
+        return {
+          success: false,
+          error: `Image download error: ${downloadError}`,
+        };
       }
-      const arrayBuffer = await response.arrayBuffer();
-      imageBuffer = Buffer.from(arrayBuffer);
     } else {
       throw new Error('No image source provided');
     }

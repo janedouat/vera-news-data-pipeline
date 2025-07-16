@@ -100,22 +100,32 @@ function sleep(ms: number): Promise<void> {
 }
 
 // Check if error is rate limiting
-function isRateLimitError(error: any): boolean {
+function isRateLimitError(error: unknown): boolean {
+  const err = error as {
+    message?: string;
+    statusCode?: number;
+    status?: number;
+  };
   return (
-    error?.message?.includes('429') ||
-    error?.statusCode === 429 ||
-    error?.status === 429
+    err?.message?.includes('429') ||
+    err?.statusCode === 429 ||
+    err?.status === 429
   );
 }
 
 // Check if error is a server error that should be retried
-function isRetryableServerError(error: any): boolean {
+function isRetryableServerError(error: unknown): boolean {
+  const err = error as {
+    message?: string;
+    statusCode?: number;
+    status?: number;
+  };
   const serverErrorCodes = [502, 503, 504]; // Bad Gateway, Service Unavailable, Gateway Timeout
   return serverErrorCodes.some(
     (code) =>
-      error?.message?.includes(code.toString()) ||
-      error?.statusCode === code ||
-      error?.status === code,
+      err?.message?.includes(code.toString()) ||
+      err?.statusCode === code ||
+      err?.status === code,
   );
 }
 
@@ -176,20 +186,18 @@ export async function scrapeWithFirecrawlStructured(
           prompt: `Extract text from this medical article page which will be relevant for a medical news feed. Don't transform the text; only extract please. In content_type, return one of the following values: ${NEWS_TYPES.join()}. In is_newsworthy, return a boolean indicating whether the page has news that may be interesting for MDs. In has_enough_content, return a boolean indicating whether the page has enough content for me to write a summary article about it for a news feed.`,
           schema: MedicalArticleSchema,
         });
-        break; // Success, exit retry loopJe
+        break; // Success, exit retry loop
       } catch (error) {
         lastError = error;
         const isRateLimit = isRateLimitError(error);
         const isServerError = isRetryableServerError(error);
 
-        console.log(`⚠️ Attempt ${attempt} failed:`, error);
-
         if (isRateLimit) {
           console.log(`🚫 Rate limit detected (429 error)`);
-        }
-
-        if (isServerError) {
+        } else if (isServerError) {
           console.log(`🚫 Server error detected (502, 503, 504)`);
+        } else {
+          console.log(`⚠️ Attempt ${attempt} failed:`, error);
         }
 
         if (attempt < MAX_RETRIES) {

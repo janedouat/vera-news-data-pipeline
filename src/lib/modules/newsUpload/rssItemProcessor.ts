@@ -16,10 +16,6 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { checkNewsItemExists, checkNewsItemExistsByDoi } from './api/newsApi';
-import {
-  generateAndUploadImage,
-  uploadImageToSupabase,
-} from '@/lib/utils/imageGeneration';
 
 export type RssItem = {
   title: string;
@@ -146,7 +142,6 @@ export async function processRssItem({
       };
     }
 
-    console.log({ pubDate });
     const articleDate = new Date(pubDate);
 
     // Check if date is too old
@@ -180,7 +175,6 @@ export async function processRssItem({
     }
 
     // Check if this item is already in Supabase before expensive operations
-    console.log({ articleDate });
     const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
     const itemExists = await checkNewsItemExists(cleanedUrl, date);
 
@@ -281,23 +275,7 @@ export async function processRssItem({
     // Use the highest score as the main score
     const score = Math.max(...Object.values(specialtyScores));
 
-    const prompt = `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
-
-    let extractedImageUrl = scrapedContent.image_url ?? undefined;
-    console.log({ extractedImageUrl });
-    if (extractedImageUrl && !url.includes('nejm')) {
-      extractedImageUrl = (
-        await uploadImageToSupabase({ imageUrl: extractedImageUrl })
-      ).imageUrl;
-    }
-
-    const imageUrl = await generateAndUploadImage({
-      prompt: prompt,
-      size: '1536x1024',
-      quality: 'medium',
-      model: 'gpt-image-1',
-      bucketName: 'news-images',
-    }).then((res) => res.imageUrl);
+    const extractedImageUrl = scrapedContent.image_url ?? undefined;
 
     await uploadTopic({
       index: processedCount,
@@ -312,7 +290,7 @@ export async function processRssItem({
       is_visible_in_prod: false,
       source: feedGroup,
       scores: specialtyScores,
-      imageUrl,
+      extractedImageUrl,
       newsType: detectedNewsType,
       doi,
     });
