@@ -62,7 +62,7 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://rss.app/feeds/62gUZPqohHlNOs3V.xml',
     group: 'Ophthalmology',
-    name: '',
+    name: BestJournals.OPHTHALMOLOGY,
   },
   {
     url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101695048/?limit=100&name=Ophthalmol%20Retina&utm_campaign=journals',
@@ -101,7 +101,7 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/7603509/?limit=15&name=Blood&utm_campaign=journals',
-    group: 'PubMed',
+    group: '',
     name: BestJournals.BLOOD,
   },
   {
@@ -940,5 +940,89 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     group: 'Wiley',
     name: 'Journal of Internal Medicine',
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0370647/?limit=15&name=CA%20Cancer%20J%20Clin&utm_campaign=journals',
+    group: 'ACS',
+    name: 'CA: A Cancer Journal for Clinicians',
+    specialty: PhysicianSpecialty.ONCOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/8309333/?limit=15&name=J%20Clin%20Oncol&utm_campaign=journals',
+    group: '',
+    name: 'Journal of Clinical Oncology',
+    specialty: PhysicianSpecialty.ONCOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101561693/?limit=15&name=Cancer%20Discov&utm_campaign=journals',
+    group: '',
+    name: 'Cancer Discovery',
+    specialty: PhysicianSpecialty.ONCOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/9007735/?limit=15&name=Ann%20Oncol&utm_campaign=journals',
+    group: '',
+    name: 'Annals of Oncology',
+    specialty: PhysicianSpecialty.ONCOLOGY,
+  },
+  {
+    url: 'https://www.nature.com/nrclinonc.rss',
+    group: 'Nature',
+    name: 'Nature Reviews Clinical Oncology',
+    specialty: PhysicianSpecialty.ONCOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/8301365/?limit=15&name=J%20Am%20Coll%20Cardiol&utm_campaign=journals',
+    group: '',
+    name: 'Journal of the American College of Cardiology',
+    specialty: PhysicianSpecialty.CARDIOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0147763/?limit=15&name=Circulation&utm_campaign=journals',
+    group: '',
+    name: 'Circulation',
+    specialty: PhysicianSpecialty.CARDIOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/8006263/?limit=15&name=Eur%20Heart%20J&utm_campaign=journals',
+    group: '',
+    name: 'European Heart Journal',
+    specialty: PhysicianSpecialty.CARDIOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101598241/?limit=15&name=JACC%20Heart%20Fail&utm_campaign=journals',
+    group: '',
+    name: 'JACC: Heart Failure',
+    specialty: PhysicianSpecialty.CARDIOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0376343/?limit=15&name=J%20Thorac%20Cardiovasc%20Surg&utm_campaign=journals',
+    group: '',
+    name: 'Journal of Thoracic and Cardiovascular Surgery',
+    specialty: PhysicianSpecialty.THORACIC_SURGERY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/9431859/?limit=15&name=Prog%20Retin%20Eye%20Res&utm_campaign=journals',
+    group: '',
+    name: 'Progress in Retinal and Eye Research',
+    specialty: PhysicianSpecialty.OPHTHALMOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0372355/?limit=15&name=Ann%20Rheum%20Dis&utm_campaign=journals',
+    group: '',
+    name: 'Annals of the Rheumatic Diseases',
+    specialty: PhysicianSpecialty.RHEUMATOLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/8503886/?limit=15&name=J%20Hepatol&utm_campaign=journals',
+    group: '',
+    name: 'Journal of Hepatology',
+    specialty: PhysicianSpecialty.GASTROENTEROLOGY,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0374630/?limit=15&name=Gastroenterology&utm_campaign=journals',
+    group: '',
+    name: 'Gastroenterology',
+    specialty: PhysicianSpecialty.GASTROENTEROLOGY,
   },
 ];
