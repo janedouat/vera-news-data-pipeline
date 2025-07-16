@@ -708,6 +708,7 @@ export type Database = {
       news: {
         Row: {
           created_at: string | null
+          doi: string | null
           elements: Json | null
           extracted_image_url: string | null
           id: string
@@ -731,6 +732,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          doi?: string | null
           elements?: Json | null
           extracted_image_url?: string | null
           id?: string
@@ -754,6 +756,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          doi?: string | null
           elements?: Json | null
           extracted_image_url?: string | null
           id?: string

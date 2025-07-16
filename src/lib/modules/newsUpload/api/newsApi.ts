@@ -27,6 +27,20 @@ export async function uploadNewsRow(row: NewsRow) {
     return { message: 'Row already exists for this url and date', existing };
   }
 
+  // Check if a row with the same DOI already exists (if DOI is provided)
+  if (row.doi) {
+    const { data: existingByDoi, error: doiError } = await supabase
+      .from('news')
+      .select('*')
+      .eq('doi', row.doi)
+      .maybeSingle();
+
+    if (doiError) throw doiError;
+    if (existingByDoi) {
+      return { message: 'Row already exists for this DOI', existing: existingByDoi };
+    }
+  }
+
   return insertNewsRow(row);
 }
 
@@ -114,6 +128,28 @@ export async function checkNewsItemExists(
     return !!data;
   } catch (error) {
     console.error('Error in checkNewsItemExists:', error);
+    return false; // Return false on error to continue processing
+  }
+}
+
+export async function checkNewsItemExistsByDoi(
+  doi: string,
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('news')
+      .select('id')
+      .eq('doi', doi)
+      .maybeSingle();
+
+    if (error) {
+      console.error('Error checking for duplicate news item by DOI:', error);
+      return false; // Return false on error to continue processing
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error in checkNewsItemExistsByDoi:', error);
     return false; // Return false on error to continue processing
   }
 }

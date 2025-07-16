@@ -8,6 +8,7 @@ interface RssItem {
   link: string;
   description?: string;
   pubDate?: string;
+  doi?: string;
 }
 
 /**
@@ -105,10 +106,106 @@ function extractPubDate(itemXml: string): string | null {
     return updatedMatch[1].trim();
   }
 
-  // Try <dc:date> (RSS 1.0)
+  // Try <dc:date> (RSS 1.0) - handle nested dc:date structure
   const dcDateMatch = itemXml.match(/<dc:date[^>]*>([\s\S]*?)<\/dc:date>/);
   if (dcDateMatch) {
-    return dcDateMatch[1].trim();
+    const content = dcDateMatch[1].trim();
+    // If the content contains another dc:date element, extract the inner one
+    const innerDcDateMatch = content.match(
+      /<dc:date[^>]*>([\s\S]*?)<\/dc:date>/,
+    );
+    if (innerDcDateMatch) {
+      return innerDcDateMatch[1].trim();
+    }
+    // If no inner dc:date found, check if the content itself looks like XML
+    // and extract just the text content
+    if (content.includes('<') && content.includes('>')) {
+      // Extract text content from XML-like content
+      const textContent = content.replace(/<[^>]*>/g, '').trim();
+      return textContent || content;
+    }
+    return content;
+  }
+
+  // Try <prism:publicationDate> (PRISM format)
+  const prismDateMatch = itemXml.match(
+    /<prism:publicationDate[^>]*>([\s\S]*?)<\/prism:publicationDate>/,
+  );
+  if (prismDateMatch) {
+    return prismDateMatch[1].trim();
+  }
+
+  return null;
+}
+
+/**
+ * Extract DOI from various RSS formats
+ */
+function extractDoi(itemXml: string): string | null {
+  // Try <prism:doi> (PRISM format)
+  const prismDoiMatch = itemXml.match(
+    /<prism:doi[^>]*>([\s\S]*?)<\/prism:doi>/,
+  );
+  if (prismDoiMatch) {
+    return prismDoiMatch[1].trim();
+  }
+
+  // Try <dc:identifier> with doi: prefix
+  const dcIdentifierMatch = itemXml.match(
+    /<dc:identifier[^>]*>doi:([\s\S]*?)<\/dc:identifier>/,
+  );
+  if (dcIdentifierMatch) {
+    return dcIdentifierMatch[1].trim();
+  }
+
+  // Try <dc:identifier> with full doi URL
+  const dcIdentifierUrlMatch = itemXml.match(
+    /<dc:identifier[^>]*>https?:\/\/doi\.org\/([\s\S]*?)<\/dc:identifier>/,
+  );
+  if (dcIdentifierUrlMatch) {
+    return dcIdentifierUrlMatch[1].trim();
+  }
+
+  // Try <dc:identifier> with any doi content
+  const dcIdentifierAnyMatch = itemXml.match(
+    /<dc:identifier[^>]*>([\s\S]*?)<\/dc:identifier>/,
+  );
+  if (dcIdentifierAnyMatch) {
+    const content = dcIdentifierAnyMatch[1].trim();
+    // Check if it looks like a DOI
+    if (content.startsWith('doi:') || content.startsWith('10.')) {
+      return content.replace(/^doi:/, '').trim();
+    }
+  }
+
+  // Try <id> with doi content (Atom format)
+  const idMatch = itemXml.match(/<id[^>]*>([\s\S]*?)<\/id>/);
+  if (idMatch) {
+    const content = idMatch[1].trim();
+    if (content.startsWith('doi:') || content.startsWith('10.')) {
+      return content.replace(/^doi:/, '').trim();
+    }
+  }
+
+  // Try to extract DOI from link URL
+  const linkMatch = itemXml.match(/<link[^>]*>([\s\S]*?)<\/link>/);
+  if (linkMatch) {
+    const link = linkMatch[1].trim();
+    // Look for DOI in URL patterns
+    const doiInUrlMatch = link.match(/doi\.org\/([^\/\s]+)/);
+    if (doiInUrlMatch) {
+      return doiInUrlMatch[1].trim();
+    }
+  }
+
+  // Try Atom-style link with doi
+  const atomLinkMatch = itemXml.match(/<link[^>]*href=["']([^"']+)["'][^>]*>/);
+  if (atomLinkMatch) {
+    const link = atomLinkMatch[1].trim();
+    const doiInUrlMatch = link.match(/doi\.org\/([^\/\s]+)/);
+    if (doiInUrlMatch) {
+      return doiInUrlMatch[1].trim();
+    }
   }
 
   return null;
@@ -150,6 +247,7 @@ export async function parseRssFeed(feedUrl: string): Promise<RssItem[]> {
           link,
           description: extractDescription(itemXml) || undefined,
           pubDate: extractPubDate(itemXml) || undefined,
+          doi: extractDoi(itemXml) || undefined,
         });
       }
     }

@@ -15,7 +15,7 @@ import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { checkNewsItemExists } from './api/newsApi';
+import { checkNewsItemExists, checkNewsItemExistsByDoi } from './api/newsApi';
 import {
   generateAndUploadImage,
   uploadImageToSupabase,
@@ -26,6 +26,7 @@ export type RssItem = {
   link: string;
   pubDate: string;
   description: string;
+  doi?: string;
 };
 
 export type RssItemProcessResult = {
@@ -132,7 +133,7 @@ export async function processRssItem({
   uploadId,
 }: RssItemProcessOptions): Promise<RssItemProcessResult> {
   try {
-    const { title, link: url, pubDate, description } = rssItem;
+    const { title, link: url, pubDate, description, doi } = rssItem;
 
     // Skip if no URL or title
     if (!url || !title || !pubDate) {
@@ -145,6 +146,7 @@ export async function processRssItem({
       };
     }
 
+    console.log({ pubDate });
     const articleDate = new Date(pubDate);
 
     // Check if date is too old
@@ -178,6 +180,7 @@ export async function processRssItem({
     }
 
     // Check if this item is already in Supabase before expensive operations
+    console.log({ articleDate });
     const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
     const itemExists = await checkNewsItemExists(cleanedUrl, date);
 
@@ -189,6 +192,20 @@ export async function processRssItem({
         status: 'skipped',
         reason: 'already_in_supabase',
       };
+    }
+
+    // Check if this item is already in Supabase by DOI (if DOI is available)
+    if (doi) {
+      const itemExistsByDoi = await checkNewsItemExistsByDoi(doi);
+      if (itemExistsByDoi) {
+        console.log(
+          `Skipping RSS item ${index + 1} because it's already in Supabase by DOI: ${doi}`,
+        );
+        return {
+          status: 'skipped',
+          reason: 'already_in_supabase',
+        };
+      }
     }
 
     const scrapedContent = await scrapeWithFirecrawlStructured(cleanedUrl);
@@ -297,6 +314,7 @@ export async function processRssItem({
       scores: specialtyScores,
       imageUrl,
       newsType: detectedNewsType,
+      doi,
     });
 
     console.log(`Successfully uploaded RSS item: ${title}`);

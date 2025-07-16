@@ -394,6 +394,7 @@ export async function uploadTopic({
   imageUrl,
   newsType,
   extractedImageUrl,
+  doi,
 }: {
   index: number;
   date: string;
@@ -411,6 +412,7 @@ export async function uploadTopic({
   imageUrl?: string;
   extractedImageUrl?: string;
   newsType?: string;
+  doi?: string;
 }) {
   if (
     url == NO_URL_PLACEHOLDER_STRING ||
@@ -443,6 +445,7 @@ export async function uploadTopic({
       scores,
       imageUrl,
       extracted_image_url: extractedImageUrl ?? null,
+      doi: doi ?? null,
     });
   }
 }
