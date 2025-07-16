@@ -16,6 +16,8 @@ export interface ScrapedContent {
   content_type: string;
   image_url?: string;
   image_description?: string;
+  is_newsworthy?: boolean;
+  has_enough_content?: boolean;
 }
 
 export const NEWS_TYPES = [
@@ -77,6 +79,8 @@ const MedicalArticleSchema = z.object({
       .optional(),
     image_url: z.string().optional(),
     image_description: z.string().optional(),
+    is_newsworthy: z.boolean().optional(),
+    has_enough_content: z.boolean().optional(),
   }),
 });
 
@@ -169,10 +173,10 @@ export async function scrapeWithFirecrawlStructured(
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
         extractResult = await firecrawlApp.extract([url], {
-          prompt: `Extract text from this medical article page which will be relevant for a medical news feed. Don't transform the text; only extract please. In content_type, return one of the following values: ${NEWS_TYPES.join()}`,
+          prompt: `Extract text from this medical article page which will be relevant for a medical news feed. Don't transform the text; only extract please. In content_type, return one of the following values: ${NEWS_TYPES.join()}. In is_newsworthy, return a boolean indicating whether the page has news that may be interesting for MDs. In has_enough_content, return a boolean indicating whether the page has enough content for me to write a summary article about it for a news feed.`,
           schema: MedicalArticleSchema,
         });
-        break; // Success, exit retry loop
+        break; // Success, exit retry loopJe
       } catch (error) {
         lastError = error;
         const isRateLimit = isRateLimitError(error);
@@ -249,6 +253,8 @@ export async function scrapeWithFirecrawlStructured(
       content_type: article.content_type,
       image_url: article.image_url,
       image_description: article.image_description,
+      has_enough_content: article.has_enough_content,
+      is_newsworthy: article.is_newsworthy,
     };
   } catch (error) {
     return {

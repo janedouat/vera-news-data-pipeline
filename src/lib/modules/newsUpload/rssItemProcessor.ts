@@ -193,6 +193,18 @@ export async function processRssItem({
 
     const scrapedContent = await scrapeWithFirecrawlStructured(cleanedUrl);
 
+    if (!scrapedContent.is_newsworthy) {
+      return {
+        status: 'skipped',
+        reason: 'not_newsworthy',
+      };
+    }
+    if (!scrapedContent.has_enough_content) {
+      return {
+        status: 'skipped',
+        reason: 'not_enough_content',
+      };
+    }
     if (
       !!scrapedContent.content_type &&
       !ACCEPTED_NEWS_TYPES.includes(scrapedContent.content_type)
@@ -255,6 +267,7 @@ export async function processRssItem({
     const prompt = `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
 
     let extractedImageUrl = scrapedContent.image_url ?? undefined;
+    console.log({ extractedImageUrl });
     if (extractedImageUrl && !url.includes('nejm')) {
       extractedImageUrl = (
         await uploadImageToSupabase({ imageUrl: extractedImageUrl })
