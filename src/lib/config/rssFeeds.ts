@@ -1,44 +1,164 @@
 import { PhysicianSpecialty } from '@/types/taxonomy';
+import { BestJournals } from '@/lib/constants/bestJournals';
 
 export interface RssFeedConfig {
   url: string;
-  group: string; // the short-form journal name
+  group: string; // the umbrella publisher name
   name: string; // the full journal name
   specialty?: PhysicianSpecialty;
   enabled?: boolean;
+  journal?: string; // from bestJournals.ts
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
+  // cell in the press
+  {
+    url: 'https://ascopubs.org/action/showFeed?type=etoc&feed=rss&jc=jco',
+    group: 'ASCO',
+    name: BestJournals.JOURNAL_OF_CLINICAL_ONCOLOGY,
+  },
+  // cell in the press
+  {
+    url: 'https://www.cell.com/cell/inpress.rss',
+    group: 'Cell',
+    name: BestJournals.CELL,
+  },
+  // Cell current
+  {
+    url: 'https://www.cell.com/cell/current.rss',
+    group: 'Cell',
+    name: BestJournals.CELL,
+  },
+  // Cancer Cell in press
+  {
+    url: 'https://www.cell.com/cancer-cell/inpress.rss',
+    group: 'Cell',
+    name: BestJournals.CANCER_CELL,
+  },
+  // Cancer Cell current
+  {
+    url: 'https://www.cell.com/cancer-cell/current.rss',
+    group: 'Cell',
+    name: BestJournals.CANCER_CELL,
+  },
+  // Immunity in press
+  {
+    url: 'https://www.cell.com/immunity/inpress.rss',
+    group: 'Cell',
+    name: BestJournals.IMMUNITY,
+  },
+  // Immunity current
+  {
+    url: 'https://www.cell.com/immunity/current.rss',
+    group: 'Cell',
+    name: BestJournals.IMMUNITY,
+  },
+  {
+    url: 'https://www.annualreviews.org/rss/content/journals/immunol/latestarticles?fmt=rss',
+    group: 'Annual Reviews',
+    name: BestJournals.ANNUAL_REVIEW_OF_IMMUNOLOGY,
+  },
+  // ophthalmology
+  {
+    url: 'https://rss.app/feeds/62gUZPqohHlNOs3V.xml',
+    group: 'Ophthalmology',
+    name: '',
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101695048/?limit=100&name=Ophthalmol%20Retina&utm_campaign=journals',
+    group: 'Ophthalmology',
+    name: BestJournals.RETINA,
+  },
+  {
+    url: 'https://www.nature.com/natcancer.rss',
+    group: 'Nature',
+    name: BestJournals.NATURE_CANCER,
+  },
+  {
+    url: 'https://www.nature.com/nrc.rss',
+    group: 'Nature',
+    name: BestJournals.NATURE_REVIEWS_CANCER,
+  },
+  {
+    url: 'https://www.nature.com/nrcardio.rss',
+    group: 'Nature',
+    name: BestJournals.NATURE_REVIEWS_CARDIOLOGY,
+  },
+  {
+    url: 'https://www.nature.com/nrneurol.rss',
+    group: 'Nature',
+    name: BestJournals.NATURE_REVIEWS_NEUROLOGY,
+  },
+  {
+    url: 'https://www.nature.com/nri.rss',
+    group: 'Nature',
+    name: BestJournals.NATURE_REVIEWS_IMMUNOLOGY,
+  },
+  {
+    url: 'https://www.nature.com/leu.rss',
+    group: 'Nature',
+    name: BestJournals.LEUKEMIA,
+  },
+  {
+    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/7603509/?limit=15&name=Blood&utm_campaign=journals',
+    group: 'PubMed',
+    name: BestJournals.BLOOD,
+  },
   {
     url: 'https://www.nature.com/nm.rss',
     group: 'Nature',
-    name: 'Medicine',
+    name: BestJournals.NATURE_MEDICINE,
+  },
+  {
+    url: 'https://onlinelibrary.wiley.com/feed/15318249/most-recent',
+    group: 'Wiley',
+    name: BestJournals.ANNALS_OF_NEUROLOGY,
+  },
+  {
+    url: 'https://onlinelibrary.wiley.com/feed/20515545/most-recent',
+    group: 'Wiley',
+    name: BestJournals.WORLD_PSYCHIATRY,
+  },
+  {
+    url: 'https://onlinelibrary.wiley.com/feed/13652133/most-recent',
+    group: 'Wiley',
+    name: BestJournals.BRITISH_JOURNAL_OF_DERMATOLOGY,
+  },
+  {
+    url: 'https://academic.oup.com/rss/site_6497/advanceAccess_4139.xml',
+    group: 'Oxford Academic',
+    name: 'British Journal of Dermatology',
+  },
+  {
+    url: 'https://academic.oup.com/rss/site_6497/4139.xml',
+    group: 'Oxford Academic',
+    name: 'British Journal of Dermatology',
   },
   //Lancet: "current" rss feeds
   {
     url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
     group: 'Lancet',
-    name: 'Lancet',
+    name: BestJournals.THE_LANCET,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
     group: 'Lancet',
-    name: 'Oncology',
+    name: BestJournals.LANCET_ONCOLOGY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
     group: 'Lancet',
-    name: 'Infectious Diseases',
+    name: BestJournals.LANCET_INFECTIOUS_DISEASES,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laneur_current.xml',
     group: 'Lancet',
-    name: 'Neurology',
+    name: BestJournals.JAMA_NEUROLOGY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanpsy_current.xml',
     group: 'Lancet',
-    name: 'Psychiatry',
+    name: BestJournals.JAMA_PSYCHIATRY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanrhe_current.xml',
@@ -78,7 +198,42 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lanchi_current.xml',
     group: 'Lancet',
-    name: 'Child & Adolescent Health',
+    name: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
+  },
+  {
+    url: 'https://www.thelancet.com/rssfeed/landia_current.xml',
+    group: 'Lancet',
+    name: BestJournals.LANCET_DIABETES_ENDOCRINOLOGY,
+  },
+  {
+    url: 'https://diabetesjournals.org/rss/site_1000003/1000004.xml',
+    group: 'Diabetes Journals',
+    name: BestJournals.DIABETES_CARE,
+  },
+  {
+    url: 'https://diabetesjournals.org/rss/site_1000003/advanceAccess_1000004.xml',
+    group: 'Diabetes Journals',
+    name: BestJournals.DIABETES_CARE,
+  },
+  {
+    url: 'https://academic.oup.com/rss/site_5593/3466.xml',
+    group: 'Oxford Academic',
+    name: BestJournals.ENDOCRINE_REVIEWS,
+  },
+  {
+    url: 'https://academic.oup.com/rss/site_5593/advanceAccess_3466.xml',
+    group: 'Oxford Academic',
+    name: BestJournals.ENDOCRINE_REVIEWS,
+  },
+  {
+    url: 'https://academic.oup.com/rss/site_5269/3135.xml',
+    group: 'Oxford Academic',
+    name: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
+  },
+  {
+    url: 'https://academic.oup.com/rss/site_5269/advanceAccess_3135.xml',
+    group: 'Oxford Academic',
+    name: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanwh_current.xml',
@@ -110,27 +265,27 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lancet_online.xml',
     group: 'Lancet',
-    name: 'Lancet',
+    name: BestJournals.THE_LANCET,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanonc_online.xml',
     group: 'Lancet',
-    name: 'Oncology',
+    name: BestJournals.LANCET_ONCOLOGY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laninf_online.xml',
     group: 'Lancet',
-    name: 'Infectious Diseases',
+    name: BestJournals.LANCET_INFECTIOUS_DISEASES,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laneur_online.xml',
     group: 'Lancet',
-    name: 'Neurology',
+    name: BestJournals.JAMA_NEUROLOGY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanpsy_online.xml',
     group: 'Lancet',
-    name: 'Psychiatry',
+    name: BestJournals.JAMA_PSYCHIATRY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanrhe_online.xml',
@@ -170,7 +325,7 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lanchi_online.xml',
     group: 'Lancet',
-    name: 'Child & Adolescent Health',
+    name: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanwh_online.xml',
@@ -200,31 +355,31 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
     group: 'Lancet',
-    name: 'Lancet',
+    name: BestJournals.THE_LANCET,
     specialty: PhysicianSpecialty.OTHER,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
     group: 'Lancet',
-    name: 'Oncology',
+    name: BestJournals.LANCET_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
     group: 'Lancet',
-    name: 'Infectious Diseases',
+    name: BestJournals.LANCET_INFECTIOUS_DISEASES,
     specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laneur_current.xml',
     group: 'Lancet',
-    name: 'Neurology',
+    name: BestJournals.JAMA_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanpsy_current.xml',
     group: 'Lancet',
-    name: 'Psychiatry',
+    name: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
   },
   {
@@ -272,7 +427,7 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lanchi_current.xml',
     group: 'Lancet',
-    name: 'Child & Adolescent Health',
+    name: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
     specialty: PhysicianSpecialty.PEDIATRICS,
   },
   {
@@ -309,19 +464,19 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_3/67.xml',
     group: 'JAMA',
-    name: 'JAMA',
+    name: BestJournals.JAMA,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
   },
   {
     url: 'https://jamanetwork.com/rss/site_192/184.xml',
     group: 'JAMA',
-    name: 'Cardiology',
+    name: BestJournals.JAMA_CARDIOLOGY,
     specialty: PhysicianSpecialty.CARDIOLOGY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_12/68.xml',
     group: 'JAMA',
-    name: 'Dermatology',
+    name: BestJournals.JAMA_DERMATOLOGY,
     specialty: PhysicianSpecialty.DERMATOLOGY,
   },
   {
@@ -333,25 +488,25 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_15/71.xml',
     group: 'JAMA',
-    name: 'Internal Medicine',
+    name: BestJournals.JOURNAL_OF_INTERNAL_MEDICINE,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
   },
   {
     url: 'https://jamanetwork.com/rss/site_16/72.xml',
     group: 'JAMA',
-    name: 'Neurology',
+    name: BestJournals.JAMA_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_159/174.xml',
     group: 'JAMA',
-    name: 'Oncology',
+    name: BestJournals.LANCET_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_17/73.xml',
     group: 'JAMA',
-    name: 'Ophthalmology',
+    name: BestJournals.OPHTHALMOLOGY,
     specialty: PhysicianSpecialty.OPHTHALMOLOGY,
   },
   {
@@ -363,19 +518,19 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_19/75.xml',
     group: 'JAMA',
-    name: 'Pediatrics',
+    name: BestJournals.PEDIATRICS,
     specialty: PhysicianSpecialty.PEDIATRICS,
   },
   {
     url: 'https://jamanetwork.com/rss/site_14/70.xml',
     group: 'JAMA',
-    name: 'Psychiatry',
+    name: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_20/76.xml',
     group: 'JAMA',
-    name: 'Surgery',
+    name: BestJournals.JAMA_SURGERY,
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
   },
 
@@ -383,43 +538,43 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_3/onlineFirst_67.xml',
     group: 'JAMA',
-    name: 'JAMA',
+    name: BestJournals.JAMA,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
   },
   {
     url: 'https://jamanetwork.com/rss/site_192/onlineFirst_184.xml',
     group: 'JAMA',
-    name: 'Cardiology',
+    name: BestJournals.JAMA_CARDIOLOGY,
     specialty: PhysicianSpecialty.CARDIOLOGY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_12/onlineFirst_68.xml',
     group: 'JAMA',
-    name: 'Dermatology',
+    name: BestJournals.JAMA_DERMATOLOGY,
     specialty: PhysicianSpecialty.DERMATOLOGY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_15/onlineFirst_71.xml',
     group: 'JAMA',
-    name: 'Internal Medicine',
+    name: BestJournals.JOURNAL_OF_INTERNAL_MEDICINE,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
   },
   {
     url: 'https://jamanetwork.com/rss/site_16/onlineFirst_72.xml',
     group: 'JAMA',
-    name: 'Neurology',
+    name: BestJournals.JAMA_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_159/onlineFirst_174.xml',
     group: 'JAMA',
-    name: 'Oncology',
+    name: BestJournals.LANCET_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_17/onlineFirst_73.xml',
     group: 'JAMA',
-    name: 'Ophthalmology',
+    name: BestJournals.OPHTHALMOLOGY,
     specialty: PhysicianSpecialty.OPHTHALMOLOGY,
   },
   {
@@ -431,25 +586,25 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_19/onlineFirst_75.xml',
     group: 'JAMA',
-    name: 'Pediatrics',
+    name: BestJournals.PEDIATRICS,
     specialty: PhysicianSpecialty.PEDIATRICS,
   },
   {
     url: 'https://jamanetwork.com/rss/site_14/onlineFirst_70.xml',
     group: 'JAMA',
-    name: 'Psychiatry',
+    name: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
   },
   {
     url: 'https://jamanetwork.com/rss/site_20/onlineFirst_76.xml',
     group: 'JAMA',
-    name: 'Surgery',
+    name: BestJournals.JAMA_SURGERY,
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
   },
   {
     url: 'http://feeds.bmj.com/bmj/recent',
     group: 'BMJ',
-    name: 'The BMJ',
+    name: BestJournals.THE_BMJ,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
   },
   {
@@ -530,6 +685,30 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     name: 'Journal of Epidemiology and Community Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
   },
+  {
+    url: 'https://adc.bmj.com/rss/current.xml',
+    group: 'BMJ',
+    name: BestJournals.ARCHIVES_OF_DISEASE_IN_CHILDHOOD,
+    specialty: PhysicianSpecialty.PEDIATRICS,
+  },
+  {
+    url: 'https://publications.aap.org/rss/site_1000005/1000005.xml',
+    group: 'AAP',
+    name: 'Pediatrics',
+    specialty: PhysicianSpecialty.PEDIATRICS,
+  },
+  {
+    url: 'https://journals.lww.com/annalsofsurgery/_layouts/15/OAKS.Journals/feed.aspx?FeedType=LatestArticles',
+    group: 'LWW',
+    name: BestJournals.ANNALS_OF_SURGERY,
+    specialty: PhysicianSpecialty.GENERAL_SURGERY,
+  },
+  {
+    url: 'https://www.atsjournals.org/action/showFeed?type=etoc&feed=rss&jc=annalsats',
+    group: 'ATS',
+    name: BestJournals.AMERICAN_JOURNAL_OF_RESPIRATORY_AND_CRITICAL_CARE_MEDICINE,
+    specialty: PhysicianSpecialty.PULMONOLOGY,
+  },
 
   // BMJ: "Online First" feeds
   {
@@ -590,7 +769,7 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=cardiology',
     group: 'NEJM',
-    name: 'Cardiology',
+    name: BestJournals.JAMA_CARDIOLOGY,
     specialty: PhysicianSpecialty.CARDIOLOGY,
   },
   {
@@ -602,7 +781,7 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=dermatology',
     group: 'NEJM',
-    name: 'Dermatology',
+    name: BestJournals.JAMA_DERMATOLOGY,
     specialty: PhysicianSpecialty.DERMATOLOGY,
   },
   {
@@ -674,13 +853,13 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=pediatrics',
     group: 'NEJM',
-    name: 'Pediatrics',
+    name: BestJournals.PEDIATRICS,
     specialty: PhysicianSpecialty.PEDIATRICS,
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=psychiatry',
     group: 'NEJM',
-    name: 'Psychiatry',
+    name: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
   },
   {
@@ -698,7 +877,68 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=surgery',
     group: 'NEJM',
-    name: 'Surgery',
+    name: BestJournals.JAMA_SURGERY,
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
+  },
+  // CDC MMWR
+  {
+    url: 'https://tools.cdc.gov/api/v2/resources/media/342778.rss',
+    group: 'CDC',
+    name: 'Morbidity and Mortality Weekly Report',
+    specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
+  },
+  {
+    url: 'https://journals.lww.com/JASN/_layouts/15/OAKS.Journals/feed.aspx?FeedType=CurrentIssue',
+    group: 'LWW',
+    name: 'Journal of the American Society of Nephrology',
+    specialty: PhysicianSpecialty.NEPHROLOGY,
+  },
+  {
+    url: 'https://www.nature.com/nrneph.rss',
+    group: 'Nature',
+    name: 'Nature Reviews Nephrology',
+    specialty: PhysicianSpecialty.NEPHROLOGY,
+  },
+  {
+    url: 'https://www.nature.com/nrrheum.rss',
+    group: 'Nature',
+    name: 'Nature Reviews Rheumatology',
+    specialty: PhysicianSpecialty.RHEUMATOLOGY,
+  },
+  {
+    url: 'https://www.nature.com/nrendo.rss',
+    group: 'Nature',
+    name: 'Nature Reviews Endocrinology',
+    specialty: PhysicianSpecialty.ENDOCRINOLOGY,
+  },
+  {
+    url: 'https://journals.asm.org/action/showFeed?type=etoc&feed=rss&jc=CMR',
+    group: 'ASM',
+    name: 'Clinical Microbiology Reviews',
+    specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
+  },
+  {
+    url: 'https://www.nature.com/nrd.rss',
+    group: 'Nature',
+    name: 'Nature Reviews Drug Discovery',
+    specialty: PhysicianSpecialty.OTHER,
+  },
+  {
+    url: 'https://www.nature.com/nbt.rss',
+    group: 'Nature',
+    name: 'Nature Biotechnology',
+    specialty: PhysicianSpecialty.OTHER,
+  },
+  {
+    url: 'https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=stm',
+    group: 'AAAS',
+    name: 'Science Translational Medicine',
+    specialty: PhysicianSpecialty.OTHER,
+  },
+  {
+    url: 'https://onlinelibrary.wiley.com/feed/13652796/most-recent',
+    group: 'Wiley',
+    name: 'Journal of Internal Medicine',
+    specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
   },
 ];
