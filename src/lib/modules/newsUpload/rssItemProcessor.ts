@@ -5,7 +5,6 @@ import {
   getSpecialties,
   getSubspecialtyTags,
   getScore,
-  uploadTopic,
 } from './topicProcessor';
 import {
   ACCEPTED_NEWS_TYPES,
@@ -15,14 +14,19 @@ import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
 import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
-import { checkNewsItemExists, checkNewsItemExistsByDoi } from './api/newsApi';
+import {
+  checkNewsItemExists,
+  checkNewsItemExistsByDoi,
+  uploadNewsRow,
+} from './api/newsApi';
 import {
   RETRYABLE_ERROR_PATTERNS,
   RATE_LIMIT_ERROR_PATTERNS,
   VALIDATION_ERROR_PATTERNS,
 } from '@/lib/config/apiConfig';
-import { validateContentSufficiency } from '@/lib/services/contentSufficiencyValidationService';
+import { validateContentSufficiency } from '@/lib/modules/newsUpload/services/contentSufficiencyValidationService';
 import { generateAndUploadImageWithRetry } from '@/lib/utils/imageGeneration';
+import { generateAndStoreSuggestedQuestions } from '@/lib/modules/newsUpload/services/newsSuggestedQuestions';
 
 export type RssItem = {
   title: string;
@@ -46,6 +50,7 @@ export type RssItemProcessOptions = {
   feedGroup: string;
   processedCount: number;
   uploadId: string;
+  traceId: string;
 };
 
 const ScientificPaperFilter = z.object({
@@ -135,6 +140,7 @@ export async function processRssItem({
   feedGroup,
   processedCount,
   uploadId,
+  traceId,
 }: RssItemProcessOptions): Promise<RssItemProcessResult> {
   try {
     const { title, link: url, pubDate, description, doi } = rssItem;
@@ -296,35 +302,45 @@ export async function processRssItem({
     const score = Math.max(...Object.values(specialtyScores));
 
     const extractedImageUrl = scrapedContent.image_url ?? undefined;
-    const extractedImageDescription = scrapedContent.image_description ?? undefined;
+    const extractedImageDescription =
+      scrapedContent.image_description ?? undefined;
 
-    const {imageUrl} = await generateAndUploadImageWithRetry({
-      prompt:  `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
+    const { imageUrl } = await generateAndUploadImageWithRetry({
+      prompt: `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`,
       size: '1536x1024',
       quality: 'medium',
       model: 'gpt-image-1',
       bucketName: 'news-images',
     });
 
-    await uploadTopic({
-      index: processedCount,
-      date,
+    const uploadResult = await uploadNewsRow({
+      news_date: date,
       url: cleanedUrl,
       specialties,
       tags,
-      answer,
+      elements: answer,
       score,
-      model: 'none',
-      uploadId,
+      upload_id: uploadId,
       is_visible_in_prod: false,
       source: feedGroup,
       scores: specialtyScores,
-      extractedImageUrl,
-      extractedImageDescription,
+      extracted_image_url: extractedImageUrl,
+      extracted_image_description: extractedImageDescription,
       imageUrl,
-      newsType: detectedNewsType,
+      news_type: detectedNewsType,
       doi,
+      news_date_timestamp: new Date(date).toISOString(),
     });
+
+    // Generate and store suggested questions for the news piece
+    if (uploadResult && typeof uploadResult === 'object' && 'id' in uploadResult) {
+      await generateAndStoreSuggestedQuestions({
+        newsId: uploadResult.id,
+        answer: stringifiedAnswer,
+        title: answer.title,
+        parentTraceId: traceId,
+      });
+    }
 
     console.log(`Successfully uploaded RSS item: ${title}`);
 

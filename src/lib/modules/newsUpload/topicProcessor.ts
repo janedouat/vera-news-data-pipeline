@@ -4,122 +4,16 @@ import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod.mjs';
 import { ALL_SPECIALTIES, Specialty } from '../../../types/taxonomy';
 import { ALL_SUBSPECIALTIES } from '../../../types/subspecialty_taxonomy';
-import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
 import { OpenAI } from 'openai';
 import { callOpenAIWithZodFormat } from '@/lib/utils/openaiWebSearch';
-import { findMedicalSourceUrl } from '@/lib/utils/perplexitySearch';
-import { Json } from '@/types/supabase';
 import {
   LLM_CALL_RETRY_CONFIG,
   RETRYABLE_ERROR_PATTERNS,
 } from '@/lib/config/apiConfig';
 
-const TopicList = z.object({
-  topics: z.array(z.string()),
-});
-
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-/// *** Topic list extraction from plain text ***
-
-export async function extractTopicsFromText(
-  unstructuredTopicList: string,
-): Promise<string[]> {
-  const result = await generateObject({
-    model: openai('gpt-4.1'),
-    schema: TopicList,
-    schemaName: 'TopicList',
-    schemaDescription: 'A list of topics extracted from unstructured text.',
-    prompt: `Extract a list of strings from the topic text below (one per title, the titles are separated by commas and numbers), do not change any of the words in the topic text below and return ONLY a JSON object with a "topics" array of strings. \n ### Topic list: ${unstructuredTopicList}`,
-    temperature: 1,
-  });
-
-  return result.object.topics;
-}
-
-/// *** Topic Source functions ***
-
-const NO_URL_PLACEHOLDER_STRING = 'no_url';
-const SOURCE_TOO_OLD_PLACEHOLDER_STRING = 'too_old';
-
-// Helper function to validate if URL is from approved domains
-function isValidDomain(url: string): boolean {
-  try {
-    const hostname = new URL(url).hostname.toLowerCase();
-    const approvedDomains = [
-      'fda.gov',
-      'cdc.gov',
-      'nejm.org',
-      'jama',
-      'bmj.com',
-      'thelancet.com',
-      'chestnet',
-      'atsjournals',
-      'nature.com',
-    ];
-
-    return approvedDomains.some((domain) => hostname.includes(domain));
-  } catch {
-    return false;
-  }
-}
-
-export async function getUrl({
-  topic,
-}: {
-  topic: string;
-}): Promise<{ url: string }> {
-  const output = await findMedicalSourceUrl(topic);
-
-  const urlR = /(https?:\/\/[^\s]+)/g;
-  const url = output.url.match(urlR)?.toString();
-  if (url) {
-    // Validate that the URL is from an approved domain
-    if (!isValidDomain(url)) {
-      console.log(`❌ URL rejected - not from approved domain: ${url}`);
-      return {
-        url: NO_URL_PLACEHOLDER_STRING,
-      };
-    }
-
-    return {
-      url: url ?? NO_URL_PLACEHOLDER_STRING,
-    };
-  } else if (output.url === 'no_url') {
-    return {
-      url: NO_URL_PLACEHOLDER_STRING,
-    };
-  } else {
-    throw new Error('Error generating url');
-  }
-}
-
-export async function getDate({
-  topic,
-  url,
-}: {
-  topic: string;
-  url: string;
-}): Promise<{ date: Date }> {
-  const content = `Find the date of the topic at this url and return the date in the format YYYY-MM-YY or "no date". If the date is simply a month, return the last day of that month (ex: June 2025 -> 2025-06-30), nothing else. Don't write anything else in the answer.\n ### URL:\n ${url}} \n ### Topic:\n  ${topic}`;
-  const message = await callOpenAIWithZodFormat({
-    content,
-    zodSchema: z.object({ date: z.string() }),
-    model: 'gpt-4.1',
-  });
-
-  const outputDate = new Date(message.date as string);
-
-  if (outputDate) {
-    return {
-      date: new Date(outputDate),
-    };
-  } else {
-    throw new Error('Error generating news_date');
-  }
-}
 
 /// *** Topic Answer functions ***
 
@@ -430,79 +324,4 @@ export function generateNewsletterTitle({
   if (articleType) titleParts.push(articleType);
 
   return `${titleParts.join(' - ')}: ${parsedAnswer.title}`;
-}
-
-export async function uploadTopic({
-  index,
-  date,
-  url,
-  specialties,
-  tags,
-  answer,
-  score,
-  model,
-  uploadId,
-  is_visible_in_prod,
-  source,
-  scores,
-  imageUrl,
-  newsType,
-  extractedImageUrl,
-  extractedImageDescription,
-  doi,
-}: {
-  index: number;
-  date: string;
-  url: string;
-  specialty?: Specialty;
-  specialties: string[];
-  tags: string[];
-  answer: Json;
-  score: number;
-  model?: string;
-  uploadId: string;
-  is_visible_in_prod?: boolean;
-  source?: string;
-  scores?: Record<string, number>;
-  imageUrl?: string;
-  extractedImageUrl?: string;
-  extractedImageDescription?: string;
-  newsType?: string;
-  doi?: string;
-}) {
-  if (
-    url == NO_URL_PLACEHOLDER_STRING ||
-    date == SOURCE_TOO_OLD_PLACEHOLDER_STRING
-  ) {
-    console.log(
-      `News piece ${index + 1} from upload ${uploadId} was not added to supabase (cause: ${url === NO_URL_PLACEHOLDER_STRING ? (date == SOURCE_TOO_OLD_PLACEHOLDER_STRING ? 'no url and date too old' : 'no url') : 'date too old'})`,
-    );
-  } else {
-    const newsletterTitle = generateNewsletterTitle({
-      url,
-      date,
-      answer: JSON.stringify(answer),
-    });
-
-    return uploadNewsRow({
-      elements: answer,
-      score,
-      news_date: date,
-      news_date_timestamp: new Date(date).toISOString(),
-      news_type: newsType ?? null,
-      specialties: specialties,
-      selecting_model: model ?? null,
-      url: url,
-      tags: tags,
-      upload_id: uploadId,
-      is_visible_in_prod: !!is_visible_in_prod,
-      newsletter_title: newsletterTitle,
-      source,
-      scores,
-      imageUrl,
-      extracted_image_url: extractedImageUrl ?? null,
-      extracted_image_description: extractedImageDescription ?? null,
-      doi: doi ?? null,
-    });
-  }
 }

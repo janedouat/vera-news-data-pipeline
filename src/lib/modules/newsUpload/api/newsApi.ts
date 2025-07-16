@@ -37,7 +37,10 @@ export async function uploadNewsRow(row: NewsRow) {
 
     if (doiError) throw doiError;
     if (existingByDoi) {
-      return { message: 'Row already exists for this DOI', existing: existingByDoi };
+      return {
+        message: 'Row already exists for this DOI',
+        existing: existingByDoi,
+      };
     }
   }
 
@@ -132,9 +135,7 @@ export async function checkNewsItemExists(
   }
 }
 
-export async function checkNewsItemExistsByDoi(
-  doi: string,
-): Promise<boolean> {
+export async function checkNewsItemExistsByDoi(doi: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
       .from('news')
@@ -151,5 +152,29 @@ export async function checkNewsItemExistsByDoi(
   } catch (error) {
     console.error('Error in checkNewsItemExistsByDoi:', error);
     return false; // Return false on error to continue processing
+  }
+}
+
+export async function updateNewsWithSuggestedQuestions(
+  newsId: string,
+  suggestedQuestions: string[],
+): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('news')
+      .update({ suggested_questions: suggestedQuestions })
+      .eq('id', newsId);
+
+    if (error) {
+      console.error('Error updating news with suggested questions:', error);
+      throw error;
+    }
+
+    console.log(
+      `✅ Successfully updated news ${newsId} with suggested questions`,
+    );
+  } catch (error) {
+    console.error('Failed to update news with suggested questions:', error);
+    throw error;
   }
 }
