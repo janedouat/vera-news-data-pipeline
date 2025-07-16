@@ -16,6 +16,12 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import { checkNewsItemExists, checkNewsItemExistsByDoi } from './api/newsApi';
+import {
+  RETRYABLE_ERROR_PATTERNS,
+  RATE_LIMIT_ERROR_PATTERNS,
+  VALIDATION_ERROR_PATTERNS,
+} from '@/lib/config/apiConfig';
+import { validateContentSufficiency } from '@/lib/services/contentSufficiencyValidationService';
 
 export type RssItem = {
   title: string;
@@ -29,6 +35,7 @@ export type RssItemProcessResult = {
   status: 'success' | 'skipped' | 'error';
   reason?: string;
   processedCount?: number;
+  errorCategory?: 'api_connection' | 'rate_limit' | 'validation' | 'unknown';
 };
 
 export type RssItemProcessOptions = {
@@ -167,11 +174,23 @@ export async function processRssItem({
     const topic = title;
 
     // Remove RSS route parameters from URL
+    console.log(`🔗 Original URL: ${url}`);
     const cleanedUrl = removeRssRouteParameters(url);
+    console.log(`🧹 Cleaned URL: ${cleanedUrl}`);
 
     // Check if any RSS parameters remain in the URL
     if (cleanedUrl.toLowerCase().includes('rss')) {
       console.log(`⚠️ RSS still found in cleaned URL: ${cleanedUrl}`);
+    }
+
+    // Additional URL validation before scraping
+    if (!cleanedUrl || cleanedUrl.trim() === '') {
+      console.error(`❌ Empty or invalid cleaned URL for item: ${title}`);
+      return {
+        status: 'error',
+        reason: 'invalid_cleaned_url',
+        errorCategory: 'validation',
+      };
     }
 
     // Check if this item is already in Supabase before expensive operations
@@ -202,20 +221,9 @@ export async function processRssItem({
       }
     }
 
+    console.log(`🌐 Starting web scraping for: ${cleanedUrl}`);
     const scrapedContent = await scrapeWithFirecrawlStructured(cleanedUrl);
 
-    if (!scrapedContent.is_newsworthy) {
-      return {
-        status: 'skipped',
-        reason: 'not_newsworthy',
-      };
-    }
-    if (!scrapedContent.has_enough_content) {
-      return {
-        status: 'skipped',
-        reason: 'not_enough_content',
-      };
-    }
     if (
       !!scrapedContent.content_type &&
       !ACCEPTED_NEWS_TYPES.includes(scrapedContent.content_type)
@@ -223,6 +231,17 @@ export async function processRssItem({
       return {
         status: 'skipped',
         reason: 'not_accepted_news_type',
+      };
+    }
+
+    const contentValidation = await validateContentSufficiency(
+      scrapedContent.content,
+    );
+
+    if (!contentValidation.has_sufficient_content) {
+      return {
+        status: 'skipped',
+        reason: 'not_enough_content',
       };
     }
 
@@ -299,10 +318,35 @@ export async function processRssItem({
 
     return { status: 'success', processedCount: processedCount + 1 };
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`Error processing RSS item ${index}:`, error);
+
+    // Categorize errors for better handling using imported patterns
+    const isApiError = RETRYABLE_ERROR_PATTERNS.some((pattern) =>
+      errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+    );
+
+    const isRateLimitError = RATE_LIMIT_ERROR_PATTERNS.some((pattern) =>
+      errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+    );
+
+    const isValidationError = VALIDATION_ERROR_PATTERNS.some((pattern) =>
+      errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+    );
+
+    let errorCategory:
+      | 'api_connection'
+      | 'rate_limit'
+      | 'validation'
+      | 'unknown' = 'unknown';
+    if (isApiError) errorCategory = 'api_connection';
+    else if (isRateLimitError) errorCategory = 'rate_limit';
+    else if (isValidationError) errorCategory = 'validation';
+
     return {
       status: 'error',
-      reason: error instanceof Error ? error.message : String(error),
+      reason: errorMessage,
+      errorCategory,
     };
   }
 }

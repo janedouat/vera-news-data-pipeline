@@ -45,6 +45,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           missing_url_or_title_or_date: number;
           date_too_old: number;
           not_scientific_paper: number;
+          not_enough_content: number;
           error: number;
           already_processed: number;
         };
@@ -68,6 +69,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           missing_url_or_title_or_date: 0,
           date_too_old: 0,
           not_scientific_paper: 0,
+          not_enough_content: 0,
           error: 0,
           already_processed: 0,
         },
@@ -108,6 +110,8 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 feedStats[feedKey].skipReasons.missing_url_or_title_or_date++;
               } else if (result.reason === 'not_scientific_paper') {
                 feedStats[feedKey].skipReasons.not_scientific_paper++;
+              } else if (result.reason === 'not_enough_content') {
+                feedStats[feedKey].skipReasons.not_enough_content++;
               } else if (result.reason === 'already_in_supabase') {
                 feedStats[feedKey].skipReasons.already_processed++;
               }
@@ -150,6 +154,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       console.log(
         `    🔬 Not scientific: ${stat.skipReasons.not_scientific_paper}`,
       );
+      console.log(
+        `    📝 Not enough content: ${stat.skipReasons.not_enough_content}`,
+      );
       console.log(`    ❌ Errors: ${stat.skipReasons.error}`);
       console.log(
         `    🔄 Already processed: ${stat.skipReasons.already_processed}`,
@@ -165,6 +172,8 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           stat.skipReasons.missing_url_or_title_or_date,
         not_scientific_paper:
           acc.not_scientific_paper + stat.skipReasons.not_scientific_paper,
+        not_enough_content:
+          acc.not_enough_content + stat.skipReasons.not_enough_content,
         error: acc.error + stat.skipReasons.error,
         already_processed:
           acc.already_processed + stat.skipReasons.already_processed,
@@ -173,6 +182,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         date_too_old: 0,
         missing_url_or_title_or_date: 0,
         not_scientific_paper: 0,
+        not_enough_content: 0,
         error: 0,
         already_processed: 0,
       },
@@ -185,6 +195,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     );
     console.log(
       `🔬 Not scientific papers: ${totalSkipReasons.not_scientific_paper}`,
+    );
+    console.log(
+      `📝 Not enough content: ${totalSkipReasons.not_enough_content}`,
     );
     console.log(`❌ Processing errors: ${totalSkipReasons.error}`);
     console.log(`🔄 Already processed: ${totalSkipReasons.already_processed}`);

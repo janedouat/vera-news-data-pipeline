@@ -8,8 +8,11 @@ import { uploadNewsRow } from '@/lib/modules/newsUpload/api/newsApi';
 import { OpenAI } from 'openai';
 import { callOpenAIWithZodFormat } from '@/lib/utils/openaiWebSearch';
 import { findMedicalSourceUrl } from '@/lib/utils/perplexitySearch';
-import { perplexity } from '@ai-sdk/perplexity';
 import { Json } from '@/types/supabase';
+import {
+  LLM_CALL_RETRY_CONFIG,
+  RETRYABLE_ERROR_PATTERNS,
+} from '@/lib/config/apiConfig';
 
 const TopicList = z.object({
   topics: z.array(z.string()),
@@ -151,23 +154,74 @@ export async function getAnswer({
   ### text: ${text}
 `;
 
-  const output = await generateObject({
-    model: perplexity('sonar-pro'),
-    schema: AnswerZObject,
-    schemaName: 'AnswerZObject',
-    schemaDescription:
-      'A structured response with title, bullet points, and paragraphs for medical news.',
-    prompt: content,
-    temperature: 0.1,
-  });
+  const { maxRetries, baseDelay, maxDelay, backoffMultiplier } =
+    LLM_CALL_RETRY_CONFIG.retry;
 
-  const message = output.object;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      console.log(
+        `🔄 Attempting API call (attempt ${attempt}/${maxRetries}) for topic: ${topic.substring(0, 50)}...`,
+      );
 
-  if (message) {
-    return { answer: message };
-  } else {
-    throw new Error('Error generating title and/or bullet_points');
+      // Add exponential backoff delay for retries
+      if (attempt > 1) {
+        const retryDelay = Math.min(
+          baseDelay * Math.pow(backoffMultiplier, attempt - 1),
+          maxDelay,
+        );
+        console.log(`⏳ Retrying after ${retryDelay}ms delay`);
+        await new Promise((resolve) => setTimeout(resolve, retryDelay));
+      }
+
+      const startTime = Date.now();
+      const output = await generateObject({
+        model: openai('gpt-4.1'),
+        schema: AnswerZObject,
+        schemaName: 'AnswerZObject',
+        schemaDescription:
+          'A structured response with title, bullet points, and paragraphs for medical news.',
+        prompt: content,
+        temperature: 0.1,
+      });
+      const endTime = Date.now();
+      console.log(`⏱️ API call completed in ${endTime - startTime}ms`);
+
+      const message = output.object;
+
+      if (message) {
+        console.log(
+          `✅ Successfully generated answer for topic: ${topic.substring(0, 50)}...`,
+        );
+        return { answer: message };
+      } else {
+        throw new Error('No valid response object generated');
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      console.error(
+        `❌ Perplexity API error (attempt ${attempt}/${maxRetries}): ${errorMessage}`,
+      );
+
+      // Check if it's a retryable error using imported patterns
+      const isRetryableError = RETRYABLE_ERROR_PATTERNS.some((pattern) =>
+        errorMessage.toLowerCase().includes(pattern.toLowerCase()),
+      );
+
+      if (attempt === maxRetries || !isRetryableError) {
+        console.error(
+          `❌ Final Perplexity API error after ${maxRetries} attempts: ${errorMessage}`,
+        );
+        throw new Error(
+          `Failed to generate answer after ${maxRetries} attempts. Last error: ${errorMessage}`,
+        );
+      }
+
+      console.warn(`⚠️ Retryable error detected, will retry...`);
+    }
   }
+
+  throw new Error('Error generating title and/or bullet_points');
 }
 
 // *** Topic symptom tagging functions ***

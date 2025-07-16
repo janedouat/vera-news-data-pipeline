@@ -9,15 +9,12 @@ const RATE_LIMIT_BASE_DELAY = 5000; // ms for 429 errors - start with 5 seconds
 const MAX_RETRY_DELAY = 30000; // ms - cap at 30 seconds
 
 export interface ScrapedContent {
-  title: string;
   content: string;
   success: boolean;
   error?: string;
   content_type: string;
   image_url?: string;
   image_description?: string;
-  is_newsworthy?: boolean;
-  has_enough_content?: boolean;
 }
 
 export const NEWS_TYPES = [
@@ -52,44 +49,66 @@ export const ACCEPTED_NEWS_TYPES = [
   'clinical_trials',
   'clinical_guidelines',
   'original_article',
+  'health_policy_report',
 ];
 
 // Medical article schema for structured extraction
 const MedicalArticleSchema = z.object({
   article: z.object({
-    content_type: z.string(),
-    title: z.string(),
-    description: z.string().optional(),
-    method: z.string().optional(),
-    authors: z.string().optional(),
-    journal: z.string().optional(),
-    date: z.string().optional(),
-    background: z.string().optional(),
-    methods: z.string().optional(),
-    findings: z.string().optional(),
-    interpretation: z.string().optional(),
-    introduction: z.string().optional(),
-    outcomes: z.string().optional(),
-    importance: z.string().optional(),
-    results: z.string().optional(),
-    'conclusions and relevance': z.string().optional(),
-    'what this study adds': z.string().optional(),
-    'HOW THIS STUDY MIGHT AFFECT RESEARCH, PRACTICE OR POLICY': z
-      .string()
-      .optional(),
+    all_content: z.string(),
     image_url: z.string().optional(),
     image_description: z.string().optional(),
-    is_newsworthy: z.boolean().optional(),
-    has_enough_content: z.boolean().optional(),
+    content_type: z.string(),
   }),
 });
 
 // URL validation function
 function isValidUrl(url: string): boolean {
   try {
+    if (!url || typeof url !== 'string') {
+      console.error(`❌ URL validation: Invalid type - ${typeof url}`);
+      return false;
+    }
+
+    // Check for common URL issues
+    if (url.trim() === '') {
+      console.error(`❌ URL validation: Empty URL`);
+      return false;
+    }
+
+    if (url.includes('javascript:') || url.includes('data:')) {
+      console.error(`❌ URL validation: Invalid protocol - ${url}`);
+      return false;
+    }
+
     const parsedUrl = new URL(url);
-    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
-  } catch {
+
+    // Check for required components
+    if (!parsedUrl.protocol || !parsedUrl.hostname) {
+      console.error(`❌ URL validation: Missing protocol or hostname - ${url}`);
+      return false;
+    }
+
+    // Only allow http and https protocols
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      console.error(
+        `❌ URL validation: Invalid protocol - ${parsedUrl.protocol}`,
+      );
+      return false;
+    }
+
+    // Check for valid hostname
+    if (parsedUrl.hostname === '' || parsedUrl.hostname.includes('..')) {
+      console.error(
+        `❌ URL validation: Invalid hostname - ${parsedUrl.hostname}`,
+      );
+      return false;
+    }
+
+    console.log(`✅ URL validation passed: ${url}`);
+    return true;
+  } catch (error) {
+    console.error(`❌ URL validation failed: ${url}`, error);
     return false;
   }
 }
@@ -129,6 +148,62 @@ function isRetryableServerError(error: unknown): boolean {
   );
 }
 
+// Check if error is a Firecrawl-specific error that should be retried
+function isFirecrawlRetryableError(error: unknown): boolean {
+  const err = error as {
+    message?: string;
+    statusCode?: number;
+    status?: number;
+  };
+  const errorMessage = err?.message?.toLowerCase() || '';
+
+  // Firecrawl-specific retryable errors
+  const firecrawlRetryablePatterns = [
+    'timeout',
+    'connection',
+    'network',
+    'temporary',
+    'unavailable',
+    'service unavailable',
+    'bad gateway',
+    'gateway timeout',
+    'internal server error',
+    'too many requests',
+    'rate limit',
+  ];
+
+  return firecrawlRetryablePatterns.some((pattern) =>
+    errorMessage.includes(pattern),
+  );
+}
+
+// Check if error is a Firecrawl validation error (should not retry)
+function isFirecrawlValidationError(error: unknown): boolean {
+  const err = error as {
+    message?: string;
+    statusCode?: number;
+    status?: number;
+  };
+  const errorMessage = err?.message?.toLowerCase() || '';
+
+  // Firecrawl validation errors that should not be retried
+  const firecrawlValidationPatterns = [
+    'all provided urls are invalid',
+    'invalid url',
+    'url not found',
+    'access denied',
+    'forbidden',
+    'not found',
+    '404',
+    '403',
+    '401',
+  ];
+
+  return firecrawlValidationPatterns.some((pattern) =>
+    errorMessage.includes(pattern),
+  );
+}
+
 // Calculate retry delay with exponential backoff and jitter
 function calculateRetryDelay(
   attempt: number,
@@ -160,6 +235,15 @@ const firecrawlApp = process.env.FIRECRAWL_API_KEY
   ? new FireCrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY })
   : null;
 
+// Log Firecrawl configuration status
+if (firecrawlApp) {
+  console.log('✅ Firecrawl API key configured');
+} else {
+  console.error(
+    '❌ Firecrawl API key not configured - FIRECRAWL_API_KEY environment variable is missing',
+  );
+}
+
 /**
  * Scrape medical articles using Firecrawl SDK with structured extraction
  */
@@ -171,8 +255,28 @@ export async function scrapeWithFirecrawlStructured(
       throw new Error('Firecrawl API key not configured');
     }
 
+    // Enhanced URL validation and logging
+    console.log(`🔍 Validating URL: ${url}`);
+
+    if (!url || typeof url !== 'string') {
+      throw new Error(`Invalid URL type: ${typeof url}, value: ${url}`);
+    }
+
     if (!isValidUrl(url)) {
-      throw new Error('Invalid URL provided');
+      console.error(`❌ URL validation failed for: ${url}`);
+      throw new Error(`Invalid URL format: ${url}`);
+    }
+
+    // Additional URL checks
+    try {
+      const parsedUrl = new URL(url);
+      console.log(`✅ URL parsed successfully: ${parsedUrl.toString()}`);
+      console.log(`   Protocol: ${parsedUrl.protocol}`);
+      console.log(`   Hostname: ${parsedUrl.hostname}`);
+      console.log(`   Pathname: ${parsedUrl.pathname}`);
+    } catch (parseError) {
+      console.error(`❌ URL parsing failed: ${url}`, parseError);
+      throw new Error(`URL parsing failed: ${url}`);
     }
 
     console.log(`🔥 Starting Firecrawl structured extraction for: ${url}`);
@@ -182,25 +286,45 @@ export async function scrapeWithFirecrawlStructured(
 
     for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
+        console.log(
+          `🔄 Firecrawl extraction attempt ${attempt}/${MAX_RETRIES} for: ${url}`,
+        );
         extractResult = await firecrawlApp.extract([url], {
-          prompt: `Extract text from this medical article page which will be relevant for a medical news feed. Don't transform the text; only extract please. In content_type, return one of the following values: ${NEWS_TYPES.join()}. In is_newsworthy, return a boolean indicating whether the page has news that may be interesting for MDs. In has_enough_content, return a boolean indicating whether the page has enough content for me to write a summary article about it for a news feed.`,
+          prompt: `Extract text from this medical article page which will be relevant for a medical news feed (introduction, conclusion, importance, discussion). Don't transform the text; only extract please. In image_description, also only extract text. In content_type, return one of the following values: ${NEWS_TYPES.join()}.`,
           schema: MedicalArticleSchema,
         });
+        console.log(`✅ Firecrawl extraction successful on attempt ${attempt}`);
         break; // Success, exit retry loop
       } catch (error) {
         lastError = error;
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
+        console.error(
+          `❌ Firecrawl extraction attempt ${attempt} failed:`,
+          errorMessage,
+        );
+
         const isRateLimit = isRateLimitError(error);
         const isServerError = isRetryableServerError(error);
+        const isFirecrawlRetryable = isFirecrawlRetryableError(error);
+        const isFirecrawlValidation = isFirecrawlValidationError(error);
 
-        if (isRateLimit) {
+        if (isFirecrawlValidation) {
+          console.log(
+            `🚫 Firecrawl validation error detected - will not retry`,
+          );
+          break; // Don't retry validation errors
+        } else if (isRateLimit) {
           console.log(`🚫 Rate limit detected (429 error)`);
         } else if (isServerError) {
           console.log(`🚫 Server error detected (502, 503, 504)`);
+        } else if (isFirecrawlRetryable) {
+          console.log(`🔄 Firecrawl retryable error detected`);
         } else {
-          console.log(`⚠️ Attempt ${attempt} failed:`, error);
+          console.log(`⚠️ Non-retryable error detected`);
         }
 
-        if (attempt < MAX_RETRIES) {
+        if (attempt < MAX_RETRIES && !isFirecrawlValidation) {
           const delay = calculateRetryDelay(
             attempt,
             isRateLimit,
@@ -210,6 +334,9 @@ export async function scrapeWithFirecrawlStructured(
             `⏳ Retrying in ${Math.round(delay)}ms... (attempt ${attempt + 1}/${MAX_RETRIES})`,
           );
           await sleep(delay);
+        } else if (isFirecrawlValidation) {
+          console.log(`❌ Stopping retries due to validation error`);
+          break;
         }
       }
     }
@@ -230,43 +357,15 @@ export async function scrapeWithFirecrawlStructured(
 
     const article = articleData.article;
 
-    // Combine all extracted sections into structured content
-    const sections = [
-      article.title && `# ${article.title}`,
-      article.authors && `**Authors:** ${article.authors}`,
-      article.journal && `**Journal:** ${article.journal}`,
-      article.date && `**Date:** ${article.date}`,
-      article.description && `**Description:** ${article.description}`,
-      article.background && `## Background\n${article.background}`,
-      article.methods && `## Methods\n${article.methods}`,
-      article.findings && `## Findings\n${article.findings}`,
-      article.results && `## Results\n${article.results}`,
-      article.interpretation && `## Interpretation\n${article.interpretation}`,
-      article.outcomes && `## Outcomes\n${article.outcomes}`,
-      article.importance && `## Importance\n${article.importance}`,
-      article['conclusions and relevance'] &&
-        `## Conclusions and Relevance\n${article['conclusions and relevance']}`,
-      article['what this study adds'] &&
-        `## What This Study Adds\n${article['what this study adds']}`,
-      article['HOW THIS STUDY MIGHT AFFECT RESEARCH, PRACTICE OR POLICY'] &&
-        `## How This Study Might Affect Research, Practice or Policy\n${article['HOW THIS STUDY MIGHT AFFECT RESEARCH, PRACTICE OR POLICY']}`,
-    ].filter(Boolean);
-
-    const content = sections.join('\n\n');
-
     return {
-      title: article.title || '',
-      content: content,
+      content: article.all_content,
       success: true,
       content_type: article.content_type,
       image_url: article.image_url,
       image_description: article.image_description,
-      has_enough_content: article.has_enough_content,
-      is_newsworthy: article.is_newsworthy,
     };
   } catch (error) {
     return {
-      title: '',
       content: '',
       success: false,
       error: error instanceof Error ? error.message : String(error),
@@ -305,7 +404,6 @@ export async function scrapeWebContent(url: string): Promise<ScrapedContent> {
           `⏭️ Skipping article with content type: ${firecrawlResult.content_type}`,
         );
         return {
-          title: firecrawlResult.title,
           content: firecrawlResult.content,
           success: false,
           error: `Content type '${firecrawlResult.content_type}' is not in accepted types`,
@@ -324,7 +422,6 @@ export async function scrapeWebContent(url: string): Promise<ScrapedContent> {
 
   console.log('❌ No Firecrawl API key configured');
   return {
-    title: '',
     content: '',
     success: false,
     error: 'No Firecrawl API key configured',

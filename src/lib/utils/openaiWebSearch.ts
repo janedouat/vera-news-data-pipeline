@@ -1,7 +1,6 @@
 import { OpenAI } from 'openai';
 import { z } from 'zod';
 import { zodTextFormat } from 'openai/helpers/zod.mjs';
-import type { Tool } from 'openai/resources/beta/threads/runs/steps';
 
 const openaiClient = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -25,7 +24,7 @@ export async function callOpenAIWithZodFormat<T extends z.ZodTypeAny>({
   model: string;
   content: string;
   options?: {
-    tools?: Tool[];
+    tools?: any[];
     temperature?: number;
     top_p?: number;
   };
