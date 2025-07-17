@@ -1,12 +1,10 @@
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
 import {
-  getAnswer,
   getSpecialties,
   getSubspecialtyTags,
   getScore,
 } from '../topicProcessor';
-import { validateContentSufficiency } from './contentSufficiencyValidationService';
 import { generateAndUploadImageWithRetry } from '@/lib/utils/imageGeneration';
 import { generateSuggestedQuestions } from './newsSuggestedQuestions';
 import { Article, insertNewsRow } from '../api/newsApi';
@@ -14,7 +12,11 @@ import { ScrapedContent } from '@/lib/utils/webScraper';
 
 export interface ContentProcessorInput {
   scrapedContent: ScrapedContent;
-  title: string;
+  answer: {
+    title: string;
+    bullet_points: string[];
+    paragraphs: string[];
+  };
   url: string;
   date: string;
   uploadId: string;
@@ -42,7 +44,7 @@ export async function processScrapedContent(
   try {
     const {
       scrapedContent,
-      title,
+      answer,
       url,
       date,
       uploadId,
@@ -53,25 +55,7 @@ export async function processScrapedContent(
       detectedNewsType,
     } = input;
 
-    // Step 1: Content Validation
-    const contentValidation = await validateContentSufficiency(
-      scrapedContent.content,
-    );
-
-    if (!contentValidation.has_sufficient_content) {
-      return {
-        status: 'skipped',
-        reason: 'not_enough_content',
-      };
-    }
-
-    // Step 2: Topic Processing
-    const { answer } = await getAnswer({
-      topic: title,
-      url,
-      text: scrapedContent.content,
-    });
-
+    // Step 1: Content Validation (already done, using provided answer)
     const stringifiedAnswer = JSON.stringify(answer);
 
     // Step 3: Specialty Detection
@@ -148,7 +132,7 @@ export async function processScrapedContent(
       references,
     });
 
-    console.log(`✅ Successfully processed content: ${title}`);
+    console.log(`✅ Successfully processed content: ${answer.title}`);
 
     return { status: 'success', processedCount: 1 };
   } catch (error) {

@@ -18,6 +18,8 @@ import {
 } from '@/lib/config/apiConfig';
 import { processScrapedContent } from './services/contentProcessor';
 import { processDrugsComRssItem } from './services/drugsComProcessor';
+import { getAnswer } from './topicProcessor';
+import { validateContentSufficiency } from '@/lib/modules/newsUpload/services/contentSufficiencyValidationService';
 
 export type RssItem = {
   title: string;
@@ -263,10 +265,28 @@ export async function processRssItem({
       `📊 Detected news type: ${detectedNewsType} for article: ${title}`,
     );
 
+    // Content Validation
+    const contentValidation = await validateContentSufficiency(
+      scrapedContent.content,
+    );
+
+    if (!contentValidation.has_sufficient_content) {
+      return {
+        status: 'skipped',
+        reason: 'not_enough_content',
+      };
+    }
+
+    // Step: Topic Processing
+    const { answer } = await getAnswer({
+      topic,
+      text: scrapedContent.content,
+    });
+
     // Use the common content processing pipeline
     const result = await processScrapedContent({
       scrapedContent,
-      title: topic,
+      answer,
       url: cleanedUrl,
       date,
       uploadId,
