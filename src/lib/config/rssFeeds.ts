@@ -8,9 +8,19 @@ export interface RssFeedConfig {
   specialty?: PhysicianSpecialty;
   enabled?: boolean;
   journal?: string; // from bestJournals.ts
+  type?: 'journal' | 'drugs';
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
+  // Drugs.com RSS feeds
+  {
+    url: 'https://www.drugs.com/feeds/new_drug_approvals.xml',
+    group: 'Drugs.com',
+    name: 'New Drug Approvals',
+    enabled: true,
+    type: 'drugs',
+  },
+  // Existing feeds (commented out)
   // {
   //   url: 'https://www.nature.com/natcancer.rss',
   //   group: 'Nature',
@@ -69,31 +79,31 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   name: BestJournals.ANNUAL_REVIEW_OF_IMMUNOLOGY,
   // },
   // ophthalmology
-  {
-    url: 'https://rss.app/feeds/62gUZPqohHlNOs3V.xml',
-    group: 'Ophthalmology',
-    name: BestJournals.OPHTHALMOLOGY,
-  },
-  {
-    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101695048/?limit=100&name=Ophthalmol%20Retina&utm_campaign=journals',
-    group: 'Ophthalmology',
-    name: BestJournals.RETINA,
-  },
-  {
-    url: 'https://www.nature.com/nrcardio.rss',
-    group: 'Nature',
-    name: BestJournals.NATURE_REVIEWS_CARDIOLOGY,
-  },
-  {
-    url: 'https://www.nature.com/nrneurol.rss',
-    group: 'Nature',
-    name: BestJournals.NATURE_REVIEWS_NEUROLOGY,
-  },
-  {
-    url: 'https://www.nature.com/nri.rss',
-    group: 'Nature',
-    name: BestJournals.NATURE_REVIEWS_IMMUNOLOGY,
-  },
+  // {
+  //   url: 'https://rss.app/feeds/62gUZPqohHlNOs3V.xml',
+  //   group: 'Ophthalmology',
+  //   name: BestJournals.OPHTHALMOLOGY,
+  // },
+  // {
+  //   url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101695048/?limit=100&name=Ophthalmol%20Retina&utm_campaign=journals',
+  //   group: 'Ophthalmology',
+  //   name: BestJournals.RETINA,
+  // },
+  // {
+  //   url: 'https://www.nature.com/nrcardio.rss',
+  //   group: 'Nature',
+  //   name: BestJournals.NATURE_REVIEWS_CARDIOLOGY,
+  // },
+  // {
+  //   url: 'https://www.nature.com/nrneurol.rss',
+  //   group: 'Nature',
+  //   name: BestJournals.NATURE_REVIEWS_NEUROLOGY,
+  // },
+  // {
+  //   url: 'https://www.nature.com/nri.rss',
+  //   group: 'Nature',
+  //   name: BestJournals.NATURE_REVIEWS_IMMUNOLOGY,
+  // },
   {
     url: 'https://www.nature.com/leu.rss',
     group: 'Nature',
@@ -104,47 +114,47 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     group: '',
     name: BestJournals.BLOOD,
   },
-  {
-    url: 'https://www.nature.com/nm.rss',
-    group: 'Nature',
-    name: BestJournals.NATURE_MEDICINE,
-  },
-  {
-    url: 'https://onlinelibrary.wiley.com/feed/15318249/most-recent',
-    group: 'Wiley',
-    name: BestJournals.ANNALS_OF_NEUROLOGY,
-  },
-  {
-    url: 'https://onlinelibrary.wiley.com/feed/20515545/most-recent',
-    group: 'Wiley',
-    name: BestJournals.WORLD_PSYCHIATRY,
-  },
-  {
-    url: 'https://onlinelibrary.wiley.com/feed/13652133/most-recent',
-    group: 'Wiley',
-    name: BestJournals.BRITISH_JOURNAL_OF_DERMATOLOGY,
-  },
-  {
-    url: 'https://academic.oup.com/rss/site_6497/advanceAccess_4139.xml',
-    group: 'Oxford Academic',
-    name: 'British Journal of Dermatology',
-  },
-  {
-    url: 'https://academic.oup.com/rss/site_6497/4139.xml',
-    group: 'Oxford Academic',
-    name: 'British Journal of Dermatology',
-  },
-  //Lancet: "current" rss feeds
-  {
-    url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
-    group: 'Lancet',
-    name: BestJournals.THE_LANCET,
-  },
   // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
-  //   group: 'Lancet',
-  //   name: BestJournals.LANCET_ONCOLOGY,
+  //   url: 'https://www.nature.com/nm.rss',
+  //   group: 'Nature',
+  //   name: BestJournals.NATURE_MEDICINE,
   // },
+  // {
+  //   url: 'https://onlinelibrary.wiley.com/feed/15318249/most-recent',
+  //   group: 'Wiley',
+  //   name: BestJournals.ANNALS_OF_NEUROLOGY,
+  // },
+  // {
+  //   url: 'https://onlinelibrary.wiley.com/feed/20515545/most-recent',
+  //   group: 'Wiley',
+  //   name: BestJournals.WORLD_PSYCHIATRY,
+  // },
+  // {
+  //   url: 'https://onlinelibrary.wiley.com/feed/13652133/most-recent',
+  //   group: 'Wiley',
+  //   name: BestJournals.BRITISH_JOURNAL_OF_DERMATOLOGY,
+  // },
+  // {
+  //   url: 'https://academic.oup.com/rss/site_6497/advanceAccess_4139.xml',
+  //   group: 'Oxford Academic',
+  //   name: 'British Journal of Dermatology',
+  // },
+  // {
+  //   url: 'https://academic.oup.com/rss/site_6497/4139.xml',
+  //   group: 'Oxford Academic',
+  //   name: 'British Journal of Dermatology',
+  // },
+  // //Lancet: "current" rss feeds
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.THE_LANCET,
+  // },
+  {
+    url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
+    group: 'Lancet',
+    name: BestJournals.LANCET_ONCOLOGY,
+  },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
   //   group: 'Lancet',
@@ -170,11 +180,11 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   group: 'Lancet',
   //   name: 'Gastroenterology & Hepatology',
   // },
-  // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanhae_current.xml',
-  //   group: 'Lancet',
-  //   name: 'Haematology',
-  // },
+  {
+    url: 'https://www.thelancet.com/rssfeed/lanhae_current.xml',
+    group: 'Lancet',
+    name: 'Haematology',
+  },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/lanres_current.xml',
   //   group: 'Lancet',
@@ -251,11 +261,11 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   group: 'Lancet',
   //   name: BestJournals.THE_LANCET,
   // },
-  // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanonc_online.xml',
-  //   group: 'Lancet',
-  //   name: BestJournals.LANCET_ONCOLOGY,
-  // },
+  {
+    url: 'https://www.thelancet.com/rssfeed/lanonc_online.xml',
+    group: 'Lancet',
+    name: BestJournals.LANCET_ONCOLOGY,
+  },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/laninf_online.xml',
   //   group: 'Lancet',
@@ -281,11 +291,11 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   group: 'Lancet',
   //   name: 'Gastroenterology & Hepatology',
   // },
-  // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanhae_online.xml',
-  //   group: 'Lancet',
-  //   name: 'Haematology',
-  // },
+  {
+    url: 'https://www.thelancet.com/rssfeed/lanhae_online.xml',
+    group: 'Lancet',
+    name: 'Haematology',
+  },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/lanres_online.xml',
   //   group: 'Lancet',
@@ -327,12 +337,12 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   name: BestJournals.THE_LANCET,
   //   specialty: PhysicianSpecialty.OTHER,
   // },
-  // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
-  //   group: 'Lancet',
-  //   name: BestJournals.LANCET_ONCOLOGY,
-  //   specialty: PhysicianSpecialty.ONCOLOGY,
-  // },
+  {
+    url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
+    group: 'Lancet',
+    name: BestJournals.LANCET_ONCOLOGY,
+    specialty: PhysicianSpecialty.ONCOLOGY,
+  },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
   //   group: 'Lancet',
@@ -363,12 +373,12 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   name: 'Gastroenterology & Hepatology',
   //   specialty: PhysicianSpecialty.GASTROENTEROLOGY,
   // },
-  // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanhae_current.xml',
-  //   group: 'Lancet',
-  //   name: 'Haematology',
-  //   specialty: PhysicianSpecialty.HEMATOLOGY,
-  // },
+  {
+    url: 'https://www.thelancet.com/rssfeed/lanhae_current.xml',
+    group: 'Lancet',
+    name: 'Haematology',
+    specialty: PhysicianSpecialty.HEMATOLOGY,
+  },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/lanres_current.xml',
   //   group: 'Lancet',

@@ -10,6 +10,7 @@ export type RssFeedProcessInput = {
   rssFeedUrls: string[];
   specialty: PhysicianSpecialty;
   startDate: string;
+  endDate?: string;
   model: string;
   uploadId: string;
 };
@@ -20,12 +21,29 @@ export type RssFeedProcessInput = {
 export async function processRssFeedItems(input: RssFeedProcessInput) {
   const startTime = Date.now();
   try {
-    const { startDate: startDateString, uploadId } = input;
+    const {
+      startDate: startDateString,
+      endDate: endDateString,
+      uploadId,
+    } = input;
 
     const startDate = new Date(startDateString);
 
     if (!startDate.valueOf()) {
       return { error: 'Request StartDate not correct', status: 400 };
+    }
+
+    let endDate: Date | undefined;
+    if (endDateString) {
+      endDate = new Date(endDateString);
+      if (!endDate.valueOf()) {
+        return { error: 'Request EndDate not correct', status: 400 };
+      }
+
+      // Validate that endDate is after startDate
+      if (endDate <= startDate) {
+        return { error: 'EndDate must be after StartDate', status: 400 };
+      }
     }
 
     let processedCount = 0;
@@ -46,6 +64,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         skipReasons: {
           missing_url_or_title_or_date: number;
           date_too_old: number;
+          date_too_new: number;
           not_scientific_paper: number;
           not_enough_content: number;
           error: number;
@@ -70,6 +89,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         skipReasons: {
           missing_url_or_title_or_date: 0,
           date_too_old: 0,
+          date_too_new: 0,
           not_scientific_paper: 0,
           not_enough_content: 0,
           error: 0,
@@ -94,6 +114,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
               rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
               index,
               startDate,
+              endDate,
               feedGroup: feed.group,
               processedCount,
               uploadId,
@@ -111,6 +132,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
               if (result.reason === 'date_too_old') {
                 feedStats[feedKey].badDateItems++;
                 feedStats[feedKey].skipReasons.date_too_old++;
+              } else if (result.reason === 'date_too_new') {
+                feedStats[feedKey].badDateItems++;
+                feedStats[feedKey].skipReasons.date_too_new++;
               } else if (result.reason === 'missing_url_or_title_or_date') {
                 feedStats[feedKey].skipReasons.missing_url_or_title_or_date++;
               } else if (result.reason === 'not_scientific_paper') {
@@ -153,6 +177,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       console.log(`  Skipped: ${stat.skippedItems}`);
       console.log(`  Skip reasons:`);
       console.log(`    📅 Too old: ${stat.skipReasons.date_too_old}`);
+      console.log(`    📅 Too new: ${stat.skipReasons.date_too_new}`);
       console.log(
         `    📄 Missing info: ${stat.skipReasons.missing_url_or_title_or_date}`,
       );
@@ -172,6 +197,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     const totalSkipReasons = Object.values(feedStats).reduce(
       (acc, stat) => ({
         date_too_old: acc.date_too_old + stat.skipReasons.date_too_old,
+        date_too_new: acc.date_too_new + stat.skipReasons.date_too_new,
         missing_url_or_title_or_date:
           acc.missing_url_or_title_or_date +
           stat.skipReasons.missing_url_or_title_or_date,
@@ -185,6 +211,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       }),
       {
         date_too_old: 0,
+        date_too_new: 0,
         missing_url_or_title_or_date: 0,
         not_scientific_paper: 0,
         not_enough_content: 0,
@@ -195,6 +222,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
 
     console.log('\n📋 Overall Skip Reasons Summary:');
     console.log(`📅 Articles too old: ${totalSkipReasons.date_too_old}`);
+    console.log(`📅 Articles too new: ${totalSkipReasons.date_too_new}`);
     console.log(
       `📄 Missing required info: ${totalSkipReasons.missing_url_or_title_or_date}`,
     );

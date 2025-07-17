@@ -1,11 +1,3 @@
-import { PhysicianSpecialty } from '@/types/taxonomy';
-import { SubspecialtiesEnumMap } from '@/types/subspecialty_taxonomy';
-import {
-  getAnswer,
-  getSpecialties,
-  getSubspecialtyTags,
-  getScore,
-} from './topicProcessor';
 import {
   ACCEPTED_NEWS_TYPES,
   scrapeWithFirecrawlStructured,
@@ -18,16 +10,14 @@ import {
   Article,
   checkNewsItemExists,
   checkNewsItemExistsByDoi,
-  insertNewsRow,
 } from './api/newsApi';
 import {
   RETRYABLE_ERROR_PATTERNS,
   RATE_LIMIT_ERROR_PATTERNS,
   VALIDATION_ERROR_PATTERNS,
 } from '@/lib/config/apiConfig';
-import { validateContentSufficiency } from '@/lib/modules/newsUpload/services/contentSufficiencyValidationService';
-import { generateAndUploadImageWithRetry } from '@/lib/utils/imageGeneration';
-import { generateSuggestedQuestions } from '@/lib/modules/newsUpload/services/newsSuggestedQuestions';
+import { processScrapedContent } from './services/contentProcessor';
+import { processDrugsComRssItem } from './services/drugsComProcessor';
 
 export type RssItem = {
   title: string;
@@ -49,6 +39,7 @@ export type RssItemProcessOptions = {
   rssItem: RssItem;
   index: number;
   startDate: Date;
+  endDate?: Date;
   feedGroup: string;
   processedCount: number;
   uploadId: string;
@@ -139,6 +130,7 @@ export async function processRssItem({
   rssItem,
   index,
   startDate,
+  endDate,
   feedGroup,
   processedCount,
   uploadId,
@@ -165,7 +157,29 @@ export async function processRssItem({
       return { status: 'skipped', reason: 'date_too_old' };
     }
 
-    // Filter out non-scientific papers/articles
+    // Check if date is too new (if endDate is provided)
+    if (endDate && articleDate > endDate) {
+      return { status: 'skipped', reason: 'date_too_new' };
+    }
+
+    // Route drugs.com feeds to specialized processor
+    if (feedGroup === 'Drugs.com') {
+      console.log(
+        `🏥 Routing drugs.com RSS item to specialized processor: ${title}`,
+      );
+      return await processDrugsComRssItem({
+        rssItem,
+        index,
+        startDate,
+        endDate,
+        feedGroup,
+        processedCount,
+        uploadId,
+        traceId,
+      });
+    }
+
+    // Filter out non-scientific papers/articles (for non-drugs.com feeds)
     const scientificPaperCheck = await isScientificPaper(
       title,
       description,
@@ -243,108 +257,31 @@ export async function processRssItem({
       };
     }
 
-    const contentValidation = await validateContentSufficiency(
-      scrapedContent.content,
-    );
-
-    if (!contentValidation.has_sufficient_content) {
-      return {
-        status: 'skipped',
-        reason: 'not_enough_content',
-      };
-    }
-
     // Classify news type based on content
     const detectedNewsType = classifyNewsType(scrapedContent.content);
     console.log(
       `📊 Detected news type: ${detectedNewsType} for article: ${title}`,
     );
 
-    // Process the item through the same pipeline as processOneOutput
-    const { answer } = await getAnswer({
-      topic,
+    // Use the common content processing pipeline
+    const result = await processScrapedContent({
+      scrapedContent,
+      title: topic,
       url: cleanedUrl,
-      text: scrapedContent.content,
-    });
-
-    const stringifiedAnswer = JSON.stringify(answer);
-
-    const { specialties } = await getSpecialties({
-      answer: stringifiedAnswer,
-    });
-
-    // Get all subspecialties for found specialties
-    const allSubspecialties = specialties
-      .map(
-        (specialty) =>
-          SubspecialtiesEnumMap?.[specialty as PhysicianSpecialty] || [],
-      )
-      .flat();
-
-    // Get subspecialty tags from the combined list
-    const { tags: allTags } = await getSubspecialtyTags({
-      answer: stringifiedAnswer,
-      tags: allSubspecialties,
-    });
-
-    // Remove duplicates
-    const tags = [...new Set(allTags)];
-
-    // Compute scores for each specialty found
-    const specialtyScores: Record<string, number> = {};
-    for (const foundSpecialty of specialties) {
-      const { score } = await getScore({
-        answer: stringifiedAnswer,
-        url: cleanedUrl,
-        specialty: foundSpecialty as PhysicianSpecialty,
-      });
-      specialtyScores[foundSpecialty] = score;
-    }
-    // Use the highest score as the main score
-    const score = Math.max(...Object.values(specialtyScores));
-
-    const extractedImageUrl = scrapedContent.image_url ?? undefined;
-    const extractedImageDescription =
-      scrapedContent.image_description ?? undefined;
-
-    const { imageUrl } = await generateAndUploadImageWithRetry({
-      prompt: `Can you create an illustration for the article '${answer.title}. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`,
-      size: '1536x1024',
-      quality: 'medium',
-      model: 'gpt-image-1',
-      bucketName: 'news-images',
-    });
-
-    const { suggestedQuestions } = await generateSuggestedQuestions({
-      answer: stringifiedAnswer,
-      title: answer.title,
-      parentTraceId: traceId,
-    });
-
-    await insertNewsRow({
-      news_date: date,
-      url: cleanedUrl,
-      specialties,
-      tags,
-      elements: answer,
-      score,
-      upload_id: uploadId,
-      is_visible_in_prod: false,
-      source: feedGroup,
-      scores: specialtyScores,
-      extracted_image_url: extractedImageUrl,
-      extracted_image_description: extractedImageDescription,
-      imageUrl,
-      news_type: detectedNewsType,
+      date,
+      uploadId,
+      feedGroup,
+      traceId,
       doi,
-      news_date_timestamp: new Date(date).toISOString(),
-      suggested_questions: suggestedQuestions,
-      references: rssItem.reference ? [rssItem.reference] : null,
+      references: rssItem.reference ? [rssItem.reference] : undefined,
+      detectedNewsType,
     });
 
-    console.log(`Successfully uploaded RSS item: ${title}`);
-
-    return { status: 'success', processedCount: processedCount + 1 };
+    if (result.status === 'success') {
+      return { status: 'success', processedCount: processedCount + 1 };
+    } else {
+      return result;
+    }
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`Error processing RSS item ${index}:`, error);
