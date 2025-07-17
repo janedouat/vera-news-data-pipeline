@@ -17,7 +17,6 @@ import {
   VALIDATION_ERROR_PATTERNS,
 } from '@/lib/config/apiConfig';
 import { processScrapedContent } from './services/contentProcessor';
-import { processDrugsComRssItem } from './services/drugsComProcessor';
 import { getAnswer } from './topicProcessor';
 import { validateContentSufficiency } from '@/lib/modules/newsUpload/services/contentSufficiencyValidationService';
 
@@ -162,23 +161,6 @@ export async function processRssItem({
     // Check if date is too new (if endDate is provided)
     if (endDate && articleDate > endDate) {
       return { status: 'skipped', reason: 'date_too_new' };
-    }
-
-    // Route drugs.com feeds to specialized processor
-    if (feedGroup === 'Drugs.com') {
-      console.log(
-        `🏥 Routing drugs.com RSS item to specialized processor: ${title}`,
-      );
-      return await processDrugsComRssItem({
-        rssItem,
-        index,
-        startDate,
-        endDate,
-        feedGroup,
-        processedCount,
-        uploadId,
-        traceId,
-      });
     }
 
     // Filter out non-scientific papers/articles (for non-drugs.com feeds)

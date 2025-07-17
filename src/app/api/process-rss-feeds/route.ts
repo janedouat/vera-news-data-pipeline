@@ -4,6 +4,7 @@ import { parseRssFeed } from '@/lib/utils/rssParser';
 import { RSS_FEEDS } from '@/lib/config/rssFeeds';
 import { processRssItem } from '@/lib/modules/newsUpload/rssItemProcessor';
 import { v4 } from 'uuid';
+import { processDrugsComRssItem } from '@/lib/modules/newsUpload/services/drugsComProcessor';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -110,16 +111,33 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           rssItems.map(async (rssItem, index) => {
             const traceId = v4();
 
-            const result = await processRssItem({
-              rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
-              index,
-              startDate,
-              endDate,
-              feedGroup: feed.group,
-              processedCount,
-              uploadId,
-              traceId,
-            });
+            let result;
+            if (feed.group === 'Drugs.com') {
+              console.log(
+                `🏥 Routing drugs.com RSS item to specialized processor`,
+              );
+              result = await processDrugsComRssItem({
+                rssItem: rssItem as Required<typeof rssItem>, // Type assert
+                index,
+                startDate,
+                endDate,
+                feedGroup: feed.group,
+                processedCount,
+                uploadId,
+                traceId,
+              });
+            } else {
+              result = await processRssItem({
+                rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
+                index,
+                startDate,
+                endDate,
+                feedGroup: feed.group,
+                processedCount,
+                uploadId,
+                traceId,
+              });
+            }
 
             // Update counters based on result
             if (result.status === 'success') {

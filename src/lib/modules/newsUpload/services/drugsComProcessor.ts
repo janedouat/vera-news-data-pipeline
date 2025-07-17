@@ -34,17 +34,17 @@ export async function processDrugsComRssItem(
   const { rssItem, index, startDate, endDate, feedGroup, uploadId, traceId } =
     input;
 
-  const { title, pubDate, doi } = rssItem;
+  const { description, pubDate } = rssItem;
 
   try {
     // Basic validation
-    if (!title || !pubDate) {
+    if (!description || !pubDate) {
       console.log(
         `Skipping drugs.com RSS item ${index + 1} because missing title or date`,
       );
       return {
         status: 'skipped',
-        reason: 'missing_url_or_title_or_date',
+        reason: 'missing_description_or_date',
       };
     }
 
@@ -62,13 +62,13 @@ export async function processDrugsComRssItem(
 
     const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
 
-    console.log(`🏥 Processing drugs.com RSS item: ${title}`);
+    console.log(`🏥 Processing drugs.com RSS item: ${description}`);
 
     // Step 1: Extract FDA and press release URLs from title
     console.log(
-      `🔍 Extracting FDA and Press Release URLs from title: ${title}`,
+      `🔍 Extracting FDA and Press Release URLs from title: ${description}`,
     );
-    const { press_release_url, fda_url } = await getFdaUrls(title);
+    const { press_release_url, fda_url } = await getFdaUrls(description);
 
     console.log(`✅ Successfully extracted URLs:`, press_release_url, fda_url);
 
@@ -113,7 +113,7 @@ export async function processDrugsComRssItem(
     // Check if we got any successful content
     if (!scrapedContent?.success) {
       console.log(
-        `❌ Both press release and FDA scraping failed for: ${title}`,
+        `❌ Both press release and FDA scraping failed for: ${description}`,
       );
       return {
         status: 'error',
@@ -126,7 +126,7 @@ export async function processDrugsComRssItem(
 
     // Step: Topic Processing
     const { answer } = await getAnswer({
-      topic: title,
+      topic: description,
       text: scrapedContent.content,
     });
 
@@ -140,7 +140,6 @@ export async function processDrugsComRssItem(
       uploadId,
       feedGroup,
       traceId,
-      doi,
       references: rssItem.reference ? [rssItem.reference] : undefined,
       detectedNewsType: 'fda_announcement',
     });
