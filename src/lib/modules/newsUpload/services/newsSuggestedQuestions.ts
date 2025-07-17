@@ -38,8 +38,6 @@ export async function generateSuggestedQuestions({
     content: `### title: ${title} ### Content: ${answer}`,
   };
 
-  const a = suggesterAgentPrompt.compile(promptInput);
-  console.log({ a });
   const generation = span.generation({
     name: 'suggest-news-questions',
     model: 'gpt-4.1',

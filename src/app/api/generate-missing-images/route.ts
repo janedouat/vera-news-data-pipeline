@@ -63,7 +63,6 @@ async function generateImageForNewsItem(
       return { success: false, error: 'No title found' };
     }
 
-    console.log({ title });
     // Create the prompt for image generation
     const prompt = `Can you create an illustration for the article '${title}'. The illustration contains exactly three simple icons representing key concepts of the article. The background is monochrome. The colors should mostly be grey blue white and black and the turquoise #1b779b. No text`;
 

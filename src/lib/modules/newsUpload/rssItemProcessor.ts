@@ -144,7 +144,6 @@ export async function processRssItem({
 }: RssItemProcessOptions): Promise<RssItemProcessResult> {
   try {
     const { title, link: url, pubDate, description, doi } = rssItem;
-    console.log({ doi });
 
     // Skip if no URL or title
     if (!url || !title || !pubDate) {

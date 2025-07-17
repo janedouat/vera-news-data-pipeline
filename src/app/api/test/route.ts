@@ -20,8 +20,6 @@ export async function POST() {
       title,
     });
 
-    console.log({ a });
-
     return NextResponse.json(
       {
         success: true,
