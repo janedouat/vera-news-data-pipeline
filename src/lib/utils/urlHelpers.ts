@@ -7,9 +7,30 @@ export function removeRssRouteParameters(url: string): string {
   try {
     const urlObj = new URL(url);
 
-    if (urlObj.searchParams.get('rss')) {
-      urlObj.searchParams.delete('rss');
-    }
+    // List of RSS-related parameters to remove
+    const rssParams = [
+      'rss',
+      'utm_source',
+      'utm_medium',
+      'utm_campaign',
+      'utm_content',
+      'fc',
+      'ff',
+      'v',
+      'feed',
+      'type',
+      'fmt',
+      'limit',
+      'name',
+      'utm_campaign',
+    ];
+
+    // Remove RSS-related parameters
+    rssParams.forEach((param) => {
+      if (urlObj.searchParams.has(param)) {
+        urlObj.searchParams.delete(param);
+      }
+    });
 
     return urlObj.toString();
   } catch (error) {

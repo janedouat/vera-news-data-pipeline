@@ -1,49 +1,126 @@
 import { NextResponse } from 'next/server';
-import { generateSuggestedQuestions } from '@/lib/modules/newsUpload/services/newsSuggestedQuestions';
-import { v4 } from 'uuid';
+import { supabase } from '@/lib/utils/supabaseHelpers';
+import { parseRssFeed } from '@/lib/utils/rssParser';
+import { RSS_FEEDS } from '@/lib/config/rssFeeds';
 
 export async function POST() {
   try {
-    const parentTraceId = v4();
-    const answer = `ILM flap and insertion techniques resulted in significantly higher macular hole closure rates and greater improvements in best-corrected visual acuity (BCVA) compared to ILM peeling in patients with macular hole-associated retinal detachment. The ILM flap technique provided superior functional recovery compared to the ILM insertion technique, particularly in terms of postoperative BCVA improvement. In eyes with non-high myopia (axial length <26 mm), the ILM flap technique showed better BCVA improvement than ILM peeling, though without additional anatomical benefit.
+    console.log('=� Starting test route to update references...');
 
-    For patients with macular hole-associated retinal detachment (MHRD) undergoing pars plana vitrectomy, the choice of internal limiting membrane (ILM) technique has a significant impact on both anatomical and functional outcomes. In a cohort of 288 patients, both ILM flap and insertion techniques were associated with higher initial macular hole closure rates and greater improvements in best-corrected visual acuity (BCVA) compared to traditional ILM peeling. Notably, the ILM flap technique demonstrated the most favorable functional recovery, outperforming the insertion method in terms of BCVA gains.
-    
-    These findings are particularly relevant for surgical planning in MHRD, especially in patients without high myopia (axial length <26 mm), where the ILM flap technique yielded better visual outcomes than peeling, though anatomical closure rates were similar. The evidence supports careful consideration of ILM technique selection to optimize both anatomical and visual prognosis in this patient population.`;
+    // Get all news items with DOI that don't have references
+    const { data: newsItems, error: fetchError } = await supabase
+      .from('news')
+      .select('*');
 
-    const title =
-      'Internal Limiting Membrane Flap and Insertion Techniques Improve Outcomes in Macular Hole-Associated Retinal Detachment';
+    if (fetchError) {
+      console.error('Error fetching news items:', fetchError);
+      return NextResponse.json(
+        { error: 'Failed to fetch news items' },
+        { status: 500 },
+      );
+    }
 
-    const a = await generateSuggestedQuestions({
-      answer,
-      parentTraceId,
-      title,
-    });
-
-    return NextResponse.json(
-      {
-        success: true,
-        result: a,
-        timestamp: new Date().toISOString(),
-      },
-      { status: 200 },
+    console.log(
+      `=� Found ${newsItems?.length || 0} news items with DOI but no references`,
     );
-  } catch (error) {
-    console.error('❌ Image generation failed:', error);
 
+    let updatedCount = 0;
+    const results = [];
+
+    // Process each news item
+    for (const newsItem of newsItems || []) {
+      console.log(`=
+ Processing: ${newsItem.title} (DOI: ${newsItem.doi})`);
+
+      let foundReference = null;
+
+      // Search through all RSS feeds for this DOI
+      for (const feedConfig of RSS_FEEDS) {
+        try {
+          console.log(`= Checking feed: ${feedConfig.name}`);
+
+          // Parse the RSS feed
+          const rssItems = await parseRssFeed(feedConfig.url);
+
+          // Look for an item with matching DOI
+          const matchingItem = rssItems.find(
+            (item) =>
+              item.doi &&
+              newsItem.doi &&
+              item.doi.toLowerCase() === newsItem.doi.toLowerCase(),
+          );
+
+          if (matchingItem && matchingItem.reference) {
+            console.log(` Found reference in ${feedConfig.name}`);
+            foundReference = matchingItem.reference;
+            break; // Found a match, stop searching
+          }
+        } catch (error) {
+          console.log(`� Error processing feed ${feedConfig.name}:`, error);
+          // Continue with next feed
+        }
+      }
+
+      // Update the news item if we found a reference
+      if (foundReference) {
+        const { error: updateError } = await supabase
+          .from('news')
+          .update({ references: [foundReference] })
+          .eq('id', newsItem.id);
+
+        if (updateError) {
+          console.error(
+            `L Error updating news item ${newsItem.id}:`,
+            updateError,
+          );
+          results.push({
+            id: newsItem.id,
+            title: newsItem.title,
+            doi: newsItem.doi,
+            status: 'error',
+            error: updateError.message,
+          });
+        } else {
+          console.log(` Updated references for: ${newsItem.title}`);
+          updatedCount++;
+          results.push({
+            id: newsItem.id,
+            title: newsItem.title,
+            doi: newsItem.doi,
+            status: 'updated',
+            reference: foundReference,
+          });
+        }
+      } else {
+        console.log(`L No reference found for: ${newsItem.title}`);
+        results.push({
+          id: newsItem.id,
+          title: newsItem.title,
+          doi: newsItem.doi,
+          status: 'no_reference_found',
+        });
+      }
+    }
+
+    console.log(
+      `<� Process completed. Updated ${updatedCount} out of ${newsItems?.length || 0} items`,
+    );
+
+    return NextResponse.json({
+      success: true,
+      message: `Successfully processed ${newsItems?.length || 0} news items`,
+      updatedCount,
+      totalProcessed: newsItems?.length || 0,
+      results,
+    });
+  } catch (error) {
+    console.error('L Error in test route:', error);
     return NextResponse.json(
       {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
-        timestamp: new Date().toISOString(),
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 },
     );
   }
-}
-
-// Also support GET requests for easy testing
-export async function GET() {
-  return POST();
 }

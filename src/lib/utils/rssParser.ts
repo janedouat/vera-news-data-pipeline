@@ -3,12 +3,23 @@
  * Supports RSS 2.0, RSS 1.0, and Atom feeds
  */
 
+import { Article } from '@/lib/modules/newsUpload/api/newsApi';
+
 interface RssItem {
   title: string;
   link: string;
   description?: string;
   pubDate?: string;
   doi?: string;
+  // Enhanced fields
+  publicationVenue?: string;
+  abstract?: string;
+  tldr?: string;
+  metadata?: Record<string, unknown>;
+  url?: string;
+  isOpenAccess?: boolean;
+  authors?: string[];
+  reference?: Article;
 }
 
 /**
@@ -88,6 +99,122 @@ function extractDescription(itemXml: string): string | null {
   }
 
   return null;
+}
+
+/**
+ * Extract publication venue/journal name
+ */
+function extractPublicationVenue(itemXml: string): string | null {
+  // Try <dc:source> (Dublin Core)
+  const dcSourceMatch = itemXml.match(
+    /<dc:source[^>]*>([\s\S]*?)<\/dc:source>/,
+  );
+  if (dcSourceMatch) {
+    return cleanTextContent(dcSourceMatch[1]);
+  }
+
+  // Try <prism:publicationName> (PRISM format)
+  const prismPubNameMatch = itemXml.match(
+    /<prism:publicationName[^>]*>([\s\S]*?)<\/prism:publicationName>/,
+  );
+  if (prismPubNameMatch) {
+    return cleanTextContent(prismPubNameMatch[1]);
+  }
+
+  // Try <journal> tag
+  const journalMatch = itemXml.match(/<journal[^>]*>([\s\S]*?)<\/journal>/);
+  if (journalMatch) {
+    return cleanTextContent(journalMatch[1]);
+  }
+
+  return null;
+}
+
+/**
+ * Extract TLDR/summary from various RSS formats
+ */
+function extractTldr(itemXml: string): string | null {
+  // Try <tldr> tag
+  const tldrMatch = itemXml.match(/<tldr[^>]*>([\s\S]*?)<\/tldr>/);
+  if (tldrMatch) {
+    return cleanTextContent(tldrMatch[1]);
+  }
+
+  // Try <summary> tag (common for TLDR)
+  const summaryMatch = itemXml.match(/<summary[^>]*>([\s\S]*?)<\/summary>/);
+  if (summaryMatch) {
+    return cleanTextContent(summaryMatch[1]);
+  }
+
+  // Try <dc:description> (Dublin Core) as fallback for TLDR
+  const dcDescMatch = itemXml.match(
+    /<dc:description[^>]*>([\s\S]*?)<\/dc:description>/,
+  );
+  if (dcDescMatch) {
+    return cleanTextContent(dcDescMatch[1]);
+  }
+
+  // Try <content> tag (Atom format) as fallback
+  const contentMatch = itemXml.match(/<content[^>]*>([\s\S]*?)<\/content>/);
+  if (contentMatch) {
+    return cleanTextContent(contentMatch[1]);
+  }
+
+  return null;
+}
+
+/**
+ * Extract authors from various RSS formats
+ */
+function extractAuthors(itemXml: string): string[] {
+  const authors: string[] = [];
+  // Try <dc:creator> (Dublin Core)
+  const dcCreatorMatches = itemXml.matchAll(
+    /<dc:creator[^>]*>([\s\S]*?)<\/dc:creator>/g,
+  );
+  for (const match of dcCreatorMatches) {
+    const author = cleanTextContent(match[1]);
+    if (author && !authors.includes(author)) {
+      authors.push(author);
+    }
+  }
+
+  // Try <author> tag
+  const authorMatches = itemXml.matchAll(/<author[^>]*>([\s\S]*?)<\/author>/g);
+  for (const match of authorMatches) {
+    const author = cleanTextContent(match[1]);
+    if (author && !authors.includes(author)) {
+      authors.push(author);
+    }
+  }
+
+  // Try <dc:contributor> (Dublin Core)
+  const dcContributorMatches = itemXml.matchAll(
+    /<dc:contributor[^>]*>([\s\S]*?)<\/dc:contributor>/g,
+  );
+  for (const match of dcContributorMatches) {
+    const author = cleanTextContent(match[1]);
+    if (author && !authors.includes(author)) {
+      authors.push(author);
+    }
+  }
+
+  return authors;
+}
+
+/**
+ * Determine if article is open access
+ */
+function extractIsOpenAccess(itemXml: string): boolean {
+  // Check for open access indicators
+  const openAccessIndicators = [
+    /<dc:rights[^>]*>.*open.*access.*<\/dc:rights>/i,
+    /<prism:copyright[^>]*>.*open.*access.*<\/prism:copyright>/i,
+    /<dc:type[^>]*>.*open.*access.*<\/dc:type>/i,
+    /open.*access/i,
+  ];
+
+  return openAccessIndicators.some((pattern) => pattern.test(itemXml));
 }
 
 /**
@@ -212,6 +339,57 @@ function extractDoi(itemXml: string): string | null {
 }
 
 /**
+ * Extract and create reference article from RSS item data
+ */
+function extractReference(
+  itemXml: string,
+  doi: string | null,
+  tldr: string | null,
+  pubDate: string | null,
+): Article | null {
+  const publicationVenue = extractPublicationVenue(itemXml);
+  const authors = extractAuthors(itemXml);
+  const isOpenAccess = extractIsOpenAccess(itemXml);
+  const title = extractTitle(itemXml);
+  const link = extractLink(itemXml);
+
+  if (!title) return null;
+
+  // Parse publication date to get year
+  let year: number | undefined;
+  if (pubDate) {
+    const date = new Date(pubDate);
+    if (!isNaN(date.getTime())) {
+      year = date.getFullYear();
+    }
+  }
+
+  // Create Article object
+  const reference: Article = {
+    paperId: doi || link || title.substring(0, 50), // Use DOI, link, or truncated title as ID
+    title,
+    abstract: tldr || undefined,
+    year,
+    url: link || undefined,
+    publicationDate: pubDate || undefined,
+    authors: authors.map((name) => ({ name })),
+    publicationVenue: publicationVenue ? { name: publicationVenue } : undefined,
+    metadata: {
+      doi: doi || undefined,
+      url: link || undefined,
+      title,
+      journal: publicationVenue || undefined,
+      first_author: authors[0] || undefined,
+      year: year?.toString() || undefined,
+    },
+    externalIds: doi ? { DOI: doi } : undefined,
+    isOpenAccess,
+  };
+
+  return reference;
+}
+
+/**
  * Parse RSS feed and extract items
  */
 export async function parseRssFeed(feedUrl: string): Promise<RssItem[]> {
@@ -242,12 +420,21 @@ export async function parseRssFeed(feedUrl: string): Promise<RssItem[]> {
       const link = extractLink(itemXml);
 
       if (title && link) {
+        const description = extractDescription(itemXml);
+        const tldr = extractTldr(itemXml);
+        const pubDate = extractPubDate(itemXml);
+        const doi = extractDoi(itemXml);
+        const reference = extractReference(itemXml, doi, tldr, pubDate);
+
         items.push({
           title,
           link,
-          description: extractDescription(itemXml) || undefined,
-          pubDate: extractPubDate(itemXml) || undefined,
-          doi: extractDoi(itemXml) || undefined,
+          url: link, // Alias for link
+          description: description || undefined,
+          pubDate: pubDate || undefined,
+          doi: doi || undefined,
+          tldr: tldr || undefined,
+          reference: reference || undefined,
         });
       }
     }

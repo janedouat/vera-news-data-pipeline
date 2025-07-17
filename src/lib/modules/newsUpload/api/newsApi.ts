@@ -1,7 +1,67 @@
 import { supabase } from '@/lib/utils/supabaseHelpers';
 import { Database } from '@/types/supabase';
 
-type NewsRow = Database['public']['Tables']['news']['Insert'];
+type SupabaseNewsRow = Database['public']['Tables']['news']['Insert'];
+export type Article = {
+  paperId: string;
+  sjr?: number;
+  quartile?: string;
+  relevanceScore?: number;
+  metadata?: {
+    is_guideline?: string;
+    url?: string;
+    pmid?: string;
+    doi?: string;
+    year?: string;
+    title?: string;
+    journal?: string;
+    first_author?: string;
+    num_citations?: string;
+    is_open_access?: string;
+    fields_of_study?: string[];
+    publication_types?: string;
+    num_influential_citations?: string;
+    impact_factor_score?: string;
+  };
+  externalIds?: {
+    PubMedCentral?: string;
+    DOI?: string;
+    CorpusId?: number;
+    PubMed?: string;
+    [key: string]: string | number | undefined;
+  };
+  publicationVenue?: {
+    id?: string;
+    name: string;
+    type?: string;
+    issn?: string;
+    url?: string;
+    alternate_urls?: string[];
+  };
+  url?: string;
+  title: string;
+  abstract?: string;
+  tldr?: {
+    text: string;
+  };
+  year?: number;
+  referenceCount?: number;
+  citationCount?: number;
+  influentialCitationCount?: number;
+  isOpenAccess?: boolean;
+  openAccessPdf?: {
+    url: string;
+    status: string;
+  };
+  publicationTypes?: string[];
+  publicationDate?: string;
+  authors?: {
+    authorId?: string;
+    name: string;
+  }[];
+};
+
+type NewsRow = SupabaseNewsRow & { references?: Article[] | null };
 
 export async function insertNewsRow(row: NewsRow) {
   const { data, error } = await supabase

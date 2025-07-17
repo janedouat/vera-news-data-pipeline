@@ -11,53 +11,63 @@ export interface RssFeedConfig {
 }
 
 export const RSS_FEEDS: RssFeedConfig[] = [
-  // cell in the press
-  {
-    url: 'https://ascopubs.org/action/showFeed?type=etoc&feed=rss&jc=jco',
-    group: 'ASCO',
-    name: BestJournals.JOURNAL_OF_CLINICAL_ONCOLOGY,
-  },
-  // cell in the press
-  {
-    url: 'https://www.cell.com/cell/inpress.rss',
-    group: 'Cell',
-    name: BestJournals.CELL,
-  },
-  // Cell current
-  {
-    url: 'https://www.cell.com/cell/current.rss',
-    group: 'Cell',
-    name: BestJournals.CELL,
-  },
-  // Cancer Cell in press
-  {
-    url: 'https://www.cell.com/cancer-cell/inpress.rss',
-    group: 'Cell',
-    name: BestJournals.CANCER_CELL,
-  },
-  // Cancer Cell current
-  {
-    url: 'https://www.cell.com/cancer-cell/current.rss',
-    group: 'Cell',
-    name: BestJournals.CANCER_CELL,
-  },
-  // Immunity in press
-  {
-    url: 'https://www.cell.com/immunity/inpress.rss',
-    group: 'Cell',
-    name: BestJournals.IMMUNITY,
-  },
-  // Immunity current
-  {
-    url: 'https://www.cell.com/immunity/current.rss',
-    group: 'Cell',
-    name: BestJournals.IMMUNITY,
-  },
-  {
-    url: 'https://www.annualreviews.org/rss/content/journals/immunol/latestarticles?fmt=rss',
-    group: 'Annual Reviews',
-    name: BestJournals.ANNUAL_REVIEW_OF_IMMUNOLOGY,
-  },
+  // {
+  //   url: 'https://www.nature.com/natcancer.rss',
+  //   group: 'Nature',
+  //   name: BestJournals.NATURE_CANCER,
+  // },
+  // {
+  //   url: 'https://www.nature.com/nrc.rss',
+  //   group: 'Nature',
+  //   name: BestJournals.NATURE_REVIEWS_CANCER,
+  // },
+  // // cell in the press
+  // {
+  //   url: 'https://ascopubs.org/action/showFeed?type=etoc&feed=rss&jc=jco',
+  //   group: 'ASCO',
+  //   name: BestJournals.JOURNAL_OF_CLINICAL_ONCOLOGY,
+  // },
+  // // cell in the press
+  // {
+  //   url: 'https://www.cell.com/cell/inpress.rss',
+  //   group: 'Cell',
+  //   name: BestJournals.CELL,
+  // },
+  // // Cell current
+  // {
+  //   url: 'https://www.cell.com/cell/current.rss',
+  //   group: 'Cell',
+  //   name: BestJournals.CELL,
+  // },
+  // // Cancer Cell in press
+  // {
+  //   url: 'https://www.cell.com/cancer-cell/inpress.rss',
+  //   group: 'Cell',
+  //   name: BestJournals.CANCER_CELL,
+  // },
+  // // Cancer Cell current
+  // {
+  //   url: 'https://www.cell.com/cancer-cell/current.rss',
+  //   group: 'Cell',
+  //   name: BestJournals.CANCER_CELL,
+  // },
+  // // Immunity in press
+  // {
+  //   url: 'https://www.cell.com/immunity/inpress.rss',
+  //   group: 'Cell',
+  //   name: BestJournals.IMMUNITY,
+  // },
+  // // Immunity current
+  // {
+  //   url: 'https://www.cell.com/immunity/current.rss',
+  //   group: 'Cell',
+  //   name: BestJournals.IMMUNITY,
+  // },
+  // {
+  //   url: 'https://www.annualreviews.org/rss/content/journals/immunol/latestarticles?fmt=rss',
+  //   group: 'Annual Reviews',
+  //   name: BestJournals.ANNUAL_REVIEW_OF_IMMUNOLOGY,
+  // },
   // ophthalmology
   {
     url: 'https://rss.app/feeds/62gUZPqohHlNOs3V.xml',
@@ -68,16 +78,6 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101695048/?limit=100&name=Ophthalmol%20Retina&utm_campaign=journals',
     group: 'Ophthalmology',
     name: BestJournals.RETINA,
-  },
-  {
-    url: 'https://www.nature.com/natcancer.rss',
-    group: 'Nature',
-    name: BestJournals.NATURE_CANCER,
-  },
-  {
-    url: 'https://www.nature.com/nrc.rss',
-    group: 'Nature',
-    name: BestJournals.NATURE_REVIEWS_CANCER,
   },
   {
     url: 'https://www.nature.com/nrcardio.rss',
@@ -140,229 +140,199 @@ export const RSS_FEEDS: RssFeedConfig[] = [
     group: 'Lancet',
     name: BestJournals.THE_LANCET,
   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_ONCOLOGY,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_INFECTIOUS_DISEASES,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/laneur_current.xml',
-    group: 'Lancet',
-    name: BestJournals.JAMA_NEUROLOGY,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanpsy_current.xml',
-    group: 'Lancet',
-    name: BestJournals.JAMA_PSYCHIATRY,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanrhe_current.xml',
-    group: 'Lancet',
-    name: 'Rheumatology',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/langas_current.xml',
-    group: 'Lancet',
-    name: 'Gastroenterology & Hepatology',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanhae_current.xml',
-    group: 'Lancet',
-    name: 'Haematology',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanres_current.xml',
-    group: 'Lancet',
-    name: 'Respiratory Medicine',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanpub_current.xml',
-    group: 'Lancet',
-    name: 'Public Health',
-  },
   // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanplh_current.xml',
+  //   url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
   //   group: 'Lancet',
-  //   name: 'Planetary Health',
-  // },
-  //   {
-  //     url: 'https://www.thelancet.com/rssfeed/lanam_current.xml',
-  //     group: 'Lancet',
-  //     name: 'Americas',
-  //   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanchi_current.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/landia_current.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_DIABETES_ENDOCRINOLOGY,
-  },
-  {
-    url: 'https://diabetesjournals.org/rss/site_1000003/1000004.xml',
-    group: 'Diabetes Journals',
-    name: BestJournals.DIABETES_CARE,
-  },
-  {
-    url: 'https://diabetesjournals.org/rss/site_1000003/advanceAccess_1000004.xml',
-    group: 'Diabetes Journals',
-    name: BestJournals.DIABETES_CARE,
-  },
-  {
-    url: 'https://academic.oup.com/rss/site_5593/3466.xml',
-    group: 'Oxford Academic',
-    name: BestJournals.ENDOCRINE_REVIEWS,
-  },
-  {
-    url: 'https://academic.oup.com/rss/site_5593/advanceAccess_3466.xml',
-    group: 'Oxford Academic',
-    name: BestJournals.ENDOCRINE_REVIEWS,
-  },
-  {
-    url: 'https://academic.oup.com/rss/site_5269/3135.xml',
-    group: 'Oxford Academic',
-    name: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
-  },
-  {
-    url: 'https://academic.oup.com/rss/site_5269/advanceAccess_3135.xml',
-    group: 'Oxford Academic',
-    name: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanwh_current.xml',
-    group: 'Lancet',
-    name: 'Global Health',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanmic_current.xml',
-    group: 'Lancet',
-    name: 'EClinicalMedicine (Lancet)',
-  },
-  //   {
-  //     url: 'https://www.thelancet.com/rssfeed/lanjpx_current.xml',
-  //     group: 'Lancet',
-  //     name: 'Regional Health – Western Pacific',
-  //   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanme_current.xml',
-    group: 'Lancet',
-    name: 'Microbe',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanexo_current.xml',
-    group: 'Lancet',
-    name: 'Healthy Longevity',
-  },
-  // Lancet: "first online" rss feeds
-  {
-    url: 'https://www.thelancet.com/rssfeed/lancet_online.xml',
-    group: 'Lancet',
-    name: BestJournals.THE_LANCET,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanonc_online.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_ONCOLOGY,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/laninf_online.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_INFECTIOUS_DISEASES,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/laneur_online.xml',
-    group: 'Lancet',
-    name: BestJournals.JAMA_NEUROLOGY,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanpsy_online.xml',
-    group: 'Lancet',
-    name: BestJournals.JAMA_PSYCHIATRY,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanrhe_online.xml',
-    group: 'Lancet',
-    name: 'Rheumatology',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/langas_online.xml',
-    group: 'Lancet',
-    name: 'Gastroenterology & Hepatology',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanhae_online.xml',
-    group: 'Lancet',
-    name: 'Haematology',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanres_online.xml',
-    group: 'Lancet',
-    name: 'Respiratory Medicine',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanpub_online.xml',
-    group: 'Lancet',
-    name: 'Public Health',
-  },
-  // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanplh_online.xml',
-  //   group: 'Lancet',
-  //   name: 'Planetary Health',
+  //   name: BestJournals.LANCET_ONCOLOGY,
   // },
   // {
-  //   url: 'https://www.thelancet.com/rssfeed/lanam_online.xml',
+  //   url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
   //   group: 'Lancet',
-  //   name: 'Americas',
+  //   name: BestJournals.LANCET_INFECTIOUS_DISEASES,
   // },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanchi_online.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanwh_online.xml',
-    group: 'Lancet',
-    name: 'Global Health',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanmic_online.xml',
-    group: 'Lancet',
-    name: 'EClinicalMedicine (Lancet)',
-  },
-  //   {
-  //     url: 'https://www.thelancet.com/rssfeed/lanjpx_online.xml',
-  //     group: 'Lancet',
-  //     name: 'Regional Health – Western Pacific',
-  //   },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanme_online.xml',
-    group: 'Lancet',
-    name: 'Microbe',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanexo_online.xml',
-    group: 'Lancet',
-    name: 'Healthy Longevity',
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
-    group: 'Lancet',
-    name: BestJournals.THE_LANCET,
-    specialty: PhysicianSpecialty.OTHER,
-  },
-  {
-    url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
-    group: 'Lancet',
-    name: BestJournals.LANCET_ONCOLOGY,
-    specialty: PhysicianSpecialty.ONCOLOGY,
-  },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/laneur_current.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.JAMA_NEUROLOGY,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanpsy_current.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.JAMA_PSYCHIATRY,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanrhe_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Rheumatology',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/langas_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Gastroenterology & Hepatology',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanhae_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Haematology',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanres_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Respiratory Medicine',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanpub_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Public Health',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanchi_current.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/landia_current.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.LANCET_DIABETES_ENDOCRINOLOGY,
+  // },
+  // {
+  //   url: 'https://diabetesjournals.org/rss/site_1000003/1000004.xml',
+  //   group: 'Diabetes Journals',
+  //   name: BestJournals.DIABETES_CARE,
+  // },
+  // {
+  //   url: 'https://diabetesjournals.org/rss/site_1000003/advanceAccess_1000004.xml',
+  //   group: 'Diabetes Journals',
+  //   name: BestJournals.DIABETES_CARE,
+  // },
+  // {
+  //   url: 'https://academic.oup.com/rss/site_5593/3466.xml',
+  //   group: 'Oxford Academic',
+  //   name: BestJournals.ENDOCRINE_REVIEWS,
+  // },
+  // {
+  //   url: 'https://academic.oup.com/rss/site_5593/advanceAccess_3466.xml',
+  //   group: 'Oxford Academic',
+  //   name: BestJournals.ENDOCRINE_REVIEWS,
+  // },
+  // {
+  //   url: 'https://academic.oup.com/rss/site_5269/3135.xml',
+  //   group: 'Oxford Academic',
+  //   name: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
+  // },
+  // {
+  //   url: 'https://academic.oup.com/rss/site_5269/advanceAccess_3135.xml',
+  //   group: 'Oxford Academic',
+  //   name: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanwh_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Global Health',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanmic_current.xml',
+  //   group: 'Lancet',
+  //   name: 'EClinicalMedicine (Lancet)',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanme_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Microbe',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanexo_current.xml',
+  //   group: 'Lancet',
+  //   name: 'Healthy Longevity',
+  // },
+  // // Lancet: "first online" rss feeds
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lancet_online.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.THE_LANCET,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanonc_online.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.LANCET_ONCOLOGY,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/laninf_online.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.LANCET_INFECTIOUS_DISEASES,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/laneur_online.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.JAMA_NEUROLOGY,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanpsy_online.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.JAMA_PSYCHIATRY,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanrhe_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Rheumatology',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/langas_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Gastroenterology & Hepatology',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanhae_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Haematology',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanres_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Respiratory Medicine',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanpub_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Public Health',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanchi_online.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanwh_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Global Health',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanmic_online.xml',
+  //   group: 'Lancet',
+  //   name: 'EClinicalMedicine (Lancet)',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanme_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Microbe',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanexo_online.xml',
+  //   group: 'Lancet',
+  //   name: 'Healthy Longevity',
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.THE_LANCET,
+  //   specialty: PhysicianSpecialty.OTHER,
+  // },
+  // {
+  //   url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
+  //   group: 'Lancet',
+  //   name: BestJournals.LANCET_ONCOLOGY,
+  //   specialty: PhysicianSpecialty.ONCOLOGY,
+  // },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
   //   group: 'Lancet',
@@ -411,18 +381,6 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   name: 'Public Health',
   //   specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
   // },
-  // // {
-  // //   url: 'https://www.thelancet.com/rssfeed/lanplh_current.xml',
-  // //   group: 'Lancet',
-  // //   name: 'Planetary Health',
-  // //   specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
-  // // },
-  // // {
-  // //   url: 'https://www.thelancet.com/rssfeed/lanam_current.xml',
-  // //   group: 'Lancet',
-  // //   name: 'Americas',
-  // //   specialty: PhysicianSpecialty.OTHER,
-  // // },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/lanchi_current.xml',
   //   group: 'Lancet',
@@ -441,12 +399,6 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   name: 'EClinicalMedicine',
   //   specialty: PhysicianSpecialty.OTHER,
   // },
-  // // {
-  // //   url: 'https://www.thelancet.com/rssfeed/lanjpx_current.xml',
-  // //   group: 'Lancet',
-  // //   name: 'Regional Health – Western Pacific',
-  // //   specialty: PhysicianSpecialty.OTHER,
-  // // },
   // {
   //   url: 'https://www.thelancet.com/rssfeed/lanme_current.xml',
   //   group: 'Lancet',
@@ -1016,10 +968,10 @@ export const RSS_FEEDS: RssFeedConfig[] = [
   //   name: 'Journal of Hepatology',
   //   specialty: PhysicianSpecialty.GASTROENTEROLOGY,
   // },
-  {
-    url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0374630/?limit=15&name=Gastroenterology&utm_campaign=journals',
-    group: '',
-    name: 'Gastroenterology',
-    specialty: PhysicianSpecialty.GASTROENTEROLOGY,
-  },
+  // {
+  //   url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0374630/?limit=15&name=Gastroenterology&utm_campaign=journals',
+  //   group: '',
+  //   name: 'Gastroenterology',
+  //   specialty: PhysicianSpecialty.GASTROENTEROLOGY,
+  // },
 ];

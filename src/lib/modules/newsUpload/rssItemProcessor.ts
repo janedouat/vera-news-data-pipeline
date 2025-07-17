@@ -15,6 +15,7 @@ import { generateObject } from 'ai';
 import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import {
+  Article,
   checkNewsItemExists,
   checkNewsItemExistsByDoi,
   insertNewsRow,
@@ -34,6 +35,7 @@ export type RssItem = {
   pubDate: string;
   description: string;
   doi?: string;
+  reference?: Article;
 };
 
 export type RssItemProcessResult = {
@@ -337,6 +339,7 @@ export async function processRssItem({
       doi,
       news_date_timestamp: new Date(date).toISOString(),
       suggested_questions: suggestedQuestions,
+      references: rssItem.reference ? [rssItem.reference] : null,
     });
 
     console.log(`Successfully uploaded RSS item: ${title}`);
