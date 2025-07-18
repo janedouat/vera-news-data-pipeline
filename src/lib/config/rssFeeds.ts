@@ -1,16 +1,24 @@
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { BestJournals, BestJournalsLabel } from '@/lib/constants/bestJournals';
 
-export interface RssFeedConfig {
+export type RssFeedConfig = {
   url: string;
   bestJournal?: string; // the full journal name
   specialty?: PhysicianSpecialty;
   enabled?: boolean;
   journal?: string; // from bestJournals.ts
-  type?: 'journal' | 'drugs.com' | 'custom';
   sourceName?: string;
   sourceId?: string;
-}
+  acceptedNewsTypes?: 'all' | string[];
+} & (
+  | {
+      type: 'journal';
+      acceptedNewsTypes?: 'all' | string[];
+    }
+  | {
+      type?: 'drugs.com' | 'custom';
+    }
+);
 
 // Common/General Medical Feeds
 const COMMON_FEEDS: RssFeedConfig[] = [
@@ -119,6 +127,17 @@ const CDC_FEEDS: RssFeedConfig[] = [
     enabled: true,
     sourceId: 'CDC',
     sourceName: 'CDC',
+  },
+];
+
+const AI_FEEDS: RssFeedConfig[] = [
+  {
+    url: 'https://jamanetwork.com/rss/site_9/0_44024.xml',
+    enabled: true,
+    sourceName: 'JAMA AI',
+    sourceId: 'jama_ai',
+    type: 'journal',
+    acceptedNewsTypes: 'all',
   },
 ];
 
@@ -1380,4 +1399,5 @@ export {
   PUBLIC_HEALTH_FEEDS,
   HIGH_IMPACT_FEEDS,
   CDC_FEEDS,
+  AI_FEEDS,
 };

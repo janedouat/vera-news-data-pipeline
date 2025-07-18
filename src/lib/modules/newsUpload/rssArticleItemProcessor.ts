@@ -45,6 +45,7 @@ export type RssItemProcessOptions = {
   processedCount: number;
   uploadId: string;
   traceId: string;
+  acceptedNewsTypes?: string[] | 'all';
 };
 
 const ScientificPaperFilter = z.object({
@@ -136,6 +137,7 @@ export async function processRssArticleItem({
   processedCount,
   uploadId,
   traceId,
+  acceptedNewsTypes,
 }: RssItemProcessOptions): Promise<RssItemProcessResult> {
   try {
     const { title, link: url, pubDate, description, doi } = rssItem;
@@ -226,8 +228,10 @@ export async function processRssArticleItem({
     console.log(`🌐 Starting web scraping for: ${cleanedUrl}`);
     const scrapedContent = await scrapeWithFirecrawlStructured(cleanedUrl);
 
+    console.log({ here: scrapedContent });
     if (
       !!scrapedContent.content_type &&
+      acceptedNewsTypes !== 'all' &&
       !ACCEPTED_NEWS_TYPES.includes(scrapedContent.content_type)
     ) {
       return {

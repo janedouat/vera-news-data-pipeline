@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { parseRssFeed } from '@/lib/utils/rssParser';
-import { CDC_FEEDS } from '@/lib/config/rssFeeds'; // TODO: Import your new feeds
+import { AI_FEEDS } from '@/lib/config/rssFeeds'; // TODO: Import your new feeds
 import { processRssArticleItem } from '@/lib/modules/newsUpload/rssArticleItemProcessor';
 import { v4 } from 'uuid';
 import { processDrugsComRssItem } from '@/lib/modules/newsUpload/services/drugsComProcessor';
@@ -68,6 +68,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           date_too_new: number;
           not_scientific_paper: number;
           not_enough_content: number;
+          not_accepted_news_type: number;
           error: number;
           already_processed: number;
         };
@@ -80,7 +81,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     // 1. Add to DRUG_FEEDS: [...DRUG_FEEDS, ...NEW_CONTENT_TYPE_FEEDS]
     // 2. Create separate loop for NEW_CONTENT_TYPE_FEEDS
     // 3. Use RSS_FEEDS for all feeds (includes everything)
-    for (const feed of CDC_FEEDS) {
+    for (const feed of AI_FEEDS) {
       // Initialize feed stats
       const feedKey = `${feed.sourceId}_${feed.bestJournal}_${feed.url}`;
       feedStats[feedKey] = {
@@ -97,6 +98,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           date_too_new: 0,
           not_scientific_paper: 0,
           not_enough_content: 0,
+          not_accepted_news_type: 0,
           error: 0,
           already_processed: 0,
         },
@@ -140,6 +142,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 processedCount,
                 uploadId,
                 traceId,
+                acceptedNewsTypes: feed.acceptedNewsTypes,
               });
             } else {
               result = await genericRssTypeRssItem({
@@ -174,6 +177,8 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 feedStats[feedKey].skipReasons.not_scientific_paper++;
               } else if (result.reason === 'not_enough_content') {
                 feedStats[feedKey].skipReasons.not_enough_content++;
+              } else if (result.reason === 'not_accepted_news_type') {
+                feedStats[feedKey].skipReasons.not_accepted_news_type++;
               } else if (result.reason === 'already_in_supabase') {
                 feedStats[feedKey].skipReasons.already_processed++;
               }
@@ -220,6 +225,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       console.log(
         `    📝 Not enough content: ${stat.skipReasons.not_enough_content}`,
       );
+      console.log(
+        `    🚫 Not accepted news type: ${stat.skipReasons.not_accepted_news_type}`,
+      );
       console.log(`    ❌ Errors: ${stat.skipReasons.error}`);
       console.log(
         `    🔄 Already processed: ${stat.skipReasons.already_processed}`,
@@ -238,6 +246,8 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
           acc.not_scientific_paper + stat.skipReasons.not_scientific_paper,
         not_enough_content:
           acc.not_enough_content + stat.skipReasons.not_enough_content,
+        not_accepted_news_type:
+          acc.not_accepted_news_type + stat.skipReasons.not_accepted_news_type,
         error: acc.error + stat.skipReasons.error,
         already_processed:
           acc.already_processed + stat.skipReasons.already_processed,
@@ -248,6 +258,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         missing_url_or_title_or_date: 0,
         not_scientific_paper: 0,
         not_enough_content: 0,
+        not_accepted_news_type: 0,
         error: 0,
         already_processed: 0,
       },
@@ -264,6 +275,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     );
     console.log(
       `📝 Not enough content: ${totalSkipReasons.not_enough_content}`,
+    );
+    console.log(
+      `🚫 Not accepted news type: ${totalSkipReasons.not_accepted_news_type}`,
     );
     console.log(`❌ Processing errors: ${totalSkipReasons.error}`);
     console.log(`🔄 Already processed: ${totalSkipReasons.already_processed}`);
