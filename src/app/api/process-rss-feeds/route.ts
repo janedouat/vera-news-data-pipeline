@@ -55,7 +55,6 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     const feedStats: Record<
       string,
       {
-        sourceId: string;
         name: string;
         url: string;
         totalItems: number;
@@ -83,10 +82,9 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     // 3. Use RSS_FEEDS for all feeds (includes everything)
     for (const feed of DRUG_FEEDS) {
       // Initialize feed stats
-      const feedKey = `${feed.sourceId}_${feed.name}_${feed.url}`;
+      const feedKey = `${feed.sourceId}_${feed.bestJournal}_${feed.url}`;
       feedStats[feedKey] = {
-        sourceId: feed.sourceId,
-        name: feed.name,
+        name: feed.bestJournal,
         url: feed.url,
         totalItems: 0,
         goodDateItems: 0,
@@ -204,7 +202,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     // Log feed statistics
     console.log('\n📊 Feed Statistics:');
     Object.values(feedStats).forEach((stat) => {
-      console.log(`${stat.sourceId} - ${stat.name}:`);
+      console.log(`${stat.url} - ${stat.name}:`);
       console.log(`  Total items: ${stat.totalItems}`);
       console.log(`  Good date items: ${stat.goodDateItems}`);
       console.log(`  Bad date items: ${stat.badDateItems}`);
