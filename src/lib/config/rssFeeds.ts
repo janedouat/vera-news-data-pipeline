@@ -1,5 +1,5 @@
 import { PhysicianSpecialty } from '@/types/taxonomy';
-import { BestJournals } from '@/lib/constants/bestJournals';
+import { BestJournals, BestJournalsLabel } from '@/lib/constants/bestJournals';
 
 export interface RssFeedConfig {
   url: string;
@@ -16,7 +16,7 @@ export interface RssFeedConfig {
 const COMMON_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/nm.rss',
-    sourceName: BestJournals.NATURE_MEDICINE,
+    sourceName: BestJournalsLabel[BestJournals.NATURE_MEDICINE],
     bestJournal: BestJournals.NATURE_MEDICINE,
     enabled: true,
     type: 'journal',
@@ -24,7 +24,7 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_3/67.xml',
-    sourceName: BestJournals.JAMA,
+    sourceName: BestJournalsLabel[BestJournals.JAMA],
     bestJournal: BestJournals.JAMA,
     enabled: true,
     type: 'journal',
@@ -32,16 +32,15 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_3/onlineFirst_67.xml',
-    sourceName: BestJournals.JAMA,
+    sourceName: BestJournalsLabel[BestJournals.JAMA],
     bestJournal: BestJournals.JAMA,
-
     enabled: true,
     type: 'journal',
     sourceId: BestJournals.JAMA + 'online_first',
   },
   {
     url: 'http://feeds.bmj.com/bmj/recent',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.THE_BMJ],
     bestJournal: BestJournals.THE_BMJ,
     enabled: true,
     type: 'journal',
@@ -49,16 +48,15 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: BestJournals.THE_LANCET,
-
     enabled: true,
     type: 'journal',
     sourceId: 'lancet_current',
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lancet_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: BestJournals.THE_LANCET,
     enabled: true,
     type: 'journal',
@@ -66,7 +64,7 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_15/71.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JOURNAL_OF_INTERNAL_MEDICINE],
     bestJournal: BestJournals.JOURNAL_OF_INTERNAL_MEDICINE,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
     enabled: true,
@@ -74,7 +72,7 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_15/onlineFirst_71.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JOURNAL_OF_INTERNAL_MEDICINE],
     bestJournal: BestJournals.JOURNAL_OF_INTERNAL_MEDICINE,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
     enabled: true,
@@ -82,7 +80,7 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onlinelibrary.wiley.com/feed/13652796/most-recent',
-    sourceName: 'Wiley',
+    sourceName: BestJournalsLabel[BestJournals.JOURNAL_OF_INTERNAL_MEDICINE],
     bestJournal: BestJournals.JOURNAL_OF_INTERNAL_MEDICINE,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
     enabled: true,
@@ -90,16 +88,16 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.nature.com/nrd.rss',
-    sourceName: 'Nature',
-    bestJournal: 'Nature Reviews Drug Discovery',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_REVIEWS_DRUG_DISCOVERY],
+    bestJournal: BestJournals.NATURE_REVIEWS_DRUG_DISCOVERY,
     specialty: PhysicianSpecialty.OTHER,
     enabled: true,
     type: 'journal',
   },
   {
     url: 'https://www.nature.com/nbt.rss',
-    sourceName: 'Nature',
-    bestJournal: 'Nature Biotechnology',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_BIOTECHNOLOGY],
+    bestJournal: BestJournals.NATURE_BIOTECHNOLOGY,
     specialty: PhysicianSpecialty.OTHER,
     enabled: true,
     type: 'journal',
@@ -128,7 +126,7 @@ const CDC_FEEDS: RssFeedConfig[] = [
 const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/natcancer.rss',
-    sourceName: 'Nature',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_CANCER],
     bestJournal: BestJournals.NATURE_CANCER,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -136,7 +134,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.nature.com/nrc.rss',
-    sourceName: 'Nature',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_REVIEWS_CANCER],
     bestJournal: BestJournals.NATURE_REVIEWS_CANCER,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -144,7 +142,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://ascopubs.org/action/showFeed?type=etoc&feed=rss&jc=jco',
-    sourceName: 'ASCO',
+    sourceName: BestJournalsLabel[BestJournals.JOURNAL_OF_CLINICAL_ONCOLOGY],
     bestJournal: BestJournals.JOURNAL_OF_CLINICAL_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -152,7 +150,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.cell.com/cancer-cell/inpress.rss',
-    sourceName: 'Cell',
+    sourceName: BestJournalsLabel[BestJournals.CANCER_CELL],
     bestJournal: BestJournals.CANCER_CELL,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -160,7 +158,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.cell.com/cancer-cell/current.rss',
-    sourceName: 'Cell',
+    sourceName: BestJournalsLabel[BestJournals.CANCER_CELL],
     bestJournal: BestJournals.CANCER_CELL,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -168,7 +166,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanonc_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_ONCOLOGY],
     bestJournal: BestJournals.LANCET_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -176,7 +174,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanonc_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_ONCOLOGY],
     bestJournal: BestJournals.LANCET_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -184,7 +182,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_159/174.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_ONCOLOGY],
     bestJournal: BestJournals.LANCET_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -192,7 +190,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_159/onlineFirst_174.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_ONCOLOGY],
     bestJournal: BestJournals.LANCET_ONCOLOGY,
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
