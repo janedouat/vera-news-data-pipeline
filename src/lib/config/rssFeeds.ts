@@ -198,7 +198,7 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=hematology-oncology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Hematology/Oncology',
     specialty: PhysicianSpecialty.ONCOLOGY,
     enabled: true,
@@ -273,7 +273,7 @@ const CARDIOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://heart.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Heart',
     specialty: PhysicianSpecialty.CARDIOLOGY,
     enabled: true,
@@ -281,7 +281,7 @@ const CARDIOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://heart.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Heart (Online First)',
     specialty: PhysicianSpecialty.CARDIOLOGY,
     enabled: true,
@@ -289,7 +289,7 @@ const CARDIOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=cardiology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: BestJournals.JAMA_CARDIOLOGY,
     specialty: PhysicianSpecialty.CARDIOLOGY,
     enabled: true,
@@ -357,7 +357,7 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://jnnp.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Journal of Neurology, Neurosurgery & Psychiatry',
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
@@ -365,7 +365,7 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://jnnp.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal:
       'Journal of Neurology, Neurosurgery & Psychiatry (Online First)',
     specialty: PhysicianSpecialty.NEUROLOGY,
@@ -426,7 +426,7 @@ const GASTROENTEROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://gut.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Gut',
     specialty: PhysicianSpecialty.GASTROENTEROLOGY,
     enabled: true,
@@ -434,7 +434,7 @@ const GASTROENTEROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://gut.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Gut (Online First)',
     specialty: PhysicianSpecialty.GASTROENTEROLOGY,
     enabled: true,
@@ -442,7 +442,7 @@ const GASTROENTEROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://fg.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Frontline Gastroenterology',
     specialty: PhysicianSpecialty.GASTROENTEROLOGY,
     enabled: true,
@@ -450,7 +450,7 @@ const GASTROENTEROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://fg.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Frontline Gastroenterology (Online First)',
     specialty: PhysicianSpecialty.GASTROENTEROLOGY,
     enabled: true,
@@ -458,7 +458,7 @@ const GASTROENTEROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=gastroenterology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Gastroenterology',
     specialty: PhysicianSpecialty.GASTROENTEROLOGY,
     enabled: true,
@@ -502,7 +502,7 @@ const PULMONOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://thorax.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Thorax',
     specialty: PhysicianSpecialty.PULMONOLOGY,
     enabled: true,
@@ -510,7 +510,7 @@ const PULMONOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://thorax.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Thorax (Online First)',
     specialty: PhysicianSpecialty.PULMONOLOGY,
     enabled: true,
@@ -530,7 +530,7 @@ const PULMONOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=pulmonary-critical-care',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Pulmonary/Critical Care',
     specialty: PhysicianSpecialty.PULMONOLOGY,
     enabled: true,
@@ -617,7 +617,7 @@ const PEDIATRICS_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://adc.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: BestJournals.ARCHIVES_OF_DISEASE_IN_CHILDHOOD,
     specialty: PhysicianSpecialty.PEDIATRICS,
     enabled: true,
@@ -625,7 +625,7 @@ const PEDIATRICS_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=pediatrics',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: BestJournals.PEDIATRICS,
     specialty: PhysicianSpecialty.PEDIATRICS,
     enabled: true,
@@ -773,7 +773,7 @@ const ENDOCRINOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://drc.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'BMJ Open Diabetes Research & Care',
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
@@ -840,7 +840,7 @@ const INFECTIOUS_DISEASE_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=infectious-disease',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Infectious Disease',
     specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
     enabled: true,
@@ -876,7 +876,7 @@ const SURGERY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=surgery',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: BestJournals.JAMA_SURGERY,
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
     enabled: true,
@@ -899,7 +899,7 @@ const SURGERY_FEEDS: RssFeedConfig[] = [
 const EMERGENCY_MEDICINE_FEEDS: RssFeedConfig[] = [
   {
     url: 'http://emj.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Emergency Medicine Journal',
     specialty: PhysicianSpecialty.EMERGENCY_MEDICINE,
     enabled: true,
@@ -907,7 +907,7 @@ const EMERGENCY_MEDICINE_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://emj.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Emergency Medicine Journal (Online First)',
     specialty: PhysicianSpecialty.EMERGENCY_MEDICINE,
     enabled: true,
@@ -915,7 +915,7 @@ const EMERGENCY_MEDICINE_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=emergency-medicine',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Emergency Medicine',
     specialty: PhysicianSpecialty.EMERGENCY_MEDICINE,
     enabled: true,
@@ -959,7 +959,7 @@ const IMMUNOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=allergy-immunology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Allergy/Immunology',
     specialty: PhysicianSpecialty.ALLERGY_IMMUNOLOGY,
     enabled: true,
@@ -971,7 +971,7 @@ const IMMUNOLOGY_FEEDS: RssFeedConfig[] = [
 const DERMATOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_12/68.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA],
     bestJournal: BestJournals.JAMA_DERMATOLOGY,
     specialty: PhysicianSpecialty.DERMATOLOGY,
     enabled: true,
@@ -979,7 +979,7 @@ const DERMATOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_12/onlineFirst_68.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA],
     bestJournal: BestJournals.JAMA_DERMATOLOGY,
     specialty: PhysicianSpecialty.DERMATOLOGY,
     enabled: true,
@@ -1011,7 +1011,7 @@ const DERMATOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=dermatology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: BestJournals.JAMA_DERMATOLOGY,
     specialty: PhysicianSpecialty.DERMATOLOGY,
     enabled: true,
@@ -1022,7 +1022,7 @@ const DERMATOLOGY_FEEDS: RssFeedConfig[] = [
 const RHEUMATOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lanrhe_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Rheumatology',
     specialty: PhysicianSpecialty.RHEUMATOLOGY,
     enabled: true,
@@ -1030,7 +1030,7 @@ const RHEUMATOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanrhe_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Rheumatology',
     specialty: PhysicianSpecialty.RHEUMATOLOGY,
     enabled: true,
@@ -1054,7 +1054,7 @@ const RHEUMATOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=rheumatology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Rheumatology',
     specialty: PhysicianSpecialty.RHEUMATOLOGY,
     enabled: true,
@@ -1081,7 +1081,7 @@ const NEPHROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=nephrology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Nephrology',
     specialty: PhysicianSpecialty.NEPHROLOGY,
     enabled: true,
@@ -1092,7 +1092,7 @@ const NEPHROLOGY_FEEDS: RssFeedConfig[] = [
 const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_18/74.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA],
     bestJournal: 'Otolaryngology–Head & Neck Surgery',
     specialty: PhysicianSpecialty.OTOLARYNGOLOGY,
     enabled: true,
@@ -1100,7 +1100,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_18/onlineFirst_74.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA],
     bestJournal: 'Otolaryngology–Head & Neck Surgery',
     specialty: PhysicianSpecialty.OTOLARYNGOLOGY,
     enabled: true,
@@ -1108,7 +1108,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=obstetrics-gynecology',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Obstetrics/Gynecology',
     specialty: PhysicianSpecialty.OBSTETRICS_GYNECOLOGY,
     enabled: true,
@@ -1116,7 +1116,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://bjsm.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'British Journal of Sports Medicine',
     specialty: PhysicianSpecialty.PHYSICAL_MEDICINE,
     enabled: true,
@@ -1124,7 +1124,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://bjsm.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'British Journal of Sports Medicine (Online First)',
     specialty: PhysicianSpecialty.PHYSICAL_MEDICINE,
     enabled: true,
@@ -1132,7 +1132,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=geriatrics-aging',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Geriatrics/Aging',
     specialty: PhysicianSpecialty.GERIATRICS,
     enabled: true,
@@ -1140,7 +1140,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanexo_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Healthy Longevity',
     specialty: PhysicianSpecialty.GERIATRICS,
     enabled: true,
@@ -1148,7 +1148,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanexo_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Healthy Longevity',
     specialty: PhysicianSpecialty.GERIATRICS,
     enabled: true,
@@ -1159,7 +1159,7 @@ const OTHER_SPECIALTY_FEEDS: RssFeedConfig[] = [
 const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lanpub_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Public Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1167,7 +1167,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanpub_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Public Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1175,7 +1175,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanwh_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Global Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1183,7 +1183,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanwh_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Global Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1191,7 +1191,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_193/185.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA],
     bestJournal: 'Health Forum',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1199,7 +1199,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://gh.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'BMJ Global Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1207,7 +1207,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://oem.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Occupational and Environmental Medicine',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1215,7 +1215,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://jech.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Journal of Epidemiology and Community Health',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1223,7 +1223,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://jech.bmj.com/rss/ahead.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'Journal of Epidemiology and Community Health (Online First)',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1231,7 +1231,7 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=health-policy',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Health Policy',
     specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
     enabled: true,
@@ -1264,14 +1264,14 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=clinical-medicine',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Clinical Medicine',
     enabled: true,
     type: 'journal',
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=genetics',
-    sourceName: 'NEJM',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
     bestJournal: 'Genetics',
 
     enabled: true,
@@ -1279,7 +1279,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://casereports.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'BMJ Case Reports',
 
     enabled: true,
@@ -1287,7 +1287,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'http://bmjopen.bmj.com/rss/current.xml',
-    sourceName: 'BMJ',
+    sourceName: BestJournalsLabel[BestJournals.BMJ],
     bestJournal: 'BMJ Open',
 
     enabled: true,
@@ -1295,7 +1295,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanmic_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'EClinicalMedicine',
 
     enabled: true,
@@ -1303,7 +1303,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanmic_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'EClinicalMedicine (Lancet)',
 
     enabled: true,
@@ -1311,7 +1311,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanme_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Microbe',
 
     enabled: true,
@@ -1319,7 +1319,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanme_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.THE_LANCET],
     bestJournal: 'Microbe',
 
     enabled: true,
