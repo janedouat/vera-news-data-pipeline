@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { parseRssFeed } from '@/lib/utils/rssParser';
-import { DRUG_FEEDS } from '@/lib/config/rssFeeds';
+import { DRUG_FEEDS } from '@/lib/config/rssFeeds'; // TODO: Import your new feeds
 import { processRssItem } from '@/lib/modules/newsUpload/rssItemProcessor';
 import { v4 } from 'uuid';
 import { processDrugsComRssItem } from '@/lib/modules/newsUpload/services/drugsComProcessor';
+import { processNewContentTypeRssItem } from '@/lib/modules/newsUpload/services/newContentTypeProcessor';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -54,7 +55,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     const feedStats: Record<
       string,
       {
-        group: string;
+        sourceId: string;
         name: string;
         url: string;
         totalItems: number;
@@ -75,11 +76,16 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     > = {};
 
     // Process each RSS feed URL
+    // TODO: Change this to process your new content type feeds
+    // You can either:
+    // 1. Add to DRUG_FEEDS: [...DRUG_FEEDS, ...NEW_CONTENT_TYPE_FEEDS]
+    // 2. Create separate loop for NEW_CONTENT_TYPE_FEEDS
+    // 3. Use RSS_FEEDS for all feeds (includes everything)
     for (const feed of DRUG_FEEDS) {
       // Initialize feed stats
-      const feedKey = `${feed.group}_${feed.name}_${feed.url}`;
+      const feedKey = `${feed.sourceId}_${feed.name}_${feed.url}`;
       feedStats[feedKey] = {
-        group: feed.group,
+        sourceId: feed.sourceId,
         name: feed.name,
         url: feed.url,
         totalItems: 0,
@@ -99,7 +105,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       };
 
       try {
-        console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.group})`);
+        console.log(`🔍 Processing RSS feed: ${feed.url} (${feed.sourceName})`);
 
         // Parse the RSS feed to get items
         const rssItems = await parseRssFeed(feed.url);
@@ -112,7 +118,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
             const traceId = v4();
 
             let result;
-            if (feed.group === 'Drugs.com') {
+            if (feed.type === 'drugs.com') {
               console.log(
                 `🏥 Routing drugs.com RSS item to specialized processor`,
               );
@@ -121,18 +127,29 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 index,
                 startDate,
                 endDate,
-                feedGroup: feed.group,
+                source: feed.sourceName,
                 processedCount,
                 uploadId,
                 traceId,
               });
-            } else {
+            } else if (feed.type === 'journal') {
               result = await processRssItem({
                 rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
                 index,
                 startDate,
                 endDate,
-                feedGroup: feed.group,
+                source: feed.sourceName,
+                processedCount,
+                uploadId,
+                traceId,
+              });
+            } else {
+              result = await processNewContentTypeRssItem({
+                rssItem: rssItem as Required<typeof rssItem>,
+                index,
+                startDate,
+                endDate,
+                source: feed.sourceName,
                 processedCount,
                 uploadId,
                 traceId,
@@ -173,7 +190,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
         );
       } catch (error) {
         console.error(
-          `Error processing RSS feed ${feed.url} (${feed.group}):`,
+          `Error processing RSS feed ${feed.url} (${feed.sourceId}):`,
           error,
         );
         // Continue with next RSS feed even if one fails
@@ -187,7 +204,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     // Log feed statistics
     console.log('\n📊 Feed Statistics:');
     Object.values(feedStats).forEach((stat) => {
-      console.log(`${stat.group} - ${stat.name}:`);
+      console.log(`${stat.sourceId} - ${stat.name}:`);
       console.log(`  Total items: ${stat.totalItems}`);
       console.log(`  Good date items: ${stat.goodDateItems}`);
       console.log(`  Bad date items: ${stat.badDateItems}`);

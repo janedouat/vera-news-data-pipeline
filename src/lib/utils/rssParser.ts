@@ -46,7 +46,35 @@ function cleanTextContent(content: string): string {
  * Extract link from various RSS formats
  */
 function extractLink(itemXml: string): string | null {
-  // Try simple <link> tag first
+  // Try permalink tag first (highest priority)
+  const permalinkMatch = itemXml.match(
+    /<permalink[^>]*>([\s\S]*?)<\/permalink>/,
+  );
+  if (permalinkMatch) {
+    return permalinkMatch[1].trim();
+  }
+
+  // Try guid tag that's marked as permalink
+  const guidPermalinkMatch = itemXml.match(
+    /<guid[^>]*isPermaLink=["']true["'][^>]*>([\s\S]*?)<\/guid>/,
+  );
+  if (guidPermalinkMatch) {
+    return guidPermalinkMatch[1].trim();
+  }
+
+  // Try guid tag without isPermaLink attribute (assume it's a permalink if it looks like a URL)
+  const guidMatch = itemXml.match(/<guid[^>]*>([\s\S]*?)<\/guid>/);
+  if (guidMatch) {
+    const guidContent = guidMatch[1].trim();
+    if (
+      guidContent.startsWith('http://') ||
+      guidContent.startsWith('https://')
+    ) {
+      return guidContent;
+    }
+  }
+
+  // Try simple <link> tag
   const simpleLinkMatch = itemXml.match(/<link[^>]*>([\s\S]*?)<\/link>/);
   if (simpleLinkMatch) {
     return simpleLinkMatch[1].trim();

@@ -41,7 +41,7 @@ export type RssItemProcessOptions = {
   index: number;
   startDate: Date;
   endDate?: Date;
-  feedGroup: string;
+  source?: string;
   processedCount: number;
   uploadId: string;
   traceId: string;
@@ -132,7 +132,7 @@ export async function processRssItem({
   index,
   startDate,
   endDate,
-  feedGroup,
+  source,
   processedCount,
   uploadId,
   traceId,
@@ -267,12 +267,11 @@ export async function processRssItem({
       url: cleanedUrl,
       date,
       uploadId,
-      feedGroup,
       traceId,
       doi,
       references: rssItem.reference ? [rssItem.reference] : undefined,
       detectedNewsType,
-      source: feedGroup,
+      source,
       uniqueId,
     });
 

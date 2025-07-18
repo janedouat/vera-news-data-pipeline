@@ -32,7 +32,7 @@ export interface DrugsComProcessorInput {
   index: number;
   startDate: Date;
   endDate?: Date;
-  feedGroup: string;
+  source?: string;
   processedCount: number;
   uploadId: string;
   traceId: string;
@@ -47,10 +47,9 @@ export interface DrugsComProcessorInput {
 export async function processDrugsComRssItem(
   input: DrugsComProcessorInput,
 ): Promise<ContentProcessorResult> {
-  const { rssItem, index, startDate, endDate, feedGroup, uploadId, traceId } =
-    input;
+  const { rssItem, index, startDate, endDate, uploadId, traceId } = input;
 
-  const { description, pubDate, title, doi } = rssItem;
+  const { description, pubDate, title } = rssItem;
 
   try {
     // Basic validation
@@ -92,15 +91,24 @@ export async function processDrugsComRssItem(
 
     // Generate unique ID early to check for duplicates
     // Use the first available URL or fallback to title
-    const primaryUrl = press_release_url || fda_url || rssItem.link;
-    const uniqueId = doi
-      ? generateUniqueNewsId({ doi })
-      : generateUniqueNewsId({ url: primaryUrl, newsDate: date });
+    const primaryUrl = press_release_url || fda_url;
+    let uniqueId: string;
+    if (primaryUrl) {
+      uniqueId = generateUniqueNewsId({
+        url: primaryUrl,
+        newsDate: date,
+      });
+      console.log(`🔑 Generated unique ID: ${uniqueId}`);
+    } else {
+      return {
+        status: 'skipped',
+        reason: 'no_url_found',
+      };
+    }
 
-    console.log(`🔑 Generated unique ID: ${uniqueId}`);
+    const itemExists = await checkNewsItemExist(uniqueId);
 
     // Check if item already exists
-    const itemExists = await checkNewsItemExist(uniqueId);
 
     if (itemExists) {
       console.log(
@@ -178,7 +186,6 @@ export async function processDrugsComRssItem(
       url: finalUrl,
       date,
       uploadId,
-      feedGroup,
       traceId,
       references: rssItem.reference ? [rssItem.reference] : undefined,
       detectedNewsType: 'fda_announcement',

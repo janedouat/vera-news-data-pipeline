@@ -20,7 +20,6 @@ export interface ContentProcessorInput {
   url: string;
   date: string;
   uploadId: string;
-  feedGroup: string;
   traceId: string;
   doi?: string;
   references?: Article[];
