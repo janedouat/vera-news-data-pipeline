@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { parseRssFeed } from '@/lib/utils/rssParser';
-import { RSS_FEEDS } from '@/lib/config/rssFeeds';
+import { DRUG_FEEDS } from '@/lib/config/rssFeeds';
 import { processRssItem } from '@/lib/modules/newsUpload/rssItemProcessor';
 import { v4 } from 'uuid';
 import { processDrugsComRssItem } from '@/lib/modules/newsUpload/services/drugsComProcessor';
@@ -75,7 +75,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     > = {};
 
     // Process each RSS feed URL
-    for (const feed of RSS_FEEDS) {
+    for (const feed of DRUG_FEEDS) {
       // Initialize feed stats
       const feedKey = `${feed.group}_${feed.name}_${feed.url}`;
       feedStats[feedKey] = {

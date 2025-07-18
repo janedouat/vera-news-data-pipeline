@@ -1,7 +1,9 @@
 import { supabase } from '@/lib/utils/supabaseHelpers';
 import { Database } from '@/types/supabase';
+import crypto from 'crypto';
 
 type SupabaseNewsRow = Database['public']['Tables']['news']['Insert'];
+
 export type Article = {
   paperId: string;
   sjr?: number;
@@ -141,17 +143,11 @@ export async function getNewsRowsByIds(
   }
 }
 
-export async function checkNewsItemExists(
-  url: string,
-  newsDate: string,
-): Promise<boolean> {
+export async function checkNewsItemExist(uniqueId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('news')
-      .select('id')
-      .eq('url', url)
-      .eq('news_date', newsDate)
-      .maybeSingle();
+    const query = supabase.from('news').select('id').eq('unique_id', uniqueId);
+
+    const { data, error } = await query.maybeSingle();
 
     if (error) {
       console.error('Error checking for duplicate news item:', error);
@@ -161,26 +157,6 @@ export async function checkNewsItemExists(
     return !!data;
   } catch (error) {
     console.error('Error in checkNewsItemExists:', error);
-    return false; // Return false on error to continue processing
-  }
-}
-
-export async function checkNewsItemExistsByDoi(doi: string): Promise<boolean> {
-  try {
-    const { data, error } = await supabase
-      .from('news')
-      .select('id')
-      .eq('doi', doi)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error checking for duplicate news item by DOI:', error);
-      return false; // Return false on error to continue processing
-    }
-
-    return !!data;
-  } catch (error) {
-    console.error('Error in checkNewsItemExistsByDoi:', error);
     return false; // Return false on error to continue processing
   }
 }
@@ -206,5 +182,58 @@ export async function updateNewsWithSuggestedQuestions(
   } catch (error) {
     console.error('Failed to update news with suggested questions:', error);
     throw error;
+  }
+}
+
+/**
+ * Generates a deterministic unique ID for news items based on content characteristics
+ * Accepts either DOI or URL+newsDate combination
+ */
+export function generateUniqueNewsId(
+  input: { doi: string } | { url: string; newsDate: string },
+): string {
+  // Priority 1: Use DOI if provided
+  if ('doi' in input && input.doi?.trim()) {
+    const cleanDoi = input.doi.trim().toLowerCase().replace(/^doi:/, '');
+    return `doi-${crypto.createHash('sha256').update(cleanDoi).digest('hex').substring(0, 16)}`;
+  }
+
+  // Priority 2: Use URL + Date if provided
+  if ('url' in input && input.url?.trim()) {
+    const cleanUrl = input.url.trim().toLowerCase();
+    const urlDateString = `${cleanUrl}|${input.newsDate}`;
+    return `url-${crypto.createHash('sha256').update(urlDateString).digest('hex').substring(0, 16)}`;
+  }
+
+  throw new Error(
+    'No unique ID generated - must provide either DOI or URL+newsDate',
+  );
+}
+
+/**
+ * Enhanced duplicate checking using the deterministic unique ID
+ */
+export async function checkNewsItemExistsByUniqueId(
+  uniqueId: string,
+): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('news')
+      .select('id')
+      .eq('unique_id', uniqueId)
+      .maybeSingle();
+
+    if (error) {
+      console.error(
+        'Error checking for duplicate news item by unique_id:',
+        error,
+      );
+      return false;
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error('Error in checkNewsItemExistsByUniqueId:', error);
+    return false;
   }
 }

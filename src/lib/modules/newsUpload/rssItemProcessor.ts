@@ -8,8 +8,8 @@ import { openai } from '@ai-sdk/openai';
 import { z } from 'zod';
 import {
   Article,
-  checkNewsItemExists,
-  checkNewsItemExistsByDoi,
+  generateUniqueNewsId,
+  checkNewsItemExist,
 } from './api/newsApi';
 import {
   RETRYABLE_ERROR_PATTERNS,
@@ -202,30 +202,25 @@ export async function processRssItem({
 
     // Check if this item is already in Supabase before expensive operations
     const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
-    const itemExists = await checkNewsItemExists(cleanedUrl, date);
+
+    // Generate deterministic unique ID
+    const uniqueId = doi
+      ? generateUniqueNewsId({ doi })
+      : generateUniqueNewsId({ url: cleanedUrl, newsDate: date });
+
+    console.log(`🔑 Generated unique ID: ${uniqueId}`);
+
+    // Check if item already exists using the unique ID
+    const itemExists = await checkNewsItemExist(uniqueId);
 
     if (itemExists) {
       console.log(
-        `Skipping RSS item ${index + 1} because it's already in Supabase: ${title}`,
+        `Skipping RSS item ${index + 1} because it's already in Supabase (unique_id: ${uniqueId}): ${title}`,
       );
       return {
         status: 'skipped',
         reason: 'already_in_supabase',
       };
-    }
-
-    // Check if this item is already in Supabase by DOI (if DOI is available)
-    if (doi) {
-      const itemExistsByDoi = await checkNewsItemExistsByDoi(doi);
-      if (itemExistsByDoi) {
-        console.log(
-          `Skipping RSS item ${index + 1} because it's already in Supabase by DOI: ${doi}`,
-        );
-        return {
-          status: 'skipped',
-          reason: 'already_in_supabase',
-        };
-      }
     }
 
     console.log(`🌐 Starting web scraping for: ${cleanedUrl}`);
@@ -277,6 +272,8 @@ export async function processRssItem({
       doi,
       references: rssItem.reference ? [rssItem.reference] : undefined,
       detectedNewsType,
+      source: feedGroup,
+      uniqueId,
     });
 
     if (result.status === 'success') {

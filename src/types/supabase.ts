@@ -727,6 +727,7 @@ export type Database = {
           suggested_questions: string[] | null
           tags: string[] | null
           timestamp: string | null
+          unique_id: string | null
           updated_at: string | null
           upload_id: string | null
           url: string | null
@@ -753,6 +754,7 @@ export type Database = {
           suggested_questions?: string[] | null
           tags?: string[] | null
           timestamp?: string | null
+          unique_id?: string | null
           updated_at?: string | null
           upload_id?: string | null
           url?: string | null
@@ -779,6 +781,7 @@ export type Database = {
           suggested_questions?: string[] | null
           tags?: string[] | null
           timestamp?: string | null
+          unique_id?: string | null
           updated_at?: string | null
           upload_id?: string | null
           url?: string | null

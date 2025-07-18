@@ -25,6 +25,8 @@ export interface ContentProcessorInput {
   doi?: string;
   references?: Article[];
   detectedNewsType?: string;
+  source?: string;
+  uniqueId: string;
 }
 
 export interface ContentProcessorResult {
@@ -48,11 +50,12 @@ export async function processScrapedContent(
       url,
       date,
       uploadId,
-      feedGroup,
+      source,
       traceId,
       doi,
       references,
       detectedNewsType,
+      uniqueId,
     } = input;
 
     // Step 1: Content Validation (already done, using provided answer)
@@ -120,7 +123,7 @@ export async function processScrapedContent(
       score,
       upload_id: uploadId,
       is_visible_in_prod: false,
-      source: feedGroup,
+      source,
       scores: specialtyScores,
       extracted_image_url: extractedImageUrl,
       extracted_image_description: extractedImageDescription,
@@ -130,6 +133,7 @@ export async function processScrapedContent(
       news_date_timestamp: new Date(date).toISOString(),
       suggested_questions: suggestedQuestions,
       references,
+      unique_id: uniqueId,
     });
 
     console.log(`✅ Successfully processed content: ${answer.title}`);

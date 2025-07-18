@@ -10,6 +10,22 @@ import {
 import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
 import { RssItem } from '../rssItemProcessor';
 import { getAnswer } from '../topicProcessor';
+import { generateUniqueNewsId, checkNewsItemExist } from '../api/newsApi';
+
+/**
+ * Extracts the domain name from a URL (including TLD)
+ * @param url - The URL to extract domain from
+ * @returns Domain name with TLD (e.g., "example.com", "site.fr")
+ */
+function extractDomainFromUrl(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname;
+  } catch (error) {
+    console.warn(`Failed to extract domain from URL: ${url}`, error);
+    return 'unknown';
+  }
+}
 
 export interface DrugsComProcessorInput {
   rssItem: RssItem;
@@ -34,11 +50,11 @@ export async function processDrugsComRssItem(
   const { rssItem, index, startDate, endDate, feedGroup, uploadId, traceId } =
     input;
 
-  const { description, pubDate } = rssItem;
+  const { description, pubDate, title, doi } = rssItem;
 
   try {
     // Basic validation
-    if (!description || !pubDate) {
+    if (!description || !title || !pubDate) {
       console.log(
         `Skipping drugs.com RSS item ${index + 1} because missing title or date`,
       );
@@ -47,6 +63,8 @@ export async function processDrugsComRssItem(
         reason: 'missing_description_or_date',
       };
     }
+
+    const topic = `${title} ${description}`;
 
     const articleDate = new Date(pubDate);
 
@@ -62,15 +80,37 @@ export async function processDrugsComRssItem(
 
     const date = articleDate.toISOString().slice(0, 10); // Get YYYY-MM-DD format
 
-    console.log(`🏥 Processing drugs.com RSS item: ${description}`);
+    console.log(`🏥 Processing drugs.com RSS item: ${topic}`);
 
     // Step 1: Extract FDA and press release URLs from title
     console.log(
-      `🔍 Extracting FDA and Press Release URLs from title: ${description}`,
+      `🔍 Extracting FDA and Press Release URLs from title: ${topic}`,
     );
-    const { press_release_url, fda_url } = await getFdaUrls(description);
+    const { press_release_url, fda_url } = await getFdaUrls(topic);
 
     console.log(`✅ Successfully extracted URLs:`, press_release_url, fda_url);
+
+    // Generate unique ID early to check for duplicates
+    // Use the first available URL or fallback to title
+    const primaryUrl = press_release_url || fda_url || rssItem.link;
+    const uniqueId = doi
+      ? generateUniqueNewsId({ doi })
+      : generateUniqueNewsId({ url: primaryUrl, newsDate: date });
+
+    console.log(`🔑 Generated unique ID: ${uniqueId}`);
+
+    // Check if item already exists
+    const itemExists = await checkNewsItemExist(uniqueId);
+
+    if (itemExists) {
+      console.log(
+        `Skipping drugs.com RSS item ${index + 1} because it's already in Supabase (unique_id: ${uniqueId}): ${title}`,
+      );
+      return {
+        status: 'skipped',
+        reason: 'already_in_supabase',
+      };
+    }
 
     // Step 2: Try to scrape press release URL first, then FDA URL
     let scrapedContent: ScrapedContent | undefined;
@@ -87,7 +127,7 @@ export async function processDrugsComRssItem(
       if (scrapedContent.success) {
         console.log(`✅ Successfully scraped press release URL`);
         finalUrl = cleanedUrl;
-        source = 'press_release';
+        source = extractDomainFromUrl(press_release_url);
       } else {
         console.log(
           `❌ Press release scraping failed: ${scrapedContent.error}`,
@@ -104,7 +144,7 @@ export async function processDrugsComRssItem(
       if (scrapedContent.success) {
         console.log(`✅ Successfully scraped FDA URL`);
         finalUrl = cleanedUrl;
-        source = 'fda_official';
+        source = extractDomainFromUrl(fda_url);
       } else {
         console.log(`❌ FDA scraping failed: ${scrapedContent.error}`);
       }
@@ -113,7 +153,7 @@ export async function processDrugsComRssItem(
     // Check if we got any successful content
     if (!scrapedContent?.success) {
       console.log(
-        `❌ Both press release and FDA scraping failed for: ${description}`,
+        `❌ Both press release and FDA scraping failed for: ${topic}`,
       );
       return {
         status: 'error',
@@ -126,7 +166,7 @@ export async function processDrugsComRssItem(
 
     // Step: Topic Processing
     const { answer } = await getAnswer({
-      topic: description,
+      topic,
       text: scrapedContent.content,
     });
 
@@ -142,6 +182,8 @@ export async function processDrugsComRssItem(
       traceId,
       references: rssItem.reference ? [rssItem.reference] : undefined,
       detectedNewsType: 'fda_announcement',
+      source,
+      uniqueId,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
