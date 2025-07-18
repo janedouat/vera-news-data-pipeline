@@ -290,7 +290,7 @@ export async function scrapeWithFirecrawlStructured(
           `🔄 Firecrawl extraction attempt ${attempt}/${MAX_RETRIES} for: ${url}`,
         );
         extractResult = await firecrawlApp.extract([url], {
-          prompt: `Extract text from this medical article page which will be relevant for a medical news feed. In particular, extract in full important sections like: introduction, conclusion, importance, discussion, results, etc. Don't transform the text; only extract please. In image_description, also only extract text. In content_type, return one of the following values: ${NEWS_TYPES.join()}.`,
+          prompt: `Extract text from this medical article page which will be relevant for a medical news feed. In particular, extract in full important sections like: introduction, conclusion, importance, discussion, results, etc. Don't transform the text; only extract please. In image_url, put the url of an image that is relevant to the news, not a generic logo etc. In image_description, also only extract text. In content_type, return one of the following values: ${NEWS_TYPES.join()}.`,
           schema: MedicalArticleSchema,
         });
         console.log(`✅ Firecrawl extraction successful on attempt ${attempt}`);
