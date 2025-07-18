@@ -781,27 +781,26 @@ const ENDOCRINOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.nature.com/nrendo.rss',
-    sourceName: 'Nature',
-    bestJournal: 'Nature Reviews Endocrinology',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_REVIEWS_ENDOCRINOLOGY],
+    bestJournal: BestJournals.NATURE_REVIEWS_ENDOCRINOLOGY,
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
     type: 'journal',
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=endocrinology',
-    sourceName: 'NEJM',
-    bestJournal: 'Endocrinology',
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
+    bestJournal: BestJournalsLabel[BestJournals.NEJM],
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
     type: 'journal',
   },
 ];
-
 // Infectious Disease Feeds
 const INFECTIOUS_DISEASE_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/laninf_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_INFECTIOUS_DISEASES],
     bestJournal: BestJournals.LANCET_INFECTIOUS_DISEASES,
     specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
     enabled: true,
@@ -809,7 +808,7 @@ const INFECTIOUS_DISEASE_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laninf_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_INFECTIOUS_DISEASES],
     bestJournal: BestJournals.LANCET_INFECTIOUS_DISEASES,
     specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
     enabled: true,
@@ -817,7 +816,7 @@ const INFECTIOUS_DISEASE_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://academic.oup.com/rss/site_5269/3135.xml',
-    sourceName: 'Oxford Academic',
+    sourceName: BestJournalsLabel[BestJournals.CLINICAL_INFECTIOUS_DISEASES],
     bestJournal: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
     specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
     enabled: true,
@@ -825,7 +824,7 @@ const INFECTIOUS_DISEASE_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://academic.oup.com/rss/site_5269/advanceAccess_3135.xml',
-    sourceName: 'Oxford Academic',
+    sourceName: BestJournalsLabel[BestJournals.CLINICAL_INFECTIOUS_DISEASES],
     bestJournal: BestJournals.CLINICAL_INFECTIOUS_DISEASES,
     specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
     enabled: true,
@@ -833,8 +832,8 @@ const INFECTIOUS_DISEASE_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://journals.asm.org/action/showFeed?type=etoc&feed=rss&jc=CMR',
-    sourceName: 'ASM',
-    bestJournal: 'Clinical Microbiology Reviews',
+    sourceName: BestJournalsLabel[BestJournals.CLINICAL_MICROBIOLOGY_REVIEWS],
+    bestJournal: BestJournals.CLINICAL_MICROBIOLOGY_REVIEWS,
     specialty: PhysicianSpecialty.INFECTIOUS_DISEASE,
     enabled: true,
     type: 'journal',
@@ -853,7 +852,7 @@ const INFECTIOUS_DISEASE_FEEDS: RssFeedConfig[] = [
 const SURGERY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_20/76.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_SURGERY],
     bestJournal: BestJournals.JAMA_SURGERY,
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
     enabled: true,
@@ -861,7 +860,7 @@ const SURGERY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_20/onlineFirst_76.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_SURGERY],
     bestJournal: BestJournals.JAMA_SURGERY,
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
     enabled: true,
@@ -869,7 +868,7 @@ const SURGERY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://journals.lww.com/annalsofsurgery/_layouts/15/OAKS.Journals/feed.aspx?FeedType=LatestArticles',
-    sourceName: 'LWW',
+    sourceName: BestJournalsLabel[BestJournals.ANNALS_OF_SURGERY],
     bestJournal: BestJournals.ANNALS_OF_SURGERY,
     specialty: PhysicianSpecialty.GENERAL_SURGERY,
     enabled: true,
@@ -885,8 +884,11 @@ const SURGERY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/0376343/?limit=15&name=J%20Thorac%20Cardiovasc%20Surg&utm_campaign=journals',
-    sourceName: '',
-    bestJournal: 'Journal of Thoracic and Cardiovascular Surgery',
+    sourceName:
+      BestJournalsLabel[
+        BestJournals.JOURNAL_OF_THORACIC_AND_CARDIOVASCULAR_SURGERY
+      ],
+    bestJournal: BestJournals.JOURNAL_OF_THORACIC_AND_CARDIOVASCULAR_SURGERY,
     specialty: PhysicianSpecialty.THORACIC_SURGERY,
     enabled: true,
     type: 'journal',
@@ -925,7 +927,7 @@ const EMERGENCY_MEDICINE_FEEDS: RssFeedConfig[] = [
 const IMMUNOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/nri.rss',
-    sourceName: 'Nature',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_REVIEWS_IMMUNOLOGY],
     bestJournal: BestJournals.NATURE_REVIEWS_IMMUNOLOGY,
     specialty: PhysicianSpecialty.ALLERGY_IMMUNOLOGY,
     enabled: true,
@@ -933,7 +935,7 @@ const IMMUNOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.cell.com/immunity/inpress.rss',
-    sourceName: 'Cell',
+    sourceName: BestJournalsLabel[BestJournals.IMMUNITY],
     bestJournal: BestJournals.IMMUNITY,
     specialty: PhysicianSpecialty.ALLERGY_IMMUNOLOGY,
     enabled: true,
@@ -941,7 +943,7 @@ const IMMUNOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.cell.com/immunity/current.rss',
-    sourceName: 'Cell',
+    sourceName: BestJournalsLabel[BestJournals.IMMUNITY],
     bestJournal: BestJournals.IMMUNITY,
     specialty: PhysicianSpecialty.ALLERGY_IMMUNOLOGY,
     enabled: true,
@@ -949,7 +951,7 @@ const IMMUNOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.annualreviews.org/rss/content/journals/immunol/latestarticles?fmt=rss',
-    sourceName: 'Annual Reviews',
+    sourceName: BestJournalsLabel[BestJournals.ANNUAL_REVIEW_OF_IMMUNOLOGY],
     bestJournal: BestJournals.ANNUAL_REVIEW_OF_IMMUNOLOGY,
     specialty: PhysicianSpecialty.ALLERGY_IMMUNOLOGY,
     enabled: true,
