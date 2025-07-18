@@ -245,12 +245,11 @@ const ONCOLOGY_FEEDS: RssFeedConfig[] = [
     type: 'journal',
   },
 ];
-
 // Cardiology Feeds
 const CARDIOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/nrcardio.rss',
-    sourceName: 'Nature',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_REVIEWS_CARDIOLOGY],
     bestJournal: BestJournals.NATURE_REVIEWS_CARDIOLOGY,
     specialty: PhysicianSpecialty.CARDIOLOGY,
     enabled: true,
@@ -258,7 +257,7 @@ const CARDIOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_192/184.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_CARDIOLOGY],
     bestJournal: BestJournals.JAMA_CARDIOLOGY,
     specialty: PhysicianSpecialty.CARDIOLOGY,
     enabled: true,
@@ -266,7 +265,7 @@ const CARDIOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_192/onlineFirst_184.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_CARDIOLOGY],
     bestJournal: BestJournals.JAMA_CARDIOLOGY,
     specialty: PhysicianSpecialty.CARDIOLOGY,
     enabled: true,
@@ -334,7 +333,7 @@ const CARDIOLOGY_FEEDS: RssFeedConfig[] = [
 const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/nrneurol.rss',
-    sourceName: 'Nature',
+    sourceName: BestJournalsLabel[BestJournals.NATURE_REVIEWS_NEUROLOGY],
     bestJournal: BestJournals.NATURE_REVIEWS_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
@@ -342,7 +341,7 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_16/72.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_NEUROLOGY],
     bestJournal: BestJournals.JAMA_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
@@ -350,7 +349,7 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_16/onlineFirst_72.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_NEUROLOGY],
     bestJournal: BestJournals.JAMA_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
@@ -375,7 +374,7 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onlinelibrary.wiley.com/feed/15318249/most-recent',
-    sourceName: 'Wiley',
+    sourceName: BestJournalsLabel[BestJournals.ANNALS_OF_NEUROLOGY],
     bestJournal: BestJournals.ANNALS_OF_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
@@ -383,15 +382,15 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laneur_current.xml',
-    sourceName: 'Lancet',
-    bestJournal: BestJournals.JAMA_NEUROLOGY,
+    sourceName: BestJournalsLabel[BestJournals.LANCET_NEUROLOGY],
+    bestJournal: BestJournals.LANCET_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
     type: 'journal',
   },
   {
     url: 'https://www.thelancet.com/rssfeed/laneur_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_NEUROLOGY],
     bestJournal: BestJournals.JAMA_NEUROLOGY,
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
@@ -399,7 +398,7 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=neurology-neurosurgery',
-    sourceName: 'NEJM',
+    sourceName: BestJournals.NEJM,
     bestJournal: 'Neurology/Neurosurgery',
     specialty: PhysicianSpecialty.NEUROLOGY,
     enabled: true,
@@ -411,16 +410,16 @@ const NEUROLOGY_FEEDS: RssFeedConfig[] = [
 const GASTROENTEROLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/langas_current.xml',
-    sourceName: 'Lancet',
-    bestJournal: 'Gastroenterology & Hepatology',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_DIABETES_ENDOCRINOLOGY],
+    bestJournal: BestJournals.LANCET_DIABETES_ENDOCRINOLOGY,
     specialty: PhysicianSpecialty.GASTROENTEROLOGY,
     enabled: true,
     type: 'journal',
   },
   {
     url: 'https://www.thelancet.com/rssfeed/langas_online.xml',
-    sourceName: 'Lancet',
-    bestJournal: 'Gastroenterology & Hepatology',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_DIABETES_ENDOCRINOLOGY],
+    bestJournal: BestJournals.LANCET_DIABETES_ENDOCRINOLOGY,
     specialty: PhysicianSpecialty.GASTROENTEROLOGY,
     enabled: true,
     type: 'journal',
@@ -487,16 +486,16 @@ const GASTROENTEROLOGY_FEEDS: RssFeedConfig[] = [
 const PULMONOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/lanres_current.xml',
-    sourceName: 'Lancet',
-    bestJournal: 'Respiratory Medicine',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_RESPIRATORY_MEDICINE],
+    bestJournal: BestJournals.LANCET_RESPIRATORY_MEDICINE,
     specialty: PhysicianSpecialty.PULMONOLOGY,
     enabled: true,
     type: 'journal',
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanres_online.xml',
-    sourceName: 'Lancet',
-    bestJournal: 'Respiratory Medicine',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_RESPIRATORY_MEDICINE],
+    bestJournal: BestJournals.LANCET_RESPIRATORY_MEDICINE,
     specialty: PhysicianSpecialty.PULMONOLOGY,
     enabled: true,
     type: 'journal',
@@ -519,7 +518,10 @@ const PULMONOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.atsjournals.org/action/showFeed?type=etoc&feed=rss&jc=annalsats',
-    sourceName: 'ATS',
+    sourceName:
+      BestJournalsLabel[
+        BestJournals.AMERICAN_JOURNAL_OF_RESPIRATORY_AND_CRITICAL_CARE_MEDICINE
+      ],
     bestJournal:
       BestJournals.AMERICAN_JOURNAL_OF_RESPIRATORY_AND_CRITICAL_CARE_MEDICINE,
     specialty: PhysicianSpecialty.PULMONOLOGY,
@@ -535,12 +537,11 @@ const PULMONOLOGY_FEEDS: RssFeedConfig[] = [
     type: 'journal',
   },
 ];
-
 // Hematology Feeds
 const HEMATOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/leu.rss',
-    sourceName: BestJournals.LEUKEMIA,
+    sourceName: BestJournalsLabel[BestJournals.LEUKEMIA],
     bestJournal: BestJournals.LEUKEMIA,
     specialty: PhysicianSpecialty.HEMATOLOGY,
     enabled: true,
@@ -556,16 +557,16 @@ const HEMATOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanhae_current.xml',
-    sourceName: 'Lancet',
-    bestJournal: 'Haematology',
+    sourceName: BestJournalsLabel[BestJournals.HAEMATOLOGICA],
+    bestJournal: BestJournals.HAEMATOLOGICA,
     specialty: PhysicianSpecialty.HEMATOLOGY,
     enabled: true,
     type: 'journal',
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanhae_online.xml',
-    sourceName: 'Lancet',
-    bestJournal: 'Haematology',
+    sourceName: BestJournalsLabel[BestJournals.HAEMATOLOGICA],
+    bestJournal: BestJournals.HAEMATOLOGICA,
     specialty: PhysicianSpecialty.HEMATOLOGY,
     enabled: true,
     type: 'journal',
@@ -576,7 +577,7 @@ const HEMATOLOGY_FEEDS: RssFeedConfig[] = [
 const PEDIATRICS_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_19/75.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.PEDIATRICS],
     bestJournal: BestJournals.PEDIATRICS,
     specialty: PhysicianSpecialty.PEDIATRICS,
     enabled: true,
@@ -584,7 +585,7 @@ const PEDIATRICS_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_19/onlineFirst_75.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.PEDIATRICS],
     bestJournal: BestJournals.PEDIATRICS,
     specialty: PhysicianSpecialty.PEDIATRICS,
     enabled: true,
@@ -600,7 +601,7 @@ const PEDIATRICS_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanchi_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH],
     bestJournal: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
     specialty: PhysicianSpecialty.PEDIATRICS,
     enabled: true,
@@ -608,7 +609,7 @@ const PEDIATRICS_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanchi_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH],
     bestJournal: BestJournals.LANCET_CHILD_ADOLESCENT_HEALTH,
     specialty: PhysicianSpecialty.PEDIATRICS,
     enabled: true,
@@ -636,7 +637,7 @@ const PEDIATRICS_FEEDS: RssFeedConfig[] = [
 const PSYCHIATRY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://jamanetwork.com/rss/site_14/70.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_PSYCHIATRY],
     bestJournal: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
     enabled: true,
@@ -644,7 +645,7 @@ const PSYCHIATRY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_14/onlineFirst_70.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_PSYCHIATRY],
     bestJournal: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
     enabled: true,
@@ -652,7 +653,7 @@ const PSYCHIATRY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanpsy_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_PSYCHIATRY],
     bestJournal: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
     enabled: true,
@@ -660,7 +661,7 @@ const PSYCHIATRY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://www.thelancet.com/rssfeed/lanpsy_online.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.JAMA_PSYCHIATRY],
     bestJournal: BestJournals.JAMA_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
     enabled: true,
@@ -668,7 +669,7 @@ const PSYCHIATRY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onlinelibrary.wiley.com/feed/20515545/most-recent',
-    sourceName: 'Wiley',
+    sourceName: BestJournalsLabel[BestJournals.WORLD_PSYCHIATRY],
     bestJournal: BestJournals.WORLD_PSYCHIATRY,
     specialty: PhysicianSpecialty.PSYCHIATRY,
     enabled: true,
@@ -676,8 +677,8 @@ const PSYCHIATRY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=psychiatry',
-    sourceName: 'NEJM',
-    bestJournal: BestJournals.JAMA_PSYCHIATRY,
+    sourceName: BestJournalsLabel[BestJournals.NEJM],
+    bestJournal: BestJournals.NEJM,
     specialty: PhysicianSpecialty.PSYCHIATRY,
     enabled: true,
     type: 'journal',
@@ -688,7 +689,7 @@ const PSYCHIATRY_FEEDS: RssFeedConfig[] = [
 const OPHTHALMOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://rss.app/feeds/62gUZPqohHlNOs3V.xml',
-    sourceName: 'Ophthalmology',
+    sourceName: BestJournalsLabel[BestJournals.OPHTHALMOLOGY],
     bestJournal: BestJournals.OPHTHALMOLOGY,
     specialty: PhysicianSpecialty.OPHTHALMOLOGY,
     enabled: true,
@@ -696,7 +697,7 @@ const OPHTHALMOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://pubmed.ncbi.nlm.nih.gov/rss/journals/101695048/?limit=100&name=Ophthalmol%20Retina&utm_campaign=journals',
-    sourceName: 'Ophthalmology',
+    sourceName: BestJournalsLabel[BestJournals.RETINA],
     bestJournal: BestJournals.RETINA,
     specialty: PhysicianSpecialty.OPHTHALMOLOGY,
     enabled: true,
@@ -704,7 +705,7 @@ const OPHTHALMOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_17/73.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.OPHTHALMOLOGY],
     bestJournal: BestJournals.OPHTHALMOLOGY,
     specialty: PhysicianSpecialty.OPHTHALMOLOGY,
     enabled: true,
@@ -712,7 +713,7 @@ const OPHTHALMOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://jamanetwork.com/rss/site_17/onlineFirst_73.xml',
-    sourceName: 'JAMA',
+    sourceName: BestJournalsLabel[BestJournals.OPHTHALMOLOGY],
     bestJournal: BestJournals.OPHTHALMOLOGY,
     specialty: PhysicianSpecialty.OPHTHALMOLOGY,
     enabled: true,
@@ -732,7 +733,7 @@ const OPHTHALMOLOGY_FEEDS: RssFeedConfig[] = [
 const ENDOCRINOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.thelancet.com/rssfeed/landia_current.xml',
-    sourceName: 'Lancet',
+    sourceName: BestJournalsLabel[BestJournals.LANCET_DIABETES_ENDOCRINOLOGY],
     bestJournal: BestJournals.LANCET_DIABETES_ENDOCRINOLOGY,
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
@@ -740,7 +741,7 @@ const ENDOCRINOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://diabetesjournals.org/rss/site_1000003/1000004.xml',
-    sourceName: 'Diabetes Journals',
+    sourceName: BestJournalsLabel[BestJournals.DIABETES_CARE],
     bestJournal: BestJournals.DIABETES_CARE,
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
@@ -748,7 +749,7 @@ const ENDOCRINOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://diabetesjournals.org/rss/site_1000003/advanceAccess_1000004.xml',
-    sourceName: 'Diabetes Journals',
+    sourceName: BestJournalsLabel[BestJournals.DIABETES_CARE],
     bestJournal: BestJournals.DIABETES_CARE,
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
@@ -756,7 +757,7 @@ const ENDOCRINOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://academic.oup.com/rss/site_5593/3466.xml',
-    sourceName: 'Oxford Academic',
+    sourceName: BestJournalsLabel[BestJournals.ENDOCRINE_REVIEWS],
     bestJournal: BestJournals.ENDOCRINE_REVIEWS,
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
@@ -764,7 +765,7 @@ const ENDOCRINOLOGY_FEEDS: RssFeedConfig[] = [
   },
   {
     url: 'https://academic.oup.com/rss/site_5593/advanceAccess_3466.xml',
-    sourceName: 'Oxford Academic',
+    sourceName: BestJournalsLabel[BestJournals.ENDOCRINE_REVIEWS],
     bestJournal: BestJournals.ENDOCRINE_REVIEWS,
     specialty: PhysicianSpecialty.ENDOCRINOLOGY,
     enabled: true,
