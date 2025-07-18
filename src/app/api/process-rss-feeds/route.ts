@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { parseRssFeed } from '@/lib/utils/rssParser';
 import { DRUG_FEEDS } from '@/lib/config/rssFeeds'; // TODO: Import your new feeds
-import { processRssItem } from '@/lib/modules/newsUpload/rssItemProcessor';
+import { processRssArticleItem } from '@/lib/modules/newsUpload/rssArticleItemProcessor';
 import { v4 } from 'uuid';
 import { processDrugsComRssItem } from '@/lib/modules/newsUpload/services/drugsComProcessor';
-import { processNewContentTypeRssItem } from '@/lib/modules/newsUpload/services/newContentTypeProcessor';
+import { genericRssTypeRssItem } from '@/lib/modules/newsUpload/services/genericRssItemProcessor';
 
 // Define the type for the input
 export type RssFeedProcessInput = {
@@ -84,7 +84,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
       // Initialize feed stats
       const feedKey = `${feed.sourceId}_${feed.bestJournal}_${feed.url}`;
       feedStats[feedKey] = {
-        name: feed.bestJournal,
+        name: feed.bestJournal ?? '',
         url: feed.url,
         totalItems: 0,
         goodDateItems: 0,
@@ -131,7 +131,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 traceId,
               });
             } else if (feed.type === 'journal') {
-              result = await processRssItem({
+              result = await processRssArticleItem({
                 rssItem: rssItem as Required<typeof rssItem>, // Type assertion since we filtered above
                 index,
                 startDate,
@@ -142,7 +142,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
                 traceId,
               });
             } else {
-              result = await processNewContentTypeRssItem({
+              result = await genericRssTypeRssItem({
                 rssItem: rssItem as Required<typeof rssItem>,
                 index,
                 startDate,

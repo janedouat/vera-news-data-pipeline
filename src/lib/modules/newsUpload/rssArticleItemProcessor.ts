@@ -127,7 +127,7 @@ Return true only if this is likely to be an actual scientific paper, research ar
   return result.object;
 }
 
-export async function processRssItem({
+export async function processRssArticleItem({
   rssItem,
   index,
   startDate,

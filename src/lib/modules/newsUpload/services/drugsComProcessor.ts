@@ -8,7 +8,7 @@ import {
   ContentProcessorResult,
 } from './contentProcessor';
 import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
-import { RssItem } from '../rssItemProcessor';
+import { RssItem } from '../rssArticleItemProcessor';
 import { getAnswer } from '../topicProcessor';
 import { generateUniqueNewsId, checkNewsItemExist } from '../api/newsApi';
 

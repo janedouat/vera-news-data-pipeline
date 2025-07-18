@@ -4,11 +4,11 @@ import {
   ContentProcessorResult,
 } from './contentProcessor';
 import { removeRssRouteParameters } from '@/lib/utils/urlHelpers';
-import { RssItem } from '../rssItemProcessor';
+import { RssItem } from '../rssArticleItemProcessor';
 import { getAnswer } from '../topicProcessor';
 import { generateUniqueNewsId, checkNewsItemExist } from '../api/newsApi';
 
-export interface NewContentTypeProcessorInput {
+export interface GenericRssTypeRssItemInput {
   rssItem: RssItem;
   index: number;
   startDate: Date;
@@ -25,8 +25,8 @@ export interface NewContentTypeProcessorInput {
  * 2. Scrapes multiple URLs with Firecrawl in priority order
  * 3. Combines content and uses common processing pipeline
  */
-export async function processNewContentTypeRssItem(
-  input: NewContentTypeProcessorInput,
+export async function genericRssTypeRssItem(
+  input: GenericRssTypeRssItemInput,
 ): Promise<ContentProcessorResult> {
   const { rssItem, index, startDate, endDate, source, uploadId, traceId } =
     input;

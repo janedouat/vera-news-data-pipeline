@@ -3,7 +3,7 @@ import { BestJournals } from '@/lib/constants/bestJournals';
 
 export interface RssFeedConfig {
   url: string;
-  bestJournal: string; // the full journal name
+  bestJournal?: string; // the full journal name
   specialty?: PhysicianSpecialty;
   enabled?: boolean;
   journal?: string; // from bestJournals.ts
@@ -34,7 +34,7 @@ const COMMON_FEEDS: RssFeedConfig[] = [
     url: 'https://jamanetwork.com/rss/site_3/onlineFirst_67.xml',
     sourceName: BestJournals.JAMA,
     bestJournal: BestJournals.JAMA,
-    specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
+
     enabled: true,
     type: 'journal',
     sourceId: BestJournals.JAMA + 'online_first',
@@ -51,7 +51,7 @@ const COMMON_FEEDS: RssFeedConfig[] = [
     url: 'https://www.thelancet.com/rssfeed/lancet_current.xml',
     sourceName: 'Lancet',
     bestJournal: BestJournals.THE_LANCET,
-    specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
+
     enabled: true,
     type: 'journal',
     sourceId: 'lancet_current',
@@ -83,7 +83,7 @@ const COMMON_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://onlinelibrary.wiley.com/feed/13652796/most-recent',
     sourceName: 'Wiley',
-    bestJournal: 'Journal of Internal Medicine',
+    bestJournal: BestJournals.JOURNAL_OF_INTERNAL_MEDICINE,
     specialty: PhysicianSpecialty.INTERNAL_MEDICINE,
     enabled: true,
     type: 'journal',
@@ -112,7 +112,14 @@ const DRUG_FEEDS: RssFeedConfig[] = [
     url: 'https://www.drugs.com/feeds/new_drug_approvals.xml',
     enabled: true,
     type: 'drugs.com',
-    bestJournal: 'Drugs.com',
+  },
+];
+
+const CDC_FEEDS: RssFeedConfig[] = [
+  {
+    url: 'https://tools.cdc.gov/api/v2/resources/media/132608.rss',
+    enabled: true,
+    sourceId: 'CDC',
   },
 ];
 
@@ -534,7 +541,7 @@ const PULMONOLOGY_FEEDS: RssFeedConfig[] = [
 const HEMATOLOGY_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/leu.rss',
-    sourceName: 'Nature',
+    sourceName: BestJournals.LEUKEMIA,
     bestJournal: BestJournals.LEUKEMIA,
     specialty: PhysicianSpecialty.HEMATOLOGY,
     enabled: true,
@@ -1221,14 +1228,6 @@ const PUBLIC_HEALTH_FEEDS: RssFeedConfig[] = [
     type: 'journal',
   },
   {
-    url: 'https://tools.cdc.gov/api/v2/resources/media/342778.rss',
-    sourceName: 'CDC',
-    bestJournal: 'Morbidity and Mortality Weekly Report',
-    specialty: PhysicianSpecialty.PREVENTIVE_MEDICINE,
-    enabled: true,
-    type: 'journal',
-  },
-  {
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=health-policy',
     sourceName: 'NEJM',
     bestJournal: 'Health Policy',
@@ -1244,7 +1243,6 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://www.cell.com/cell/inpress.rss',
     sourceName: 'Cell',
     bestJournal: BestJournals.CELL,
-    specialty: PhysicianSpecialty.OTHER,
     enabled: true,
     type: 'journal',
   },
@@ -1252,7 +1250,6 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://www.cell.com/cell/current.rss',
     sourceName: 'Cell',
     bestJournal: BestJournals.CELL,
-    specialty: PhysicianSpecialty.OTHER,
     enabled: true,
     type: 'journal',
   },
@@ -1260,7 +1257,6 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://www.science.org/action/showFeed?type=etoc&feed=rss&jc=stm',
     sourceName: 'AAAS',
     bestJournal: 'Science Translational Medicine',
-    specialty: PhysicianSpecialty.OTHER,
     enabled: true,
     type: 'journal',
   },
@@ -1268,7 +1264,6 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=clinical-medicine',
     sourceName: 'NEJM',
     bestJournal: 'Clinical Medicine',
-    specialty: PhysicianSpecialty.OTHER,
     enabled: true,
     type: 'journal',
   },
@@ -1276,7 +1271,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://onesearch-rss.nejm.org/api/specialty/rss?context=nejm&specialty=genetics',
     sourceName: 'NEJM',
     bestJournal: 'Genetics',
-    specialty: PhysicianSpecialty.OTHER,
+
     enabled: true,
     type: 'journal',
   },
@@ -1284,7 +1279,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'http://casereports.bmj.com/rss/current.xml',
     sourceName: 'BMJ',
     bestJournal: 'BMJ Case Reports',
-    specialty: PhysicianSpecialty.OTHER,
+
     enabled: true,
     type: 'journal',
   },
@@ -1292,7 +1287,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'http://bmjopen.bmj.com/rss/current.xml',
     sourceName: 'BMJ',
     bestJournal: 'BMJ Open',
-    specialty: PhysicianSpecialty.OTHER,
+
     enabled: true,
     type: 'journal',
   },
@@ -1300,7 +1295,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://www.thelancet.com/rssfeed/lanmic_current.xml',
     sourceName: 'Lancet',
     bestJournal: 'EClinicalMedicine',
-    specialty: PhysicianSpecialty.OTHER,
+
     enabled: true,
     type: 'journal',
   },
@@ -1308,7 +1303,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://www.thelancet.com/rssfeed/lanmic_online.xml',
     sourceName: 'Lancet',
     bestJournal: 'EClinicalMedicine (Lancet)',
-    specialty: PhysicianSpecialty.OTHER,
+
     enabled: true,
     type: 'journal',
   },
@@ -1316,7 +1311,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://www.thelancet.com/rssfeed/lanme_current.xml',
     sourceName: 'Lancet',
     bestJournal: 'Microbe',
-    specialty: PhysicianSpecialty.OTHER,
+
     enabled: true,
     type: 'journal',
   },
@@ -1324,7 +1319,7 @@ const HIGH_IMPACT_FEEDS: RssFeedConfig[] = [
     url: 'https://www.thelancet.com/rssfeed/lanme_online.xml',
     sourceName: 'Lancet',
     bestJournal: 'Microbe',
-    specialty: PhysicianSpecialty.OTHER,
+
     enabled: true,
     type: 'journal',
   },

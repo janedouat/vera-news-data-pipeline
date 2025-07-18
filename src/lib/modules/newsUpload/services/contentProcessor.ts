@@ -112,6 +112,10 @@ export async function processScrapedContent(
       parentTraceId: traceId,
     });
 
+    if (references && references[0] && references[0].metadata) {
+      references[0].metadata.journal = source;
+    }
+
     // Step 8: Database Insert
     await insertNewsRow({
       news_date: date,
