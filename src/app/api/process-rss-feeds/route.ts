@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PhysicianSpecialty } from '@/types/taxonomy';
 import { parseRssFeed } from '@/lib/utils/rssParser';
-import { DRUG_FEEDS } from '@/lib/config/rssFeeds'; // TODO: Import your new feeds
+import { CDC_FEEDS } from '@/lib/config/rssFeeds'; // TODO: Import your new feeds
 import { processRssArticleItem } from '@/lib/modules/newsUpload/rssArticleItemProcessor';
 import { v4 } from 'uuid';
 import { processDrugsComRssItem } from '@/lib/modules/newsUpload/services/drugsComProcessor';
@@ -80,7 +80,7 @@ export async function processRssFeedItems(input: RssFeedProcessInput) {
     // 1. Add to DRUG_FEEDS: [...DRUG_FEEDS, ...NEW_CONTENT_TYPE_FEEDS]
     // 2. Create separate loop for NEW_CONTENT_TYPE_FEEDS
     // 3. Use RSS_FEEDS for all feeds (includes everything)
-    for (const feed of DRUG_FEEDS) {
+    for (const feed of CDC_FEEDS) {
       // Initialize feed stats
       const feedKey = `${feed.sourceId}_${feed.bestJournal}_${feed.url}`;
       feedStats[feedKey] = {

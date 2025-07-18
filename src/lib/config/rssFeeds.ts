@@ -16,7 +16,7 @@ export interface RssFeedConfig {
 const COMMON_FEEDS: RssFeedConfig[] = [
   {
     url: 'https://www.nature.com/nm.rss',
-    sourceName: 'Nature',
+    sourceName: BestJournals.NATURE_MEDICINE,
     bestJournal: BestJournals.NATURE_MEDICINE,
     enabled: true,
     type: 'journal',
@@ -120,6 +120,7 @@ const CDC_FEEDS: RssFeedConfig[] = [
     url: 'https://tools.cdc.gov/api/v2/resources/media/132608.rss',
     enabled: true,
     sourceId: 'CDC',
+    sourceName: 'CDC',
   },
 ];
 
@@ -1377,4 +1378,5 @@ export {
   OTHER_SPECIALTY_FEEDS,
   PUBLIC_HEALTH_FEEDS,
   HIGH_IMPACT_FEEDS,
+  CDC_FEEDS,
 };
