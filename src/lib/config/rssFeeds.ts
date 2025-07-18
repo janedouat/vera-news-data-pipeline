@@ -1362,7 +1362,6 @@ export const RSS_FEEDS = ALL_FEEDS;
 export {
   COMMON_FEEDS,
   DRUG_FEEDS,
-  NEW_CONTENT_TYPE_FEEDS, // Export the new content type feeds
   ONCOLOGY_FEEDS,
   CARDIOLOGY_FEEDS,
   NEUROLOGY_FEEDS,
